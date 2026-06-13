@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Author;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Http\RedirectResponse;
 
 class AuthorController extends Controller
 {
@@ -16,7 +16,7 @@ class AuthorController extends Controller
      */
     public function index(): Response
     {
-        $authors = Author::latest()->get();
+        $authors = Author::latest()->paginate(15);
 
         return Inertia::render('Admin/Authors/Index', [
             'authors' => $authors,
@@ -46,7 +46,7 @@ class AuthorController extends Controller
 
         return redirect(route('admin.authors.index'))->with('toast', [
             'type' => 'success',
-            'message' => 'Author created successfully.'
+            'message' => 'Author created successfully.',
         ]);
     }
 
@@ -82,7 +82,7 @@ class AuthorController extends Controller
 
         return redirect(route('admin.authors.index'))->with('toast', [
             'type' => 'success',
-            'message' => 'Author updated successfully.'
+            'message' => 'Author updated successfully.',
         ]);
     }
 
@@ -95,8 +95,7 @@ class AuthorController extends Controller
 
         return redirect(route('admin.authors.index'))->with('toast', [
             'type' => 'success',
-            'message' => 'Author deleted successfully.'
+            'message' => 'Author deleted successfully.',
         ]);
     }
 }
-

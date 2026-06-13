@@ -1,10 +1,11 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import Pagination from '@/Components/Pagination.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 
 defineProps({
-    genres: Object,
+    genres: Object, // Laravel paginator: { data, links, ... }
 });
 
 const deleteGenre = (id) => {
@@ -46,7 +47,7 @@ const deleteGenre = (id) => {
                             </tr>
                         </thead>
                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                            <tr v-for="genre in genres" :key="genre.id">
+                            <tr v-for="genre in genres.data" :key="genre.id">
                                 <td class="px-6 py-4 whitespace-nowrap">{{ genre.name }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">{{ genre.slug }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -56,7 +57,7 @@ const deleteGenre = (id) => {
                                         class="text-red-600 dark:text-red-400 hover:underline">Delete</button>
                                 </td>
                             </tr>
-                            <tr v-if="genres.length === 0">
+                            <tr v-if="genres.data.length === 0">
                                 <td colspan="3" class="px-6 py-4 whitespace-nowrap text-center text-gray-500">
                                     No genres found.
                                 </td>
@@ -64,6 +65,8 @@ const deleteGenre = (id) => {
                         </tbody>
                     </table>
                 </div>
+
+                <Pagination :links="genres.links" />
             </div>
         </div>
     </AuthenticatedLayout>

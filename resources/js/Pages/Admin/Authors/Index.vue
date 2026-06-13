@@ -1,14 +1,13 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import Pagination from '@/Components/Pagination.vue';
+import { Head, Link } from '@inertiajs/vue3';
 import { router } from '@inertiajs/vue3';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 
 defineProps({
-    authors: Array,
+    authors: Object, // Laravel paginator: { data, links, ... }
 });
-
-const { props } = usePage();
 
 const deleteAuthor = (id) => {
     if (confirm('Are you sure you want to delete this author?')) {
@@ -49,13 +48,13 @@ const deleteAuthor = (id) => {
                             </tr>
                         </thead>
                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                            <tr v-if="authors.length === 0">
+                            <tr v-if="authors.data.length === 0">
                                 <td colspan="3"
                                     class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 text-center">
                                     No
                                     authors found.</td>
                             </tr>
-                            <tr v-for="author in authors" :key="author.id">
+                            <tr v-for="author in authors.data" :key="author.id">
                                 <td
                                     class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                                     {{
@@ -73,6 +72,8 @@ const deleteAuthor = (id) => {
                         </tbody>
                     </table>
                 </div>
+
+                <Pagination :links="authors.links" />
             </div>
         </div>
     </AuthenticatedLayout>

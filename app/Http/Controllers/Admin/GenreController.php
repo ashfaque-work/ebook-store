@@ -4,11 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Genre;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Support\Str;
-use Illuminate\Http\RedirectResponse;
 
 class GenreController extends Controller
 {
@@ -18,7 +18,7 @@ class GenreController extends Controller
     public function index(): Response
     {
         return Inertia::render('Admin/Genres/Index', [
-            'genres' => Genre::latest()->get(),
+            'genres' => Genre::latest()->paginate(15),
         ]);
     }
 
@@ -46,7 +46,7 @@ class GenreController extends Controller
 
         return redirect(route('admin.genres.index'))->with('toast', [
             'type' => 'success',
-            'message' => 'Genre created successfully.'
+            'message' => 'Genre created successfully.',
         ]);
     }
 
@@ -74,7 +74,7 @@ class GenreController extends Controller
     public function update(Request $request, Genre $genre): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:genres,name,' . $genre->id,
+            'name' => 'required|string|max:255|unique:genres,name,'.$genre->id,
         ]);
 
         $genre->update([
@@ -84,7 +84,7 @@ class GenreController extends Controller
 
         return redirect(route('admin.genres.index'))->with('toast', [
             'type' => 'success',
-            'message' => 'Genre updated successfully.'
+            'message' => 'Genre updated successfully.',
         ]);
     }
 
@@ -97,7 +97,7 @@ class GenreController extends Controller
 
         return redirect(route('admin.genres.index'))->with('toast', [
             'type' => 'success',
-            'message' => 'Genre deleted successfully.'
+            'message' => 'Genre deleted successfully.',
         ]);
     }
 }

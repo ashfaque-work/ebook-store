@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
@@ -12,6 +12,8 @@ import ToastListener from '@/Components/ToastListener.vue'; // 1. Import the new
 const showingNavigationDropdown = ref(false);
 const page = usePage();
 const { theme, toggleTheme } = useTheme();
+
+const isAdmin = computed(() => page.props.auth.user?.role === 'admin');
 
 const isUrl = (...urls) => {
     let currentUrl = page.url.substring(1);
@@ -40,18 +42,30 @@ const isUrl = (...urls) => {
                         </NavLink>
                     </div>
 
-                    <h3 class="px-4 mt-6 text-xs uppercase text-gray-400 font-semibold tracking-wider">Content</h3>
+                    <h3 class="px-4 mt-6 text-xs uppercase text-gray-400 font-semibold tracking-wider">My Account</h3>
                     <div class="mt-2">
-                        <NavLink href="/admin/authors" :active="isUrl('admin/authors')" theme="dark">
-                            Authors
+                        <NavLink href="/library" :active="isUrl('library')" theme="dark">
+                            My Library
                         </NavLink>
-                        <NavLink href="/admin/genres" :active="isUrl('admin/genres')" theme="dark">
-                            Genres
-                        </NavLink>
-                        <NavLink href="/admin/books" :active="isUrl('admin/books')" theme="dark">
-                            Books
+                        <NavLink href="/orders" :active="isUrl('orders')" theme="dark">
+                            My Orders
                         </NavLink>
                     </div>
+
+                    <template v-if="isAdmin">
+                        <h3 class="px-4 mt-6 text-xs uppercase text-gray-400 font-semibold tracking-wider">Content</h3>
+                        <div class="mt-2">
+                            <NavLink href="/admin/authors" :active="isUrl('admin/authors')" theme="dark">
+                                Authors
+                            </NavLink>
+                            <NavLink href="/admin/genres" :active="isUrl('admin/genres')" theme="dark">
+                                Genres
+                            </NavLink>
+                            <NavLink href="/admin/books" :active="isUrl('admin/books')" theme="dark">
+                                Books
+                            </NavLink>
+                        </div>
+                    </template>
                 </nav>
             </aside>
 
