@@ -10,6 +10,11 @@ const props = defineProps({
 
 const isCartEmpty = computed(() => props.cartItems.length === 0);
 
+const checkout = () => {
+    // Unauthenticated users are redirected to login by the route middleware.
+    router.post(route('checkout.store'));
+};
+
 const removeItem = (bookId) => {
     if (confirm('Are you sure you want to remove this item?')) {
         router.delete(`/cart/${bookId}`);
@@ -78,13 +83,14 @@ const clearCart = () => {
                         <p>Total</p>
                         <p>${{ parseFloat(total).toFixed(2) }}</p>
                     </div>
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Shipping and taxes calculated at checkout.
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Instant digital delivery &mdash; download
+                        your books right after checkout.
                     </p>
                     <div class="mt-6">
-                        <a href="#"
-                            class="flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-blue-700">
+                        <button @click="checkout" type="button"
+                            class="w-full flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-blue-700">
                             Checkout
-                        </a>
+                        </button>
                     </div>
                 </div>
             </div>

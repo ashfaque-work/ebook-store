@@ -3,10 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Book;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Support\Facades\Session;
 
 class BookController extends Controller
 {
@@ -20,9 +19,13 @@ class BookController extends Controller
         // Check if the book's ID is in the cart session array
         $isBookInCart = in_array($book->id, Session::get('cart', []));
 
+        // Has the signed-in user already bought this book?
+        $isPurchased = (bool) auth()->user()?->hasPurchased($book);
+
         return Inertia::render('Books/Show', [
             'book' => $book,
             'isBookInCart' => $isBookInCart, // Pass this boolean to the frontend
+            'isPurchased' => $isPurchased,
         ]);
     }
 }

@@ -5,7 +5,16 @@
       "Bash(gh --version)",
       "Bash(gh auth *)",
       "Bash(git config *)",
-      "Bash(git credential *)"
+      "Bash(git credential *)",
+      "Bash(git commit -q -m ' *)",
+      "Bash(git remote *)",
+      "Bash(git push *)",
+      "Bash(php -l app/Models/Book.php)",
+      "Bash(php -l app/Http/Controllers/Admin/BookController.php)",
+      "Bash(php -l app/Http/Controllers/LibraryController.php)",
+      "Bash(php -l app/Http/Controllers/BookController.php)",
+      "Bash(npm run *)",
+      "Bash(./vendor/bin/pint --dirty)"
     ]
   }
 }

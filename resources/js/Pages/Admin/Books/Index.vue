@@ -1,10 +1,11 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import Pagination from '@/Components/Pagination.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 
 defineProps({
-    books: Object,
+    books: Object, // Laravel paginator: { data, links, ... }
 });
 
 const deleteBook = (id) => {
@@ -13,8 +14,9 @@ const deleteBook = (id) => {
     }
 };
 
-const getCoverUrl = (path) => {
-    return path ? `/storage/${path}` : 'https://placehold.co/80x120/667eea/ffffff?text=No+Cover';
+// cover_image_path already comes through as a full /storage URL (model accessor).
+const getCoverUrl = (url) => {
+    return url || 'https://placehold.co/80x120/667eea/ffffff?text=No+Cover';
 }
 </script>
 
@@ -59,7 +61,7 @@ const getCoverUrl = (path) => {
                             </tr>
                         </thead>
                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                            <tr v-for="book in books" :key="book.id">
+                            <tr v-for="book in books.data" :key="book.id">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <img :src="getCoverUrl(book.cover_image_path)" alt="Cover"
                                         class="h-16 w-12 object-cover rounded-md bg-gray-300 dark:bg-gray-700">
@@ -75,7 +77,7 @@ const getCoverUrl = (path) => {
                                         class="text-red-600 dark:text-red-400 hover:underline">Delete</button>
                                 </td>
                             </tr>
-                            <tr v-if="books.length === 0">
+                            <tr v-if="books.data.length === 0">
                                 <td colspan="6" class="px-6 py-4 whitespace-nowrap text-center text-gray-500">
                                     No books found.
                                 </td>
@@ -83,6 +85,8 @@ const getCoverUrl = (path) => {
                         </tbody>
                     </table>
                 </div>
+
+                <Pagination :links="books.links" />
             </div>
         </div>
     </AuthenticatedLayout>

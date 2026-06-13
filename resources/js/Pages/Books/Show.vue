@@ -7,6 +7,7 @@ import SecondaryButton from '@/Components/SecondaryButton.vue';
 const props = defineProps({
     book: Object,
     isBookInCart: Boolean,
+    isPurchased: Boolean,
 });
 
 const addToCart = () => {
@@ -39,7 +40,11 @@ const addToCart = () => {
                     <div class="mt-6 flex items-center justify-between">
                         <span class="text-3xl font-bold text-blue-600 dark:text-blue-400">${{ book.price }}</span>
 
-                        <PrimaryButton v-if="!isBookInCart" @click="addToCart">Add to Cart</PrimaryButton>
+                        <!-- Already owned: link straight to the download -->
+                        <a v-if="isPurchased" :href="route('library.download', book.id)">
+                            <PrimaryButton>Download</PrimaryButton>
+                        </a>
+                        <PrimaryButton v-else-if="!isBookInCart" @click="addToCart">Add to Cart</PrimaryButton>
                         <Link v-else href="/cart">
                         <SecondaryButton>Go to Cart</SecondaryButton>
                         </Link>

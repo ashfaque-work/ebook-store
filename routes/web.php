@@ -5,10 +5,11 @@ use App\Http\Controllers\Admin\BookController as AdminBookController;
 use App\Http\Controllers\Admin\GenreController as AdminGenreController;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 // Public Routes
 Route::get('/', HomeController::class)->name('home');
@@ -20,12 +21,12 @@ Route::post('/cart/{book}', [CartController::class, 'store'])->name('cart.store'
 Route::delete('/cart/{book}', [CartController::class, 'destroy'])->name('cart.destroy');
 Route::delete('/cart', [CartController::class, 'clear'])->name('cart.clear');
 
-
 // Authenticated User Routes
 Route::get('/dashboard', function () {
-    // For now, redirect all logged-in users to the admin panel.
-    // We will add role-based logic later.
-    return redirect()->route('admin.authors.index');
+    // Send admins to the admin panel; customers to their library.
+    return auth()->user()->isAdmin()
+        ? redirect()->route('admin.authors.index')
+        : redirect()->route('library.index');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
@@ -34,13 +35,23 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+// Checkout (mock payment) — must be a verified, authenticated user.
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+    Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
+});
+
+// Customer library (purchased books + gated downloads).
+Route::middleware('auth')->group(function () {
+    Route::get('/library', [LibraryController::class, 'index'])->name('library.index');
+    Route::get('/library/{book}/download', [LibraryController::class, 'download'])->name('library.download');
+});
+
 // Admin Routes
-Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('authors', AdminAuthorController::class);
     Route::resource('genres', AdminGenreController::class);
     Route::resource('books', AdminBookController::class);
 });
 
-
 require __DIR__.'/auth.php';
-

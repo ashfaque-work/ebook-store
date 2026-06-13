@@ -1,61 +1,105 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 📚 eBook Store
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A digital ebook storefront built with **Laravel 12**, **Inertia.js 2**, and **Vue 3**. Customers browse a catalogue, add books to a cart, check out, and download their purchased files from a personal library. Administrators manage authors, genres, and books from a protected admin panel.
 
-## About Laravel
+> Payments currently run through a **mock gateway** (no external account needed). The payment layer is isolated behind a `PaymentGateway` contract so a real provider (e.g. Stripe) can be dropped in without touching the checkout flow.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Features
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **Catalogue** with search (title/author), genre filter, and pagination.
+- **Session cart** — add, remove, clear.
+- **Checkout** — creates an order, charges via the (mock) gateway, records line items, and emails a receipt. Totals are always recomputed server-side; books already owned are skipped.
+- **My Library** — customers download purchased ebooks through a **gated** route; files live on a **private** disk and are never publicly reachable.
+- **Role-based admin** — only users with the `admin` role can reach `/admin`; everyone else gets a 403.
+- **Auth** — registration, login, email verification, password reset, profile management (Laravel Breeze).
 
-## Learning Laravel
+## Tech stack
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+| Layer | Tech |
+|------|------|
+| Backend | Laravel 12, PHP 8.2 |
+| Frontend | Inertia.js 2 + Vue 3 + Tailwind CSS |
+| Build | Vite |
+| Auth | Laravel Breeze + Sanctum |
+| Database | MySQL (dev/prod), SQLite in-memory (tests) |
+| Tests | Pest |
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+---
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Local setup
 
-## Laravel Sponsors
+### Requirements
+- PHP 8.2+, Composer
+- Node.js 18+ and npm
+- MySQL 8+ (or MariaDB)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Steps
 
-### Premium Partners
+```bash
+# 1. Install dependencies
+composer install
+npm install
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+# 2. Environment
+cp .env.example .env
+php artisan key:generate
 
-## Contributing
+# 3. Configure the database in .env (DB_DATABASE=ebook_store, etc.),
+#    create the schema, then:
+php artisan migrate --seed
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+# 4. Link the public storage disk (for cover images)
+php artisan storage:link
 
-## Code of Conduct
+# 5. Run everything (server + queue worker + Vite)
+composer dev
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+`composer dev` runs the PHP server, a queue listener (needed for the receipt email), and Vite concurrently. Visit **http://localhost:8000**.
 
-## Security Vulnerabilities
+### Seeded accounts
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | `admin@example.com` | `password` |
+| Customer | `customer@example.com` | `password` |
+
+---
+
+## How it fits together
+
+- **Roles** — `users.role` (`admin` \| `customer`). The column is **not** mass-assignable, so it can't be set via registration. The `admin` middleware alias (`EnsureUserIsAdmin`) guards the admin route group.
+- **File storage** — cover images go to the **public** disk; ebook files go to the **private** `local` disk (`storage/app/private`, see `Book::FILE_DISK`). Downloads are served only by `LibraryController@download` after a `User::hasPurchased()` check.
+- **Orders** — `orders` + `order_items` (with a price/title snapshot at purchase time). `OrderItem` keeps a `unique(order_id, book_id)` constraint.
+- **Payments** — `App\Services\Payments\PaymentGateway` is bound to `FakePaymentGateway` in `AppServiceProvider`. To go live, implement the contract for your provider and re-bind it there.
+
+---
+
+## Tests
+
+```bash
+php artisan test
+```
+
+Tests run against SQLite in-memory and cover admin access control, mass-assignment safety, the checkout flow, and download gating.
+
+---
+
+## Going to production
+
+Before deploying:
+
+1. Set in `.env`: `APP_ENV=production`, `APP_DEBUG=false`, a real `APP_NAME` and `APP_URL`, and `APP_KEY` (via `php artisan key:generate`).
+2. Configure a real mailer (`MAIL_MAILER=smtp`, …) so order receipts are actually delivered.
+3. Run a queue worker (`php artisan queue:work`) — the receipt email is queued.
+4. Build assets: `npm run build`.
+5. Cache config/routes/views: `php artisan config:cache route:cache view:cache`.
+6. Swap `FakePaymentGateway` for a real payment integration.
+
+---
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+MIT.

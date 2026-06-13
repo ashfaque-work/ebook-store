@@ -1,9 +1,17 @@
 # eBook Store — Project Analysis & Implementation Roadmap
 
-> **Status:** Incomplete prototype. The admin/catalog half works; the *store* half (purchasing, secure delivery, roles) does not yet exist.
-> **Goal of this document:** give an accurate picture of the current codebase and a concrete, ordered plan to take it to a *publishable* state.
+> **Status:** Core store implemented. Roles, secured downloads, orders, mock checkout, and a customer library are now in place (Phases 1–5 done). Remaining: catalog pagination/search and production hardening (Phases 6–7).
+> **Goal of this document:** give an accurate picture of the codebase and a concrete, ordered plan to take it to a *publishable* state.
 > **Chosen direction:** Mock checkout (full order flow with a simulated payment step, no external payment account required, swappable for a real gateway later).
 > **Last updated:** 2026-06-13
+>
+> ### Implementation log (2026-06-13)
+> - **Phase 1 ✅** `role` column + `EnsureUserIsAdmin` middleware (`admin` alias); `/admin` now blocks non-admins (403); role-aware `/dashboard`; seeder creates `admin@example.com` + `customer@example.com` (password `password`). `role` is **not** mass-assignable.
+> - **Phase 2 ✅** Ebook files moved to the **private** disk (`Book::FILE_DISK = 'local'`); `file_path` hidden from JSON; fixed a latent bug where covers were never deleted (accessor returned a URL — now uses `getRawOriginal()`).
+> - **Phase 3 ✅** Real `orders` + new `order_items` tables; `Order`/`OrderItem` models; `User::hasPurchased()`.
+> - **Phase 4 ✅** `PaymentGateway` contract + `FakePaymentGateway` (bound in `AppServiceProvider`); `CheckoutController` builds the order in a DB transaction, charges, marks paid, clears cart; real Checkout button + `Checkout/Success.vue`. Server recomputes totals; skips already-owned books.
+> - **Phase 5 ✅** `LibraryController` (purchased list + **gated** `library.download` with `hasPurchased()` check); `Library/Index.vue`; book page shows Download when owned.
+> - **⚠️ Requires a running MySQL** to `php artisan migrate --seed`. Could not run migrations/tests here (DB was offline). See §11.
 
 ---
 
