@@ -1,8 +1,9 @@
 /**
  * Currency formatting for the store.
  *
- * One place decides how money looks. Prices arrive from the API as decimal
- * strings ("299.00"), so parse once here rather than in every template.
+ * Money crosses the wire as an integer number of paise, the same
+ * representation the database and every Indian payment gateway use. Formatting
+ * is the only place it becomes a decimal, and it happens here.
  */
 
 const formatter = new Intl.NumberFormat('en-IN', {
@@ -13,20 +14,25 @@ const formatter = new Intl.NumberFormat('en-IN', {
 });
 
 /**
- * Format a rupee amount for display, e.g. formatInr('1299.5') → "₹1,299.50".
+ * Format paise for display: formatPaise(129950) -> "₹1,299.50".
  *
- * @param {string|number|null|undefined} rupees
+ * @param {number|string|null|undefined} paise
  * @returns {string}
  */
-export function formatInr(rupees) {
-    const value = Number.parseFloat(rupees ?? 0);
+export function formatPaise(paise) {
+    const value = Number.parseInt(paise ?? 0, 10);
 
-    return formatter.format(Number.isFinite(value) ? value : 0);
+    return formatter.format((Number.isFinite(value) ? value : 0) / 100);
 }
 
-/** Free books get a word rather than "₹0.00". */
-export function formatPrice(rupees) {
-    const value = Number.parseFloat(rupees ?? 0);
+/** Free books get a word rather than a zero amount. */
+export function formatPrice(paise) {
+    const value = Number.parseInt(paise ?? 0, 10);
 
-    return value === 0 ? 'Free' : formatInr(value);
+    return value === 0 ? 'Free' : formatPaise(value);
+}
+
+/** Rupees, for prefilling an admin form from a stored paise amount. */
+export function paiseToRupees(paise) {
+    return (Number.parseInt(paise ?? 0, 10) / 100).toFixed(2);
 }

@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import BookCover from '@/Components/BookCover.vue';
+import { paiseToRupees } from '@/lib/money';
 
 const props = defineProps({
     book: Object,
@@ -17,7 +18,7 @@ const form = useForm({
     author_id: props.book.author_id,
     genre_id: props.book.genre_id,
     description: props.book.description,
-    price: props.book.price,
+    price: paiseToRupees(props.book.price_paise),
     is_published: Boolean(props.book.is_published),
     cover_image: null,
     book_file: null,

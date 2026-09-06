@@ -1,7 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
-import { formatInr, formatPrice } from '@/lib/money';
+import { formatPaise, formatPrice } from '@/lib/money';
 
 defineProps({
     order: Object,
@@ -27,19 +27,43 @@ const formatDate = (value) =>
                     <div class="flex justify-between text-sm text-gray-500 dark:text-gray-400">
                         <span>Placed {{ formatDate(order.created_at) }}</span>
                         <span class="capitalize">Status: {{ order.status }}</span>
+                        <span v-if="order.invoice_number">Invoice {{ order.invoice_number }}</span>
                     </div>
 
                     <ul role="list" class="mt-6 divide-y divide-gray-200 dark:divide-gray-700">
                         <li v-for="item in order.items" :key="item.id"
                             class="flex justify-between py-3 text-sm text-gray-700 dark:text-gray-300">
                             <span>{{ item.title }}</span>
-                            <span>{{ formatPrice(item.price) }}</span>
+                            <span>{{ formatPrice(item.price_paise) }}</span>
                         </li>
                     </ul>
 
+                    <!-- Tax breakdown, shown only when GST is actually charged. -->
+                    <div v-if="order.tax_paise > 0"
+                        class="mt-4 space-y-1 border-t border-gray-200 pt-4 text-sm text-gray-600 dark:border-gray-700 dark:text-gray-400">
+                        <div class="flex justify-between">
+                            <span>Subtotal</span>
+                            <span>{{ formatPaise(order.subtotal_paise) }}</span>
+                        </div>
+                        <div v-if="order.tax_type === 'igst'" class="flex justify-between">
+                            <span>IGST</span>
+                            <span>{{ formatPaise(order.tax_paise) }}</span>
+                        </div>
+                        <template v-else>
+                            <div class="flex justify-between">
+                                <span>CGST</span>
+                                <span>{{ formatPaise(Math.round(order.tax_paise / 2)) }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>SGST</span>
+                                <span>{{ formatPaise(order.tax_paise - Math.round(order.tax_paise / 2)) }}</span>
+                            </div>
+                        </template>
+                    </div>
+
                     <div class="mt-4 flex justify-between border-t border-gray-200 dark:border-gray-700 pt-4 text-lg font-medium text-gray-900 dark:text-white">
                         <span>Total</span>
-                        <span>{{ formatInr(order.total) }}</span>
+                        <span>{{ formatPaise(order.total_paise) }}</span>
                     </div>
 
                     <div class="mt-8 flex gap-3">

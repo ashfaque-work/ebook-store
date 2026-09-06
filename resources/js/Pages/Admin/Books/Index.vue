@@ -3,7 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
-import { formatInr, formatPrice } from '@/lib/money';
+import { formatPaise, formatPrice } from '@/lib/money';
 import BookCover from '@/Components/BookCover.vue';
 
 defineProps({
@@ -76,7 +76,7 @@ const deleteBook = (book) => {
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">{{ book.author.name }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">{{ book.genre.name }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">{{ formatPrice(book.price) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">{{ formatPrice(book.price_paise) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <Link :href="`/admin/books/${book.id}/edit`"
                                         class="text-blue-600 dark:text-blue-400 hover:underline mr-4">Edit</Link>

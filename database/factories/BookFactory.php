@@ -24,7 +24,8 @@ class BookFactory extends Factory
             'description' => fake()->paragraph(),
             'language' => 'en',
             'page_count' => fake()->numberBetween(120, 640),
-            'price' => fake()->randomFloat(2, 49, 899),
+            'price_paise' => fake()->numberBetween(4900, 89900),
+            'tax_rate' => 18.00,
             'is_published' => true,
             'published_at' => now(),
             'cover_image_path' => 'covers/sample.jpg',
@@ -51,6 +52,6 @@ class BookFactory extends Factory
 
     public function free(): static
     {
-        return $this->state(fn () => ['price' => 0]);
+        return $this->state(fn () => ['price_paise' => 0]);
     }
 }

@@ -3,7 +3,7 @@ import GuestLayout from '@/Layouts/GuestLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
-import { formatInr, formatPrice } from '@/lib/money';
+import { formatPaise, formatPrice } from '@/lib/money';
 import BookCover from '@/Components/BookCover.vue';
 
 const props = defineProps({
@@ -65,7 +65,7 @@ watch(genre, applyFilters);
                         <div class="p-4">
                             <h3 class="font-bold text-lg text-gray-900 dark:text-white">{{ book.title }}</h3>
                             <p class="text-sm text-gray-600 dark:text-gray-400">by {{ book.author.name }}</p>
-                            <p class="mt-2 font-semibold text-blue-600 dark:text-blue-400">{{ formatPrice(book.price) }}</p>
+                            <p class="mt-2 font-semibold text-blue-600 dark:text-blue-400">{{ formatPrice(book.price_paise) }}</p>
                         </div>
                     </div>
                     </Link>

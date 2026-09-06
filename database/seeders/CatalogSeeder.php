@@ -90,8 +90,9 @@ class CatalogSeeder extends Seeder
                         'description' => $this->blurb($title),
                         'language' => 'en',
                         'page_count' => random_int(148, 512),
-                        // Realistic Indian ebook pricing.
-                        'price' => collect([99, 149, 199, 249, 299, 349, 399, 499])->random(),
+                        // Realistic Indian ebook pricing, in paise.
+                        'price_paise' => collect([9900, 14900, 19900, 24900, 29900, 34900, 39900, 49900])->random(),
+                        'tax_rate' => 18.00,
                         'is_published' => true,
                         'published_at' => now()->subDays(random_int(0, 400)),
                         'cover_image_path' => null,
@@ -110,7 +111,7 @@ class CatalogSeeder extends Seeder
         ]);
 
         // One free book, so the "Free" price path is exercised.
-        Book::where('slug', Str::slug('Kitchen Light'))->update(['price' => 0]);
+        Book::where('slug', Str::slug('Kitchen Light'))->update(['price_paise' => 0]);
     }
 
     private function blurb(string $title): string

@@ -3,7 +3,7 @@ import GuestLayout from '@/Layouts/GuestLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
-import { formatInr, formatPrice } from '@/lib/money';
+import { formatPaise, formatPrice } from '@/lib/money';
 import BookCover from '@/Components/BookCover.vue';
 
 const props = defineProps({
@@ -36,7 +36,7 @@ const addToCart = () => {
                     <p class="mt-4 text-gray-700 dark:text-gray-300 flex-grow">{{ book.description }}</p>
 
                     <div class="mt-6 flex items-center justify-between">
-                        <span class="text-3xl font-bold text-blue-600 dark:text-blue-400">{{ formatPrice(book.price) }}</span>
+                        <span class="text-3xl font-bold text-blue-600 dark:text-blue-400">{{ formatPrice(book.price_paise) }}</span>
 
                         <!-- Already owned: link straight to the download -->
                         <a v-if="isPurchased" :href="route('library.download', book.id)">

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Money;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -39,6 +40,8 @@ class Book extends Model
         'isbn',
         'page_count',
         'price',
+        'price_paise',
+        'tax_rate',
         'is_published',
         'published_at',
         'is_featured',
@@ -62,13 +65,36 @@ class Book extends Model
     protected function casts(): array
     {
         return [
-            'price' => 'decimal:2',
+            'price_paise' => 'integer',
+            'tax_rate' => 'float',
             'is_published' => 'boolean',
             'is_featured' => 'boolean',
             'published_at' => 'datetime',
             'page_count' => 'integer',
             'file_size' => 'integer',
         ];
+    }
+
+    /**
+     * Price as a Money object, and settable from a rupee amount.
+     *
+     * `price_paise` is the storage and wire format; `price` is the domain API
+     * so PHP never juggles a float. Admin forms submit rupees and are
+     * converted here, once.
+     */
+    protected function price(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value, array $attributes) => Money::fromPaise((int) ($attributes['price_paise'] ?? 0)),
+            set: fn ($value) => [
+                'price_paise' => $value instanceof Money ? $value->paise : Money::fromRupees($value)->paise,
+            ],
+        );
+    }
+
+    public function isFree(): bool
+    {
+        return $this->price_paise === 0;
     }
 
     public function author(): BelongsTo

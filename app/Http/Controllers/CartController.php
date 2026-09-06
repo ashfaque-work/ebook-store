@@ -14,8 +14,10 @@ class CartController extends Controller
     public function index(): Response
     {
         $bookIds = Session::get('cart', []);
-        $cartItems = Book::whereIn('id', $bookIds)->get(); // Re-fetch books from DB
-        $total = $cartItems->sum('price');
+        // Re-fetch from the database: the cart only ever holds IDs, so a price
+        // can never be influenced by the client.
+        $cartItems = Book::published()->whereIn('id', $bookIds)->get();
+        $total = $cartItems->sum('price_paise');
 
         return Inertia::render('Cart/Index', [
             'cartItems' => $cartItems,

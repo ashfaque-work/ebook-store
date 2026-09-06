@@ -2,7 +2,7 @@
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import { formatInr, formatPrice } from '@/lib/money';
+import { formatPaise, formatPrice } from '@/lib/money';
 import BookCover from '@/Components/BookCover.vue';
 
 const props = defineProps({
@@ -66,7 +66,7 @@ const clearCart = () => {
                                     </h3>
                                 </div>
                                 <div class="flex-1 flex items-end justify-between text-sm">
-                                    <p class="text-gray-800 dark:text-gray-200 font-semibold">{{ formatPrice(item.price) }}</p>
+                                    <p class="text-gray-800 dark:text-gray-200 font-semibold">{{ formatPrice(item.price_paise) }}</p>
                                     <div class="flex">
                                         <button @click="removeItem(item.id)" type="button"
                                             class="font-medium text-red-600 dark:text-red-400 hover:text-red-500">
@@ -82,7 +82,7 @@ const clearCart = () => {
                 <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
                     <div class="flex justify-between text-lg font-medium text-gray-900 dark:text-white">
                         <p>Total</p>
-                        <p>{{ formatInr(total) }}</p>
+                        <p>{{ formatPaise(total) }}</p>
                     </div>
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Instant digital delivery &mdash; download
                         your books right after checkout.

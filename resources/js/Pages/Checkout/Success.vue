@@ -1,7 +1,7 @@
 <script setup>
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
-import { formatInr, formatPrice } from '@/lib/money';
+import { formatPaise, formatPrice } from '@/lib/money';
 
 defineProps({
     order: Object,
@@ -26,14 +26,14 @@ defineProps({
                 </h1>
                 <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
                     Order <span class="font-semibold">{{ order.order_number }}</span> &middot;
-                    Total {{ formatInr(order.total) }}
+                    Total {{ formatPaise(order.total_paise) }}
                 </p>
 
                 <ul role="list" class="mt-6 divide-y divide-gray-200 dark:divide-gray-700 text-left">
                     <li v-for="item in order.items" :key="item.id"
                         class="flex justify-between py-3 text-sm text-gray-700 dark:text-gray-300">
                         <span>{{ item.title }}</span>
-                        <span>{{ formatPrice(item.price) }}</span>
+                        <span>{{ formatPrice(item.price_paise) }}</span>
                     </li>
                 </ul>
 

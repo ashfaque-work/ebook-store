@@ -3,7 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import { formatInr, formatPrice } from '@/lib/money';
+import { formatPaise, formatPrice } from '@/lib/money';
 
 const props = defineProps({
     orders: Object, // Laravel paginator: { data, links, ... }
@@ -56,7 +56,7 @@ const statusClasses = (status) => ({
                                 <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-white">{{ order.order_number }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-400">{{ formatDate(order.created_at) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-400">{{ order.items_count }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white">{{ formatInr(order.total) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white">{{ formatPaise(order.total_paise) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full capitalize"
                                         :class="statusClasses(order.status)">{{ order.status }}</span>

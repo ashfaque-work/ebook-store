@@ -54,7 +54,7 @@ test('a purchased book can still be unpublished', function () {
         'author_id' => $this->book->author_id,
         'genre_id' => $this->book->genre_id,
         'description' => $this->book->description,
-        'price' => $this->book->price,
+        'price' => $this->book->price->rupees(),
         'is_published' => false,
     ])->assertRedirect(route('admin.books.index'));
 

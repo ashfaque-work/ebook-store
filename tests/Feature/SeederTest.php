@@ -42,7 +42,7 @@ test('the seeded catalogue exercises the draft and free-book paths', function ()
     $this->seed(CatalogSeeder::class);
 
     expect(Book::where('is_published', false)->exists())->toBeTrue()
-        ->and(Book::where('price', 0)->exists())->toBeTrue();
+        ->and(Book::where('price_paise', 0)->exists())->toBeTrue();
 });
 
 test('a seeded book can be bought and downloaded end to end', function () {
@@ -51,7 +51,7 @@ test('a seeded book can be bought and downloaded end to end', function () {
     $this->seed(CatalogSeeder::class);
 
     $user = User::factory()->create();
-    $book = Book::published()->where('price', '>', 0)->first();
+    $book = Book::published()->where('price_paise', '>', 0)->first();
 
     $this->actingAs($user)->withSession(['cart' => [$book->id]])->post('/checkout');
 

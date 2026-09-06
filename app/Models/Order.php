@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Money;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -17,12 +18,24 @@ class Order extends Model
 
     public const STATUS_REFUNDED = 'refunded';
 
+    /** Buyer in our own state: the tax splits into CGST and SGST. */
+    public const TAX_CGST_SGST = 'cgst_sgst';
+
+    /** Buyer in another state: a single IGST line. */
+    public const TAX_IGST = 'igst';
+
     protected $fillable = [
         'user_id',
         'order_number',
         'idempotency_key',
+        'invoice_number',
         'status',
-        'total',
+        'total_paise',
+        'subtotal_paise',
+        'tax_paise',
+        'currency',
+        'tax_type',
+        'buyer_state_code',
         'payment_reference',
         'paid_at',
     ];
@@ -30,7 +43,9 @@ class Order extends Model
     protected function casts(): array
     {
         return [
-            'total' => 'decimal:2',
+            'total_paise' => 'integer',
+            'subtotal_paise' => 'integer',
+            'tax_paise' => 'integer',
             'paid_at' => 'datetime',
         ];
     }
@@ -43,6 +58,27 @@ class Order extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function total(): Money
+    {
+        return Money::fromPaise($this->total_paise);
+    }
+
+    public function subtotal(): Money
+    {
+        return Money::fromPaise($this->subtotal_paise);
+    }
+
+    public function tax(): Money
+    {
+        return Money::fromPaise($this->tax_paise);
+    }
+
+    /** CGST and SGST are each half of the total tax on an intra-state sale. */
+    public function halfTax(): Money
+    {
+        return Money::fromPaise((int) round($this->tax_paise / 2));
     }
 
     public function isPaid(): bool

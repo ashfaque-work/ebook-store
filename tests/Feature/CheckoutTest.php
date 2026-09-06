@@ -6,7 +6,7 @@ use App\Models\User;
 
 test('checkout creates a paid order, records items, and clears the cart', function () {
     $user = User::factory()->create();
-    $book = Book::factory()->create(['price' => 12.50]);
+    $book = Book::factory()->create(['price_paise' => 1250]);
 
     $this->actingAs($user)
         ->withSession(['cart' => [$book->id]])
@@ -17,7 +17,7 @@ test('checkout creates a paid order, records items, and clears the cart', functi
 
     expect($order)->not->toBeNull()
         ->and($order->status)->toBe(Order::STATUS_PAID)
-        ->and((float) $order->total)->toBe(12.50)
+        ->and($order->total_paise)->toBe(1250)
         ->and($order->payment_reference)->not->toBeNull()
         ->and($order->items)->toHaveCount(1)
         ->and($user->hasPurchased($book))->toBeTrue();
