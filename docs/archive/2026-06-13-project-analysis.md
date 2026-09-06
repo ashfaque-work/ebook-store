@@ -1,3 +1,7 @@
+> **SUPERSEDED — 2026-09-06.** This was the plan through Phase 5 of the original build.
+> It is kept for history only. Do not plan from it; see [../README.md](../README.md) for the
+> current document set, and [../00-AUDIT.md](../00-AUDIT.md) for the state of the code today.
+
 # eBook Store — Project Analysis & Implementation Roadmap
 
 > **Status:** Core store implemented. Roles, secured downloads, orders, mock checkout, and a customer library are now in place (Phases 1–5 done). Remaining: catalog pagination/search and production hardening (Phases 6–7).

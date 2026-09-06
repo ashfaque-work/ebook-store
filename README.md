@@ -100,6 +100,15 @@ Before deploying:
 
 ---
 
+## Documentation
+
+Planning and specification docs live in [`docs/`](docs/). Start with
+[docs/README.md](docs/README.md) for the index, then
+[docs/00-AUDIT.md](docs/00-AUDIT.md) (current state and bug register) and
+[docs/01-ROADMAP.md](docs/01-ROADMAP.md) (what to build, in order).
+
+---
+
 ## License
 
 MIT.
