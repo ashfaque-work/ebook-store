@@ -20,7 +20,10 @@ class BookController extends Controller
     public function index(): Response
     {
         // Eager load relationships to prevent N+1 query issues
-        $books = Book::with(['author', 'genre'])->latest()->paginate(15);
+        $books = Book::with(['author', 'genre'])
+            ->withCount('orderItems')
+            ->latest()
+            ->paginate(15);
 
         return Inertia::render('Admin/Books/Index', [
             'books' => $books,
@@ -50,16 +53,20 @@ class BookController extends Controller
             'genre_id' => 'required|exists:genres,id',
             'description' => 'required|string',
             'price' => 'required|numeric|min:0',
-            'cover_image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'is_published' => 'boolean',
+            'cover_image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'book_file' => 'required|file|mimes:pdf,epub|max:10240', // 10MB Max
         ]);
 
         // Covers are marketing images and stay on the public disk.
-        $coverImagePath = $request->file('cover_image')->store('covers', 'public');
+        $coverImagePath = $request->file('cover_image')->store('covers', Book::COVER_DISK);
         // The actual ebook is a paid asset: store it on the PRIVATE disk so it
         // is never reachable by direct URL. It is delivered only through the
         // gated library download route after a confirmed purchase.
-        $bookFilePath = $request->file('book_file')->store('books', Book::FILE_DISK);
+        $file = $request->file('book_file');
+        $bookFilePath = $file->store('books', Book::FILE_DISK);
+
+        $isPublished = $validated['is_published'] ?? true;
 
         Book::create([
             'title' => $validated['title'],
@@ -68,22 +75,18 @@ class BookController extends Controller
             'genre_id' => $validated['genre_id'],
             'description' => $validated['description'],
             'price' => $validated['price'],
+            'is_published' => $isPublished,
+            'published_at' => $isPublished ? now() : null,
             'cover_image_path' => $coverImagePath,
             'file_path' => $bookFilePath,
+            'file_format' => strtolower($file->getClientOriginalExtension()) ?: 'pdf',
+            'file_size' => $file->getSize(),
         ]);
 
         return redirect(route('admin.books.index'))->with('toast', [
             'type' => 'success',
             'message' => 'Book created successfully.',
         ]);
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Book $book)
-    {
-        // Not used for this project
     }
 
     /**
@@ -95,6 +98,7 @@ class BookController extends Controller
             'book' => $book,
             'authors' => Author::orderBy('name')->get(),
             'genres' => Genre::orderBy('name')->get(),
+            'hasBeenPurchased' => $book->hasBeenPurchased(),
         ]);
     }
 
@@ -109,7 +113,8 @@ class BookController extends Controller
             'genre_id' => 'required|exists:genres,id',
             'description' => 'required|string',
             'price' => 'required|numeric|min:0',
-            'cover_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'is_published' => 'boolean',
+            'cover_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'book_file' => 'nullable|file|mimes:pdf,epub|max:10240',
         ]);
 
@@ -119,21 +124,29 @@ class BookController extends Controller
         $updateData = $validated;
         $updateData['slug'] = Book::uniqueSlug($validated['title'], $book->id);
 
+        // Stamp the first time it goes live, and never overwrite that date.
+        if (($validated['is_published'] ?? false) && ! $book->published_at) {
+            $updateData['published_at'] = now();
+        }
+
         if ($request->hasFile('cover_image')) {
             // Delete old cover image (use the raw stored key, not the URL the
             // coverImagePath accessor produces).
             if ($book->getRawOriginal('cover_image_path')) {
-                Storage::disk('public')->delete($book->getRawOriginal('cover_image_path'));
+                Storage::disk(Book::COVER_DISK)->delete($book->getRawOriginal('cover_image_path'));
             }
-            $updateData['cover_image_path'] = $request->file('cover_image')->store('covers', 'public');
+            $updateData['cover_image_path'] = $request->file('cover_image')->store('covers', Book::COVER_DISK);
         }
 
         if ($request->hasFile('book_file')) {
             // Delete old book file from the private disk
-            if ($book->file_path) {
-                Storage::disk(Book::FILE_DISK)->delete($book->file_path);
+            if ($book->getRawOriginal('file_path')) {
+                Storage::disk(Book::FILE_DISK)->delete($book->getRawOriginal('file_path'));
             }
-            $updateData['file_path'] = $request->file('book_file')->store('books', Book::FILE_DISK);
+            $file = $request->file('book_file');
+            $updateData['file_path'] = $file->store('books', Book::FILE_DISK);
+            $updateData['file_format'] = strtolower($file->getClientOriginalExtension()) ?: 'pdf';
+            $updateData['file_size'] = $file->getSize();
         }
 
         $book->update($updateData);
@@ -146,19 +159,38 @@ class BookController extends Controller
 
     /**
      * Remove the specified resource from storage.
+     *
+     * A book that somebody has paid for is never deleted: order_items holds a
+     * restrictOnDelete foreign key, so the delete would fail — and previously
+     * it failed *after* the files had already been erased, silently destroying
+     * every buyer's copy. Check first, and only touch storage once the row is
+     * definitely gone.
      */
     public function destroy(Book $book): RedirectResponse
     {
-        // Delete associated files from storage (raw key for the cover, since
-        // the accessor returns a URL; private disk for the ebook file).
-        if ($book->getRawOriginal('cover_image_path')) {
-            Storage::disk('public')->delete($book->getRawOriginal('cover_image_path'));
-        }
-        if ($book->file_path) {
-            Storage::disk(Book::FILE_DISK)->delete($book->file_path);
+        if ($book->hasBeenPurchased()) {
+            return back()->with('toast', [
+                'type' => 'error',
+                'message' => 'This book has been purchased and cannot be deleted. Unpublish it instead.',
+            ]);
         }
 
+        $coverPath = $book->getRawOriginal('cover_image_path');
+        $filePath = $book->getRawOriginal('file_path');
+        $samplePath = $book->getRawOriginal('sample_path');
+
         $book->delete();
+
+        // Only now is it safe to destroy the files.
+        if ($coverPath) {
+            Storage::disk(Book::COVER_DISK)->delete($coverPath);
+        }
+        if ($filePath) {
+            Storage::disk(Book::FILE_DISK)->delete($filePath);
+        }
+        if ($samplePath) {
+            Storage::disk(Book::FILE_DISK)->delete($samplePath);
+        }
 
         return redirect(route('admin.books.index'))->with('toast', [
             'type' => 'success',

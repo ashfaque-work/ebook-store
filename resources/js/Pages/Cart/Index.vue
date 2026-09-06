@@ -2,6 +2,8 @@
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import { formatInr, formatPrice } from '@/lib/money';
+import BookCover from '@/Components/BookCover.vue';
 
 const props = defineProps({
     cartItems: Array, // Now receiving an array of full Book objects
@@ -54,8 +56,8 @@ const clearCart = () => {
                     <ul role="list" class="divide-y divide-gray-200 dark:divide-gray-700">
                         <li v-for="item in cartItems" :key="item.id" class="flex p-4 sm:p-6">
                             <div class="flex-shrink-0">
-                                <img :src="item.cover_image_path" :alt="item.title"
-                                    class="w-24 h-36 object-cover rounded-md">
+                                <BookCover :src="item.cover_image_path" :title="item.title"
+                                    class="w-24 h-36 rounded-md" />
                             </div>
                             <div class="ml-4 flex-1 flex flex-col justify-between">
                                 <div>
@@ -64,8 +66,7 @@ const clearCart = () => {
                                     </h3>
                                 </div>
                                 <div class="flex-1 flex items-end justify-between text-sm">
-                                    <p class="text-gray-800 dark:text-gray-200 font-semibold">${{
-                                        parseFloat(item.price).toFixed(2) }}</p>
+                                    <p class="text-gray-800 dark:text-gray-200 font-semibold">{{ formatPrice(item.price) }}</p>
                                     <div class="flex">
                                         <button @click="removeItem(item.id)" type="button"
                                             class="font-medium text-red-600 dark:text-red-400 hover:text-red-500">
@@ -81,7 +82,7 @@ const clearCart = () => {
                 <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
                     <div class="flex justify-between text-lg font-medium text-gray-900 dark:text-white">
                         <p>Total</p>
-                        <p>${{ parseFloat(total).toFixed(2) }}</p>
+                        <p>{{ formatInr(total) }}</p>
                     </div>
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Instant digital delivery &mdash; download
                         your books right after checkout.

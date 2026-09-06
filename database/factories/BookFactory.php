@@ -22,9 +22,35 @@ class BookFactory extends Factory
             'title' => $title,
             'slug' => Str::slug($title),
             'description' => fake()->paragraph(),
-            'price' => fake()->randomFloat(2, 1, 50),
+            'language' => 'en',
+            'page_count' => fake()->numberBetween(120, 640),
+            'price' => fake()->randomFloat(2, 49, 899),
+            'is_published' => true,
+            'published_at' => now(),
             'cover_image_path' => 'covers/sample.jpg',
             'file_path' => 'books/sample.pdf',
+            'file_format' => 'pdf',
         ];
+    }
+
+    /**
+     * A draft — present in the admin panel, invisible in the catalogue.
+     */
+    public function unpublished(): static
+    {
+        return $this->state(fn () => [
+            'is_published' => false,
+            'published_at' => null,
+        ]);
+    }
+
+    public function featured(): static
+    {
+        return $this->state(fn () => ['is_featured' => true]);
+    }
+
+    public function free(): static
+    {
+        return $this->state(fn () => ['price' => 0]);
     }
 }

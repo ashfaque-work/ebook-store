@@ -14,6 +14,9 @@ class BookController extends Controller
      */
     public function show(Book $book): Response
     {
+        // Drafts are visible to admins only.
+        $this->authorize('view', $book);
+
         $book->load('author', 'genre');
 
         // Check if the book's ID is in the cart session array
@@ -24,7 +27,7 @@ class BookController extends Controller
 
         return Inertia::render('Books/Show', [
             'book' => $book,
-            'isBookInCart' => $isBookInCart, // Pass this boolean to the frontend
+            'isBookInCart' => $isBookInCart,
             'isPurchased' => $isPurchased,
         ]);
     }

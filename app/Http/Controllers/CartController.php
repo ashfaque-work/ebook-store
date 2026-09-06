@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Book;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Session;
 
 class CartController extends Controller
 {
@@ -30,7 +30,7 @@ class CartController extends Controller
 
         return redirect()->route('books.show', $book->slug)->with('toast', [
             'type' => 'success',
-            'message' => 'Book added to cart.'
+            'message' => 'Book added to cart.',
         ]);
     }
 
@@ -42,7 +42,7 @@ class CartController extends Controller
 
         return redirect()->route('cart.index')->with('toast', [
             'type' => 'success',
-            'message' => 'Book removed from cart.'
+            'message' => 'Book removed from cart.',
         ]);
     }
 
@@ -52,7 +52,7 @@ class CartController extends Controller
 
         return redirect()->route('cart.index')->with('toast', [
             'type' => 'success',
-            'message' => 'Cart cleared successfully.'
+            'message' => 'Cart cleared successfully.',
         ]);
     }
 }

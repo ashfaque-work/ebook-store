@@ -2,6 +2,12 @@
 
 **Date:** 2026-09-06 · **Commit:** `d01394e` · **Method:** full read of `app/`, `routes/`, `resources/js/`, `database/`, `config/`
 
+> **Status update — 2026-09-06.** Phase A is complete: **A1–A6 and A8–A11 are fixed**
+> and covered by regression tests. **A7** (admin sidebar on mobile) is deliberately
+> deferred to the Phase D layout rebuild. The findings below are kept as written so the
+> reasoning and the fixes stay readable together; see [01-ROADMAP.md](01-ROADMAP.md)
+> for what shipped.
+
 ---
 
 ## 1. Verdict

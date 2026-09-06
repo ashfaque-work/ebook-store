@@ -28,7 +28,7 @@ Route::get('/dashboard', function () {
     return auth()->user()->isAdmin()
         ? redirect()->route('admin.authors.index')
         : redirect()->route('library.index');
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware('auth')->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -36,8 +36,10 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// Checkout (mock payment) — must be a verified, authenticated user.
-Route::middleware(['auth', 'verified'])->group(function () {
+// Checkout. Deliberately NOT behind `verified` — making someone complete an
+// email round-trip before they can pay costs sales, and the account is already
+// authenticated. Verification gates the admin panel, where it matters.
+Route::middleware('auth')->group(function () {
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
     Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
 });
@@ -45,7 +47,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // Customer library (purchased books + gated downloads).
 Route::middleware('auth')->group(function () {
     Route::get('/library', [LibraryController::class, 'index'])->name('library.index');
-    Route::get('/library/{book}/download', [LibraryController::class, 'download'])->name('library.download');
+    Route::get('/library/{book}/download', [LibraryController::class, 'download'])
+        ->middleware('throttle:20,1')
+        ->name('library.download');
 
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
@@ -55,7 +59,7 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('authors', AdminAuthorController::class);
     Route::resource('genres', AdminGenreController::class);
-    Route::resource('books', AdminBookController::class);
+    Route::resource('books', AdminBookController::class)->except('show');
 });
 
 require __DIR__.'/auth.php';

@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class Book extends Model
 {
@@ -19,25 +21,55 @@ class Book extends Model
      */
     public const FILE_DISK = 'local';
 
+    /**
+     * The disk holding cover images. Public — covers are marketing assets.
+     *
+     * Named explicitly because `Storage::url()` resolves against the *default*
+     * disk, which is the private one. Always go through this constant.
+     */
+    public const COVER_DISK = 'public';
+
     protected $fillable = [
         'author_id',
         'genre_id',
         'title',
         'slug',
         'description',
+        'language',
+        'isbn',
+        'page_count',
         'price',
+        'is_published',
+        'published_at',
+        'is_featured',
         'cover_image_path',
         'file_path',
+        'file_format',
+        'file_size',
+        'sample_path',
     ];
 
     /**
-     * Never expose the private storage key of the ebook file to the frontend.
+     * Never expose the private storage keys of the ebook files to the frontend.
      *
      * @var list<string>
      */
     protected $hidden = [
         'file_path',
+        'sample_path',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'price' => 'decimal:2',
+            'is_published' => 'boolean',
+            'is_featured' => 'boolean',
+            'published_at' => 'datetime',
+            'page_count' => 'integer',
+            'file_size' => 'integer',
+        ];
+    }
 
     public function author(): BelongsTo
     {
@@ -54,6 +86,29 @@ class Book extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function downloadLogs(): HasMany
+    {
+        return $this->hasMany(DownloadLog::class);
+    }
+
+    /**
+     * Only books that are live in the catalogue. Every public-facing query
+     * must go through this scope.
+     */
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query->where('is_published', true);
+    }
+
+    /**
+     * Has this book ever been bought? Sold books can be unpublished but never
+     * deleted — removing one would strand everyone who paid for it.
+     */
+    public function hasBeenPurchased(): bool
+    {
+        return $this->orderItems()->exists();
+    }
+
     /**
      * Build a URL-safe slug from a title that is unique across books.
      * Appends -2, -3, … on collision. Pass $ignoreId when updating a book so
@@ -61,7 +116,7 @@ class Book extends Model
      */
     public static function uniqueSlug(string $title, ?int $ignoreId = null): string
     {
-        $base = \Illuminate\Support\Str::slug($title);
+        $base = Str::slug($title);
         $slug = $base;
         $suffix = 2;
 
@@ -76,12 +131,12 @@ class Book extends Model
 
     /**
      * Get the full public URL for the book's cover image.
-     * This accessor modifies the original cover_image_path attribute.
+     * This accessor rewrites the stored key into a URL on the cover disk.
      */
     protected function coverImagePath(): Attribute
     {
         return Attribute::make(
-            get: fn ($value) => $value ? Storage::url($value) : null,
+            get: fn ($value) => $value ? Storage::disk(self::COVER_DISK)->url($value) : null,
         );
     }
 }

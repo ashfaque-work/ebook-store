@@ -11,31 +11,36 @@ Phase A (stabilise) ──> Phase B (money) ──> Phase E (deploy free)
                                 Phase F (growth) ── after launch
 ```
 
-Phase B depends on A4 being fixed. Phases C and D are independent of each other and of B;
-run whichever you have appetite for. **Do not deploy before A2 and A5 are resolved** —
-both fail differently in production than they do locally.
+Phase A is complete. Phase B depended on A4, which is now fixed. Phases C and D are independent of each other and of B;
+run whichever you have appetite for. ~~Do not deploy before A2 and A5 are resolved~~ — both are resolved.
 
 ---
 
-## Phase A — Stabilise 🔴
+## Phase A — Stabilise ✅ *(done 2026-09-06)*
 
-*Roughly a week. Nothing else is worth building on top of a store that eats its own files.*
+*Nothing else was worth building on top of a store that eats its own files.*
 
-- [ ] **A1** Guard `Admin\BookController@destroy` behind `orderItems()->exists()`; delete files only after the row is gone
-- [ ] **A2** Decide on email verification; implement `MustVerifyEmail` and gate `/admin` only, or remove the `'verified'` middleware
-- [ ] **A3** Fix or remove `canRegister` so guests can reach `/register`
-- [ ] **A4** Idempotent checkout: cache lock, idempotency key on `orders`, `processing` on the button
-- [ ] **A5** `Storage::disk('public')->url()` via a new `Book::COVER_DISK` constant
-- [ ] **A6** Wrap the receipt mail in try/catch and `report()`
-- [ ] **A8** Seed genres, authors, books and sample EPUBs
-- [ ] **A9** Paginate the library
-- [ ] **A10** Throttle `library.download`; add a `download_logs` table
-- [ ] **A11** Custom `404`/`500` pages; drop the empty `show()` route; share a trimmed auth user
-- [ ] Introduce `BookPolicy` and `OrderPolicy`; replace inline `abort_unless` calls
-- [ ] Add a `Money` value object / `->inr()` helper so no template ever formats a price by hand
+- [x] **A1** Guard `Admin\BookController@destroy` behind `hasBeenPurchased()`; delete files only after the row is gone
+- [x] **A2** `User implements MustVerifyEmail`; `verified` now gates `/admin` only — not checkout
+- [x] **A3** `canRegister` shared from `HandleInertiaRequests`; the guest nav link works
+- [x] **A4** Idempotent checkout: per-user cache lock, `orders.idempotency_key` unique index, already-paid short-circuit
+- [x] **A5** `Book::COVER_DISK`; covers resolve through the public disk instead of the default one
+- [x] **A6** Receipt mail wrapped in try/catch + `report()`
+- [x] **A8** `CatalogSeeder` — 8 genres, 12 authors, ~26 books, a draft, a free book, a placeholder PDF
+- [x] **A9** Library paginated (12/page)
+- [x] **A10** `throttle:20,1` on `library.download`; `download_logs` table and model
+- [x] **A11** Error pages (403/404/419/429/500/503); empty `show()` route dropped; trimmed `auth.user` payload
+- [x] `BookPolicy` + `OrderPolicy`; inline `abort_unless` calls replaced with `$this->authorize()`
+- [x] `App\Support\Money` (integer paise) and `resources/js/lib/money.js`; every price renders as ₹
+- [x] Publish/draft state on books, enforced in the catalogue, book page and checkout
+- [x] `BookCover` component — fallback, real `alt` text, lazy loading
+- [x] `vendor/bin/pint` run across the codebase
 
-**Done when:** a purchased book cannot be deleted, `php artisan test` is green with new
-regression tests for A1 and A4, and a fresh `migrate:fresh --seed` gives a populated store.
+**Deferred to Phase D by design:** A7 (admin sidebar on mobile) is folded into the
+layout rebuild rather than patched twice.
+
+**Result:** 73 tests, 278 assertions, green. New regression cover for A1, A4, A6,
+A10, the draft/publish rules, the Money conversions and the seeder.
 
 ---
 
@@ -118,7 +123,7 @@ whole thing — on a URL you did not pay for.
 
 Post-launch, ordered by expected return. See [07-FEATURES.md](07-FEATURES.md).
 
-- [ ] Reviews and ratings; publish/draft state; featured and bestseller rails
+- [ ] Reviews and ratings; featured and bestseller rails
 - [ ] Wishlist; series and collections; many-to-many tags; author landing pages
 - [ ] Coupons and discount codes; gifting
 - [ ] Admin dashboard: revenue, top titles, conversion, refunds, user management

@@ -2,11 +2,13 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import BookCover from '@/Components/BookCover.vue';
 
 const props = defineProps({
     book: Object,
     authors: Array,
     genres: Array,
+    hasBeenPurchased: Boolean,
 });
 
 const form = useForm({
@@ -16,6 +18,7 @@ const form = useForm({
     genre_id: props.book.genre_id,
     description: props.book.description,
     price: props.book.price,
+    is_published: Boolean(props.book.is_published),
     cover_image: null,
     book_file: null,
 });
@@ -26,9 +29,6 @@ const submit = () => {
     });
 };
 
-const getCoverUrl = (path) => {
-    return path ? `/storage/${path}` : 'https://placehold.co/120x180/667eea/ffffff?text=No+Cover';
-}
 </script>
 
 <template>
@@ -45,8 +45,8 @@ const getCoverUrl = (path) => {
                 <!-- Current Cover Image -->
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Current Cover</label>
-                    <img :src="getCoverUrl(book.cover_image_path)" alt="Current Cover"
-                        class="mt-1 h-32 w-24 object-cover rounded-md bg-gray-300 dark:bg-gray-700">
+                    <BookCover :src="book.cover_image_path" :title="book.title"
+                        class="mt-1 h-32 w-24 rounded-md" />
                 </div>
 
                 <!-- Title -->
@@ -122,6 +122,17 @@ const getCoverUrl = (path) => {
                         class="mt-1 block w-full text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" />
                     <div v-if="form.errors.book_file" class="text-sm text-red-600 mt-2">{{ form.errors.book_file }}
                     </div>
+                </div>
+
+                <!-- Published -->
+                <div class="mt-4 flex items-start gap-3">
+                    <input type="checkbox" v-model="form.is_published" id="is_published"
+                        class="mt-1 rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900" />
+                    <label for="is_published" class="text-sm text-gray-700 dark:text-gray-300">
+                        <span class="font-medium">Published</span>
+                        <span class="block text-gray-500 dark:text-gray-400">Unpublished books stay in the admin panel but
+                            never appear in the catalogue. This is how a book that has already been sold is retired.</span>
+                    </label>
                 </div>
 
                 <div class="flex items-center justify-end mt-6">

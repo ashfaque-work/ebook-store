@@ -1,6 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
+import { formatInr, formatPrice } from '@/lib/money';
 
 defineProps({
     order: Object,
@@ -32,13 +33,13 @@ const formatDate = (value) =>
                         <li v-for="item in order.items" :key="item.id"
                             class="flex justify-between py-3 text-sm text-gray-700 dark:text-gray-300">
                             <span>{{ item.title }}</span>
-                            <span>${{ parseFloat(item.price).toFixed(2) }}</span>
+                            <span>{{ formatPrice(item.price) }}</span>
                         </li>
                     </ul>
 
                     <div class="mt-4 flex justify-between border-t border-gray-200 dark:border-gray-700 pt-4 text-lg font-medium text-gray-900 dark:text-white">
                         <span>Total</span>
-                        <span>${{ parseFloat(order.total).toFixed(2) }}</span>
+                        <span>{{ formatInr(order.total) }}</span>
                     </div>
 
                     <div class="mt-8 flex gap-3">

@@ -3,21 +3,25 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import { formatInr, formatPrice } from '@/lib/money';
+import BookCover from '@/Components/BookCover.vue';
 
 defineProps({
     books: Object, // Laravel paginator: { data, links, ... }
 });
 
-const deleteBook = (id) => {
-    if (confirm('Are you sure you want to delete this book?')) {
-        router.delete(`/admin/books/${id}`);
+const deleteBook = (book) => {
+    // The server refuses this too; warning here saves a pointless round trip.
+    if (book.order_items_count > 0) {
+        alert(`"${book.title}" has been purchased and cannot be deleted. Unpublish it instead.`);
+        return;
+    }
+
+    if (confirm(`Delete "${book.title}"? This cannot be undone.`)) {
+        router.delete(`/admin/books/${book.id}`);
     }
 };
 
-// cover_image_path already comes through as a full /storage URL (model accessor).
-const getCoverUrl = (url) => {
-    return url || 'https://placehold.co/80x120/667eea/ffffff?text=No+Cover';
-}
 </script>
 
 <template>
@@ -63,17 +67,20 @@ const getCoverUrl = (url) => {
                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                             <tr v-for="book in books.data" :key="book.id">
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <img :src="getCoverUrl(book.cover_image_path)" alt="Cover"
-                                        class="h-16 w-12 object-cover rounded-md bg-gray-300 dark:bg-gray-700">
+                                    <BookCover :src="book.cover_image_path" :title="book.title" class="h-16 w-12 rounded-md" />
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">{{ book.title }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {{ book.title }}
+                                    <span v-if="!book.is_published"
+                                        class="ml-2 rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-300">Draft</span>
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap">{{ book.author.name }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">{{ book.genre.name }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">${{ book.price }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">{{ formatPrice(book.price) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <Link :href="`/admin/books/${book.id}/edit`"
                                         class="text-blue-600 dark:text-blue-400 hover:underline mr-4">Edit</Link>
-                                    <button @click="deleteBook(book.id)"
+                                    <button @click="deleteBook(book)"
                                         class="text-red-600 dark:text-red-400 hover:underline">Delete</button>
                                 </td>
                             </tr>

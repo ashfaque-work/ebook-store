@@ -11,14 +11,14 @@ use Inertia\Response;
 class HomeController extends Controller
 {
     /**
-     * Handle the incoming request.
-     * This is the special __invoke method that makes the controller "invokable".
+     * The public catalogue.
      */
     public function __invoke(Request $request): Response
     {
         $filters = $request->only(['search', 'genre']);
 
-        $books = Book::with(['author', 'genre'])
+        $books = Book::published()
+            ->with(['author', 'genre'])
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', "%{$search}%")

@@ -26,5 +26,7 @@ class DatabaseSeeder extends Seeder
 
         // A handful of extra customers.
         User::factory(5)->create();
+
+        $this->call(CatalogSeeder::class);
     }
 }

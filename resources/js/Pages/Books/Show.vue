@@ -3,6 +3,8 @@ import GuestLayout from '@/Layouts/GuestLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
+import { formatInr, formatPrice } from '@/lib/money';
+import BookCover from '@/Components/BookCover.vue';
 
 const props = defineProps({
     book: Object,
@@ -23,12 +25,8 @@ const addToCart = () => {
         <div class="max-w-4xl mx-auto bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-6 md:p-8">
             <div class="md:flex">
                 <div class="md:w-1/3">
-                    <img v-if="book.cover_image_path" :src="book.cover_image_path" :alt="book.title"
-                        class="w-full h-auto rounded-lg shadow-lg">
-                    <div v-else
-                        class="w-full h-auto rounded-lg shadow-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                        <span class="text-gray-500">No Image</span>
-                    </div>
+                    <BookCover :src="book.cover_image_path" :title="book.title" :author="book.author?.name"
+                        class="w-full aspect-[2/3] rounded-lg shadow-lg" />
                 </div>
                 <div class="md:w-2/3 md:pl-8 mt-6 md:mt-0 flex flex-col">
                     <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ book.title }}</h1>
@@ -38,7 +36,7 @@ const addToCart = () => {
                     <p class="mt-4 text-gray-700 dark:text-gray-300 flex-grow">{{ book.description }}</p>
 
                     <div class="mt-6 flex items-center justify-between">
-                        <span class="text-3xl font-bold text-blue-600 dark:text-blue-400">${{ book.price }}</span>
+                        <span class="text-3xl font-bold text-blue-600 dark:text-blue-400">{{ formatPrice(book.price) }}</span>
 
                         <!-- Already owned: link straight to the download -->
                         <a v-if="isPurchased" :href="route('library.download', book.id)">

@@ -3,6 +3,8 @@ import GuestLayout from '@/Layouts/GuestLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
+import { formatInr, formatPrice } from '@/lib/money';
+import BookCover from '@/Components/BookCover.vue';
 
 const props = defineProps({
     books: Object, // Laravel paginator: { data, links, ... }
@@ -58,11 +60,12 @@ watch(genre, applyFilters);
                     <Link v-for="book in books.data" :key="book.id" :href="`/books/${book.slug}`" class="group">
                     <div
                         class="bg-gray-50 dark:bg-gray-700 rounded-lg overflow-hidden transform hover:scale-105 transition-transform duration-300">
-                        <img :src="book.cover_image_path" alt="Book Cover" class="w-full h-64 object-cover">
+                        <BookCover :src="book.cover_image_path" :title="book.title" :author="book.author?.name"
+                            class="w-full h-64" />
                         <div class="p-4">
                             <h3 class="font-bold text-lg text-gray-900 dark:text-white">{{ book.title }}</h3>
                             <p class="text-sm text-gray-600 dark:text-gray-400">by {{ book.author.name }}</p>
-                            <p class="mt-2 font-semibold text-blue-600 dark:text-blue-400">${{ book.price }}</p>
+                            <p class="mt-2 font-semibold text-blue-600 dark:text-blue-400">{{ formatPrice(book.price) }}</p>
                         </div>
                     </div>
                     </Link>
