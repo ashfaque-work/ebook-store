@@ -39,13 +39,25 @@ function completeCheckout(User $user, array $bookIds): ?Order
     $order = Order::where('user_id', $user->id)->latest('id')->first();
 
     if (! $order || $order->isPaid()) {
+        signOut();
+
         return $order;
     }
 
     test()->actingAs($user)
         ->post(route('checkout.verify', $order), callbackPayloadFor($order));
 
+    // actingAs() persists for the rest of the test, so leave the caller a
+    // guest: a test that wants a user signed in says so itself.
+    signOut();
+
     return $order->fresh();
+}
+
+/** Drop whatever actingAs() left behind. */
+function signOut(): void
+{
+    app('auth')->forgetGuards();
 }
 
 /**

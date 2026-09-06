@@ -56,6 +56,8 @@ class BookController extends Controller
             'is_published' => 'boolean',
             'cover_image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'book_file' => 'required|file|mimes:pdf,epub|max:10240', // 10MB Max
+            // The free preview. Same format as the book so one reader serves both.
+            'sample_file' => 'nullable|file|mimes:pdf,epub|max:10240',
         ]);
 
         // Covers are marketing images and stay on the public disk.
@@ -81,6 +83,9 @@ class BookController extends Controller
             'file_path' => $bookFilePath,
             'file_format' => strtolower($file->getClientOriginalExtension()) ?: 'pdf',
             'file_size' => $file->getSize(),
+            'sample_path' => $request->hasFile('sample_file')
+                ? $request->file('sample_file')->store('samples', Book::FILE_DISK)
+                : null,
         ]);
 
         return redirect(route('admin.books.index'))->with('toast', [
@@ -99,6 +104,7 @@ class BookController extends Controller
             'authors' => Author::orderBy('name')->get(),
             'genres' => Genre::orderBy('name')->get(),
             'hasBeenPurchased' => $book->hasBeenPurchased(),
+            'hasSample' => $book->hasSample(),
         ]);
     }
 
@@ -116,10 +122,11 @@ class BookController extends Controller
             'is_published' => 'boolean',
             'cover_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'book_file' => 'nullable|file|mimes:pdf,epub|max:10240',
+            'sample_file' => 'nullable|file|mimes:pdf,epub|max:10240',
         ]);
 
         // Drop the uploaded-file keys; only real columns should reach update().
-        unset($validated['cover_image'], $validated['book_file']);
+        unset($validated['cover_image'], $validated['book_file'], $validated['sample_file']);
 
         $updateData = $validated;
         $updateData['slug'] = Book::uniqueSlug($validated['title'], $book->id);
@@ -147,6 +154,13 @@ class BookController extends Controller
             $updateData['file_path'] = $file->store('books', Book::FILE_DISK);
             $updateData['file_format'] = strtolower($file->getClientOriginalExtension()) ?: 'pdf';
             $updateData['file_size'] = $file->getSize();
+        }
+
+        if ($request->hasFile('sample_file')) {
+            if ($book->getRawOriginal('sample_path')) {
+                Storage::disk(Book::FILE_DISK)->delete($book->getRawOriginal('sample_path'));
+            }
+            $updateData['sample_path'] = $request->file('sample_file')->store('samples', Book::FILE_DISK);
         }
 
         $book->update($updateData);

@@ -92,6 +92,17 @@ class Book extends Model
         );
     }
 
+    /** Is there a free preview to read without buying? */
+    public function hasSample(): bool
+    {
+        return (bool) $this->getRawOriginal('sample_path');
+    }
+
+    public function readingProgress(): HasMany
+    {
+        return $this->hasMany(ReadingProgress::class);
+    }
+
     public function isFree(): bool
     {
         return $this->price_paise === 0;

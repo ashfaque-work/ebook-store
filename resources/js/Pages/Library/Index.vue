@@ -7,6 +7,7 @@ import { computed } from 'vue';
 
 const props = defineProps({
     books: Object, // Laravel paginator: { data, links, ... }
+    continueReading: { type: Object, default: null },
 });
 
 const isEmpty = computed(() => props.books.data.length === 0);
@@ -22,28 +23,66 @@ const isEmpty = computed(() => props.books.data.length === 0);
             </h2>
         </template>
 
-        <div class="py-12">
+        <div class="py-8">
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                <div v-if="isEmpty" class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-8 text-center">
-                    <p class="text-gray-600 dark:text-gray-400 text-lg">Nothing here yet.</p>
-                    <Link href="/" class="mt-4 inline-block text-blue-600 dark:text-blue-400 hover:underline">
+                <div v-if="isEmpty" class="rounded-lg bg-white p-8 text-center shadow-sm dark:bg-gray-800">
+                    <p class="text-lg text-gray-600 dark:text-gray-400">Nothing here yet.</p>
+                    <Link href="/" class="mt-4 inline-block text-blue-600 hover:underline dark:text-blue-400">
                         Browse the shelves
                     </Link>
                 </div>
 
                 <template v-else>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    <!-- The first thing a returning reader should see. -->
+                    <section v-if="continueReading" class="mb-8">
+                        <h3 class="mb-3 text-sm font-semibold text-gray-500 dark:text-gray-400">Continue reading</h3>
+
+                        <Link :href="route('reader.show', continueReading.book.slug)"
+                            class="flex gap-5 rounded-lg bg-white p-5 shadow-sm transition hover:shadow-md dark:bg-gray-800">
+                        <BookCover :src="continueReading.book.cover_image_path" :title="continueReading.book.title"
+                            :author="continueReading.book.author" class="h-32 w-22 shrink-0 rounded" />
+
+                        <div class="flex min-w-0 flex-1 flex-col justify-center">
+                            <h4 class="truncate text-lg font-semibold text-gray-900 dark:text-white">
+                                {{ continueReading.book.title }}
+                            </h4>
+                            <p class="truncate text-sm text-gray-600 dark:text-gray-400">
+                                by {{ continueReading.book.author }}
+                            </p>
+
+                            <div class="mt-4 h-1.5 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+                                <div class="h-full rounded-full bg-amber-500"
+                                    :style="{ width: `${continueReading.percent}%` }" />
+                            </div>
+                            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                {{ continueReading.percent }}% read &middot; pick up where you left off
+                            </p>
+                        </div>
+                        </Link>
+                    </section>
+
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                         <div v-for="book in books.data" :key="book.id"
-                            class="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-sm flex flex-col">
+                            class="flex flex-col overflow-hidden rounded-lg bg-white shadow-sm dark:bg-gray-800">
+                            <Link :href="route('reader.show', book.slug)">
                             <BookCover :src="book.cover_image_path" :title="book.title" :author="book.author?.name"
-                                class="w-full h-64" />
-                            <div class="p-4 flex flex-col flex-1">
-                                <h3 class="font-bold text-lg text-gray-900 dark:text-white">{{ book.title }}</h3>
+                                class="h-64 w-full" />
+                            </Link>
+
+                            <div class="flex flex-1 flex-col p-4">
+                                <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ book.title }}</h3>
                                 <p class="text-sm text-gray-600 dark:text-gray-400">by {{ book.author.name }}</p>
-                                <a :href="route('library.download', book.id)"
-                                    class="mt-4 inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500">
-                                    Download
-                                </a>
+
+                                <div class="mt-4 flex items-center gap-3">
+                                    <Link :href="route('reader.show', book.slug)"
+                                        class="inline-flex flex-1 items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500">
+                                    Read
+                                    </Link>
+                                    <a :href="route('library.download', book.id)"
+                                        class="text-sm text-gray-600 underline hover:no-underline dark:text-gray-400">
+                                        Download
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>

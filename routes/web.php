@@ -12,6 +12,8 @@ use App\Http\Controllers\LegalController;
 use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Reader\AnnotationController;
+use App\Http\Controllers\Reader\ReaderController;
 use App\Http\Controllers\Webhooks\RazorpayWebhookController;
 use Illuminate\Support\Facades\Route;
 
@@ -60,6 +62,30 @@ Route::middleware('auth')->group(function () {
 Route::post('/webhooks/razorpay', RazorpayWebhookController::class)
     ->middleware('throttle:120,1')
     ->name('webhooks.razorpay');
+
+// Samples are open on purpose: a reader who finishes a free chapter converts
+// far better than one reading a blurb, and a signup wall in front of that is
+// the wrong trade.
+Route::get('/read/{book:slug}/sample', [ReaderController::class, 'sample'])->name('reader.sample');
+Route::get('/read/{book:slug}/sample/asset', [ReaderController::class, 'sampleAsset'])
+    ->middleware('throttle:60,1')
+    ->name('reader.sample.asset');
+
+// Reading a book you own.
+Route::middleware('auth')->group(function () {
+    Route::get('/read/{book:slug}', [ReaderController::class, 'show'])->name('reader.show');
+    Route::get('/read/{book:slug}/asset', [ReaderController::class, 'asset'])
+        ->middleware('throttle:120,1')
+        ->name('reader.asset');
+    Route::post('/read/{book}/progress', [ReaderController::class, 'progress'])->name('reader.progress');
+
+    Route::post('/read/{book}/bookmarks', [AnnotationController::class, 'storeBookmark'])->name('reader.bookmarks.store');
+    Route::delete('/read/{book}/bookmarks/{bookmark}', [AnnotationController::class, 'destroyBookmark'])->name('reader.bookmarks.destroy');
+
+    Route::post('/read/{book}/highlights', [AnnotationController::class, 'storeHighlight'])->name('reader.highlights.store');
+    Route::patch('/read/{book}/highlights/{highlight}', [AnnotationController::class, 'updateHighlight'])->name('reader.highlights.update');
+    Route::delete('/read/{book}/highlights/{highlight}', [AnnotationController::class, 'destroyHighlight'])->name('reader.highlights.destroy');
+});
 
 // Customer library (purchased books + gated downloads).
 Route::middleware('auth')->group(function () {

@@ -76,21 +76,34 @@ flow as Razorpay, so nothing here is only exercised in production.
 
 ---
 
-## Phase C — The reader 🔴
+## Phase C — The reader ✅ *(2026-09-06)*
 
-*Two to three weeks. This is the product.* Full spec in [05-READER.md](05-READER.md).
+Full spec in [05-READER.md](05-READER.md).
 
-- [ ] `reading_progress`, `bookmarks`, `highlights` tables
-- [ ] Gated asset-streaming route for EPUB/PDF, ownership-checked, `Range`-aware
-- [ ] EPUB reader on `epub.js`; PDF reader on `pdf.js`
-- [ ] Reader chrome: TOC, font size, line height, three themes, keyboard navigation
-- [ ] Progress sync — resume on any device; "Continue reading" on the library
-- [ ] **Free samples**: `sample_path` per book, readable without purchase, with a buy prompt at the end
-- [ ] Watermark the buyer's email into downloaded PDFs
-- [ ] Bookmarks and highlights UI
+- [x] `reading_progress`, `bookmarks`, `highlights` tables
+- [x] Gated asset route, ownership-checked, `Range`-aware locally and presigned on object storage
+- [x] EPUB reader on `epub.js`; PDF reader on `pdf.js`; both lazy-loaded
+- [x] Reader chrome: TOC, font size, line height, page width, three themes, keyboard navigation, tap-thirds and swipe
+- [x] Progress sync — throttled, flushed on unload, resumes on any device
+- [x] **Free samples** — `sample_path` per book, readable with no account, buy panel at the end
+- [x] "Continue reading" leads the library
+- [x] Bookmarks; highlights with notes (EPUB)
 
-**Done when:** a book can be read start to finish on a phone without downloading anything,
-progress survives a device switch, and a guest can read chapter one.
+**Deliberately not done, and why:**
+
+- **PDF text selection and highlighting.** PDFs render to canvas, so there is no
+  selectable text layer. Highlights work in EPUB, where the format has real
+  ranges (CFI). A half-working PDF text layer is worse than an honest absence;
+  this is a follow-up, not a gap in the flow.
+- **Auto-generated samples.** Admins upload a sample file per book. Slicing the
+  first 10% out of an arbitrary EPUB or PDF server-side is a project of its own
+  and the manual path gets the conversion benefit today.
+- **PDF watermarking on download** (P2 in [07-FEATURES.md](07-FEATURES.md)).
+  Attribution beats encryption, but it needs a PDF manipulation library and
+  careful testing; it is not on the path to launch.
+
+**Result:** 166 tests, 690 assertions. epub.js (352 KB) and pdf.js (438 KB)
+build as separate chunks and stay out of the 265 KB storefront bundle.
 
 ---
 

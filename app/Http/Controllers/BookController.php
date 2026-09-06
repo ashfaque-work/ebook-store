@@ -29,6 +29,7 @@ class BookController extends Controller
             'book' => $book,
             'isBookInCart' => $isBookInCart,
             'isPurchased' => $isPurchased,
+            'hasSample' => $book->hasSample(),
         ]);
     }
 }

@@ -10,6 +10,7 @@ const props = defineProps({
     authors: Array,
     genres: Array,
     hasBeenPurchased: Boolean,
+    hasSample: Boolean,
 });
 
 const form = useForm({
@@ -22,6 +23,7 @@ const form = useForm({
     is_published: Boolean(props.book.is_published),
     cover_image: null,
     book_file: null,
+    sample_file: null,
 });
 
 const submit = () => {
@@ -123,6 +125,20 @@ const submit = () => {
                         class="mt-1 block w-full text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" />
                     <div v-if="form.errors.book_file" class="text-sm text-red-600 mt-2">{{ form.errors.book_file }}
                     </div>
+                </div>
+
+                <!-- Free sample -->
+                <div class="mt-4">
+                    <label for="sample_file" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Free sample (PDF/EPUB)
+                    </label>
+                    <input type="file" @input="form.sample_file = $event.target.files[0]" id="sample_file"
+                        class="mt-1 block w-full text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600" />
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        <span v-if="hasSample">A sample is already uploaded; choosing a file replaces it.</span>
+                        <span v-else>Usually the first chapter. Readable without an account.</span>
+                    </p>
+                    <div v-if="form.errors.sample_file" class="text-sm text-red-600 mt-2">{{ form.errors.sample_file }}</div>
                 </div>
 
                 <!-- Published -->

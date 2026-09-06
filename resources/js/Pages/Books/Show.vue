@@ -10,6 +10,7 @@ const props = defineProps({
     book: Object,
     isBookInCart: Boolean,
     isPurchased: Boolean,
+    hasSample: Boolean,
 });
 
 const addToCart = () => {
@@ -38,14 +39,32 @@ const addToCart = () => {
                     <div class="mt-6 flex items-center justify-between">
                         <span class="text-3xl font-bold text-blue-600 dark:text-blue-400">{{ formatPrice(book.price_paise) }}</span>
 
-                        <!-- Already owned: link straight to the download -->
-                        <a v-if="isPurchased" :href="route('library.download', book.id)">
-                            <PrimaryButton>Download</PrimaryButton>
-                        </a>
-                        <PrimaryButton v-else-if="!isBookInCart" @click="addToCart">Add to Cart</PrimaryButton>
-                        <Link v-else href="/cart">
-                        <SecondaryButton>Go to Cart</SecondaryButton>
-                        </Link>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <!-- Owned: reading comes first, the file second. -->
+                            <template v-if="isPurchased">
+                                <Link :href="route('reader.show', book.slug)">
+                                <PrimaryButton>Read</PrimaryButton>
+                                </Link>
+                                <a :href="route('library.download', book.id)"
+                                    class="text-sm text-gray-600 underline hover:no-underline dark:text-gray-400">
+                                    Download
+                                </a>
+                            </template>
+
+                            <template v-else>
+                                <PrimaryButton v-if="!isBookInCart" @click="addToCart">Add to Cart</PrimaryButton>
+                                <Link v-else href="/cart">
+                                <SecondaryButton>Go to Cart</SecondaryButton>
+                                </Link>
+
+                                <!-- The strongest thing this page can do is let
+                                     someone start reading. -->
+                                <Link v-if="hasSample" :href="route('reader.sample', book.slug)"
+                                    class="text-sm font-medium text-blue-600 underline hover:no-underline dark:text-blue-400">
+                                Read the first chapter
+                                </Link>
+                            </template>
+                        </div>
                     </div>
                 </div>
             </div>

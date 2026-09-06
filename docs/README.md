@@ -3,7 +3,7 @@
 Working documentation for the eBook Store project. These docs are the plan of record;
 when code and docs disagree, fix one of them in the same commit.
 
-**Last reviewed:** 2026-09-06 · **Stage:** Phases A and B complete; C (reader), D (UI) and E (deploy) remain
+**Last reviewed:** 2026-09-06 · **Stage:** Phases A, B and C complete; D (UI) and E (deploy) remain
 
 ---
 
@@ -29,12 +29,13 @@ when code and docs disagree, fix one of them in the same commit.
 
 ## The one-paragraph version
 
-The store takes real money: Razorpay with webhooks as the source of truth, integer-paise
-accounting, GST and invoice numbering, and refunds that revoke access. The policy pages
-gateway approval depends on are live. What remains is **Razorpay KYC** (yours to submit),
-**an in-browser reader**, without which this is a file locker rather than a place people
-come to read, **a designed UI** — every screen is still Breeze scaffolding — and a
-**deployment**.
+The store takes real money and delivers a reading experience. Razorpay is integrated with
+webhooks as the source of truth, money is integer paise, GST and invoice numbering are in
+place, and refunds revoke access. Books are read in the browser — EPUB and PDF, with
+progress that follows you between devices, bookmarks, highlights, and free samples anyone
+can open without an account. The policy pages gateway approval depends on are live. What
+remains is **Razorpay KYC** (yours to submit), **a designed UI** — every screen is still
+Breeze scaffolding — and a **deployment**.
 
 ## Working agreements
 

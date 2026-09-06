@@ -69,6 +69,14 @@ class CatalogSeeder extends Seeder
             Storage::disk(Book::FILE_DISK)->put($samplePath, $this->placeholderPdf());
         }
 
+        // A free preview for every seeded book, so the sample reader and the
+        // conversion path it exists for are visible in development.
+        $previewPath = 'samples/preview.pdf';
+
+        if (! Storage::disk(Book::FILE_DISK)->exists($previewPath)) {
+            Storage::disk(Book::FILE_DISK)->put($previewPath, $this->placeholderPdf());
+        }
+
         foreach (self::CATALOG as $genreName => $titles) {
             $genre = Genre::firstOrCreate(
                 ['slug' => Str::slug($genreName)],
@@ -99,6 +107,7 @@ class CatalogSeeder extends Seeder
                         'file_path' => $samplePath,
                         'file_format' => 'pdf',
                         'file_size' => Storage::disk(Book::FILE_DISK)->size($samplePath),
+                        'sample_path' => $previewPath,
                     ],
                 );
             }

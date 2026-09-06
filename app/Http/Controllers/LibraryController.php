@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Book;
 use App\Models\DownloadLog;
 use App\Models\Order;
+use App\Models\ReadingProgress;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -31,7 +32,40 @@ class LibraryController extends Controller
 
         return Inertia::render('Library/Index', [
             'books' => $books,
+            // The first thing a returning reader should see.
+            'continueReading' => $this->continueReading($user),
         ]);
+    }
+
+    /**
+     * The book this reader is part-way through, if there is one.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function continueReading($user): ?array
+    {
+        $progress = ReadingProgress::with('book.author')
+            ->where('user_id', $user->id)
+            ->where('percent', '<', 98)
+            ->whereNotNull('last_read_at')
+            ->latest('last_read_at')
+            ->first();
+
+        if (! $progress?->book) {
+            return null;
+        }
+
+        return [
+            'book' => [
+                'id' => $progress->book->id,
+                'slug' => $progress->book->slug,
+                'title' => $progress->book->title,
+                'author' => $progress->book->author?->name,
+                'cover_image_path' => $progress->book->cover_image_path,
+            ],
+            'percent' => $progress->percent,
+            'lastReadAt' => $progress->last_read_at,
+        ];
     }
 
     /**
