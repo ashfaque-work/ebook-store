@@ -108,7 +108,10 @@ function purchasedBook(User $user): Book { /* paid order + item */ }
 
 ## 4. CI
 
-No `.github/` exists. Add:
+**Now at [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).** It runs the suite on
+SQLite *and* MySQL, checks Pint and Prettier, runs `npm ci` (a peer-dependency conflict
+fails there and nowhere else until a deploy), builds the assets, and proves the migrations
+roll back on MySQL. Sketch it was built from:
 
 ```yaml
 # .github/workflows/ci.yml

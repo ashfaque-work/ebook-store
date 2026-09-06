@@ -103,6 +103,10 @@ Two families, sharply distinct in job.
 headings can be set condensed the way a book *spine* is condensed, without a second font.
 That is the typographic idea: the store speaks in spines, the book speaks in pages.
 
+> **As built:** the width axis is not in use. Bunny Fonts serves plain weights
+> reliably and variable axes less so, so headings lean on tight tracking
+> instead. Restoring the axis means self-hosting the variable file.
+
 **Literata** — body copy and all reading. Commissioned specifically for screen reading and
 used by Google Play Books. Choosing it is not a style preference; it is the typeface that was
 designed for the exact job this product exists to do.
