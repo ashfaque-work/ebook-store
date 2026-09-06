@@ -47,6 +47,40 @@ return [
             'report' => false,
         ],
 
+        /*
+         * Cloudflare R2. S3-compatible, and its free tier charges nothing for
+         * egress, which matters when the product is large files.
+         *
+         * Private books: never public, delivered as a short-lived presigned
+         * URL after the ownership check. Streaming them through PHP would
+         * exhaust a small container.
+         */
+        'r2' => [
+            'driver' => 's3',
+            'key' => env('R2_ACCESS_KEY_ID'),
+            'secret' => env('R2_SECRET_ACCESS_KEY'),
+            'region' => 'auto',
+            'bucket' => env('R2_BUCKET'),
+            'endpoint' => env('R2_ENDPOINT'),
+            'use_path_style_endpoint' => true,
+            'visibility' => 'private',
+            'throw' => true,
+        ],
+
+        // Covers: marketing images, cached hard, served straight from R2.
+        'r2-public' => [
+            'driver' => 's3',
+            'key' => env('R2_ACCESS_KEY_ID'),
+            'secret' => env('R2_SECRET_ACCESS_KEY'),
+            'region' => 'auto',
+            'bucket' => env('R2_PUBLIC_BUCKET', env('R2_BUCKET')),
+            'endpoint' => env('R2_ENDPOINT'),
+            'url' => env('R2_PUBLIC_URL'),
+            'use_path_style_endpoint' => true,
+            'visibility' => 'public',
+            'throw' => true,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

@@ -134,7 +134,7 @@ class ReaderController extends Controller
      */
     private function serve(?string $path, string $format): HttpResponse
     {
-        $disk = Storage::disk(Book::FILE_DISK);
+        $disk = Storage::disk(Book::fileDisk());
 
         abort_if(! $path || ! $disk->exists($path), 404, 'File not found.');
 
@@ -145,7 +145,7 @@ class ReaderController extends Controller
             'X-Content-Type-Options' => 'nosniff',
         ];
 
-        if (config('filesystems.disks.'.Book::FILE_DISK.'.driver') === 's3') {
+        if (config('filesystems.disks.'.Book::fileDisk().'.driver') === 's3') {
             return redirect()->away($disk->temporaryUrl($path, now()->addMinutes(10)));
         }
 

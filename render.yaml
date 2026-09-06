@@ -1,0 +1,102 @@
+# Render blueprint. See docs/08-DEPLOYMENT.md for what has to exist first.
+#
+# The free plan sleeps after 15 minutes idle, so the first visitor after a
+# quiet spell waits roughly 50 seconds. Point an uptime monitor at /up every
+# 10 minutes to keep it warm — that is a workaround, and the main reason to
+# move to the paid tier once anything sells.
+services:
+  - type: web
+    name: ebook-store
+    runtime: docker
+    plan: free
+    region: singapore
+    healthCheckPath: /up
+    # Runs before traffic is switched over; never migrate:fresh here.
+    preDeployCommand: php artisan migrate --force
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: LOG_CHANNEL
+        value: stderr
+
+      - key: DB_CONNECTION
+        value: mysql
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: 4000
+      - key: DB_DATABASE
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      # TiDB requires TLS.
+      - key: MYSQL_ATTR_SSL_CA
+        value: /etc/ssl/certs/ca-certificates.crt
+
+      - key: SESSION_DRIVER
+        value: database
+      - key: CACHE_STORE
+        value: database
+      # No second process on the free plan, so a queued job would sit
+      # unprocessed forever. Switch to `database` when a worker exists.
+      - key: QUEUE_CONNECTION
+        value: sync
+
+      - key: FILESYSTEM_DISK
+        value: r2
+      - key: PRIVATE_DISK
+        value: r2
+      - key: PUBLIC_DISK
+        value: r2-public
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET
+        sync: false
+      - key: R2_ENDPOINT
+        sync: false
+      - key: R2_PUBLIC_URL
+        sync: false
+
+      - key: MAIL_MAILER
+        value: smtp
+      - key: MAIL_HOST
+        sync: false
+      - key: MAIL_PORT
+        value: 587
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_FROM_ADDRESS
+        sync: false
+
+      - key: RAZORPAY_KEY
+        sync: false
+      - key: RAZORPAY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+
+      # Must match the Razorpay application, and the legal pages read them.
+      - key: STORE_LEGAL_NAME
+        sync: false
+      - key: STORE_TRADING_NAME
+        sync: false
+      - key: STORE_SUPPORT_EMAIL
+        sync: false
+      - key: STORE_JURISDICTION
+        sync: false
+
+      # Leave GST off until a GSTIN actually exists.
+      - key: STORE_GST_ENABLED
+        value: false

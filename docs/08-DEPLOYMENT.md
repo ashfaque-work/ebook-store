@@ -3,6 +3,12 @@
 Free first, paid when there is revenue. The plan below costs ₹0/month and does not need
 rewriting when you upgrade — only the hosting row changes.
 
+> **Built and committed:** [`Dockerfile`](../Dockerfile), [`docker/`](../docker/),
+> [`render.yaml`](../render.yaml), [`.env.production.example`](../.env.production.example),
+> the `r2` / `r2-public` disks, the `SecurityHeaders` middleware with the CSP, and
+> `php artisan books:migrate-storage`. What is left is provisioning the accounts and
+> pasting in the keys — §7 is the order to do it in.
+
 ---
 
 ## 1. The trap to design around
@@ -64,62 +70,59 @@ Two buckets, or one bucket with two prefixes:
 ],
 ```
 
-`composer require league/flysystem-aws-s3-v3`.
+The `league/flysystem-aws-s3-v3` adapter is already a dependency.
 
-Then point the model constants at it:
+The disks are chosen by environment, not by editing code:
 
-```php
-class Book
-{
-    public const FILE_DISK  = 'r2';        // was 'local'
-    public const COVER_DISK = 'r2-public'; // new — see A5
-}
 ```
+PRIVATE_DISK=r2
+PUBLIC_DISK=r2-public
+```
+
+`Book::fileDisk()` and `Book::coverDisk()` read those, so the same image runs
+locally on the filesystem and in production on R2.
 
 **Deliver private files with presigned URLs, not PHP streaming.** A 20 MB EPUB streamed
 through a 512 MB container is how you take the site down:
 
 ```php
 return redirect()->away(
-    Storage::disk(Book::FILE_DISK)->temporaryUrl($path, now()->addMinutes(10))
+    Storage::disk(Book::fileDisk())->temporaryUrl($path, now()->addMinutes(10))
 );
 ```
+
+Both the download route and the reader's asset route already do this when the configured
+disk uses the `s3` driver, and stream from the filesystem otherwise.
 
 The ownership check still happens in your controller — R2 only ever sees a URL your code
 decided to issue, valid for ten minutes.
 
-**Migrating existing local files:** write a one-off `php artisan books:migrate-storage` that
-copies each `file_path` and `cover_image_path` to R2 and rewrites the column. Run it once,
-verify a download, then remove the command.
+**Migrating existing local files:** `php artisan books:migrate-storage --dry-run` lists what
+would move; without the flag it streams each file across. It copies rather than moves and
+leaves the stored paths untouched, so a failure halfway through leaves the store working on
+the old disk. Verify a download before deleting anything.
 
 ---
 
 ## 4. Render setup
 
-Deploy from the repo with a `Dockerfile` (more predictable than the native PHP runtime,
-because you control the extensions and the Nginx config).
+Deploy from the repo with the committed [`Dockerfile`](../Dockerfile) — more predictable than
+a native PHP runtime, because you control the extensions and the nginx config.
 
-```dockerfile
-FROM php:8.2-fpm-alpine
-RUN apk add --no-cache nginx supervisor icu-dev oniguruma-dev libzip-dev \
- && docker-php-ext-install pdo_mysql bcmath intl zip opcache
-# bcmath is required by the Money helper in 03-DATABASE.md
+It builds in three stages so `node_modules` and dev dependencies never reach the runtime
+image: assets in `node:22-alpine`, vendor in `composer:2`, then a `php:8.2-fpm-alpine` runtime
+running nginx and php-fpm under supervisor. `bcmath` is not optional — the money layer needs
+it so rupees convert to paise exactly.
 
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-WORKDIR /var/www
-COPY composer.* ./
-RUN composer install --no-dev --optimize-autoloader --no-scripts
+Config, route and view caches are built in [`docker/entrypoint.sh`](../docker/entrypoint.sh)
+at boot rather than at image build time, because they bake in environment values and the
+environment is not known until the container starts on the platform.
 
-# Build assets in a node stage and copy public/build across
-COPY . .
-RUN php artisan config:cache && php artisan route:cache && php artisan view:cache
-CMD ["supervisord", "-c", "/etc/supervisord.conf"]
-```
+[`render.yaml`](../render.yaml) declares the service, the health check, the pre-deploy
+migration and every environment variable. Anything marked `sync: false` is a secret you paste
+into the dashboard.
 
-Build assets in a separate `node:22-alpine` stage and copy `public/build` — do not ship
-`node_modules` into the runtime image.
-
-**Release command:** `php artisan migrate --force`. Never `migrate:fresh` in production.
+**Pre-deploy command:** `php artisan migrate --force`. Never `migrate:fresh` in production.
 
 **Health check path:** `/up`.
 
@@ -173,7 +176,9 @@ request. Wrap it in try/catch or a Brevo outage becomes a checkout outage.
 
 ## 6. Security headers
 
-Add a `SecurityHeaders` middleware in Phase E:
+[`app/Http/Middleware/SecurityHeaders.php`](../app/Http/Middleware/SecurityHeaders.php)
+applies these on every response. The CSP is production-only, because locally the debug page
+is worth more than the policy:
 
 ```
 Strict-Transport-Security: max-age=31536000; includeSubDomains
@@ -188,12 +193,17 @@ Content-Security-Policy:
   connect-src 'self' https://api.razorpay.com https://<your-r2-domain>;
 ```
 
-`blob:` in `img-src` is required by pdf.js. Get the CSP wrong and Razorpay's modal fails to
-open with no visible error — test checkout immediately after adding headers.
+`blob:` is required by pdf.js and by the EPUB reader's iframe; `R2_PUBLIC_URL` is folded in
+automatically as an asset origin. Get the CSP wrong and Razorpay's modal fails to open with
+no visible error — `DeploymentReadinessTest` asserts the gateway and reader origins survive,
+but **test a real checkout immediately after changing it** anyway.
 
 ---
 
 ## 7. Launch checklist
+
+Order matters: the storage move has to happen before the first deploy that uses R2, and
+Razorpay KYC has to be submitted long before you need the live keys.
 
 - [ ] `APP_DEBUG=false`, real `APP_KEY`, real `APP_NAME`/`APP_URL`
 - [ ] `php artisan config:cache route:cache view:cache` in the image

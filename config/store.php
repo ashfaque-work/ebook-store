@@ -62,6 +62,30 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Storage
+    |--------------------------------------------------------------------------
+    |
+    | Which disks hold the goods. Locally these are the filesystem; in
+    | production they are object storage, because free hosting rebuilds the
+    | container on every deploy and takes storage/app with it — which would
+    | mean losing books people have paid for to a routine redeploy.
+    |
+    | Set PRIVATE_DISK=r2 and PUBLIC_DISK=r2-public once the bucket exists,
+    | then run `php artisan books:migrate-storage`.
+    |
+    */
+
+    'disks' => [
+        'private' => env('PRIVATE_DISK', 'local'),
+        'public' => env('PUBLIC_DISK', 'public'),
+    ],
+
+    // Where covers are served from, so the content security policy can allow
+    // it. Blank while everything is served from our own origin.
+    'asset_origin' => env('R2_PUBLIC_URL'),
+
+    /*
+    |--------------------------------------------------------------------------
     | GST
     |--------------------------------------------------------------------------
     |

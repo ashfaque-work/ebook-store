@@ -20,7 +20,7 @@ test('the catalog seeder produces a browsable store', function () {
         ->and(Book::published()->count())->toBeGreaterThan(20);
 
     // The placeholder ebook must exist, or every seeded download 404s.
-    expect(Storage::disk(Book::FILE_DISK)->exists('books/sample.pdf'))->toBeTrue();
+    expect(Storage::disk(Book::fileDisk())->exists('books/sample.pdf'))->toBeTrue();
 
     $this->get('/')->assertInertia(fn ($page) => $page
         ->where('mode', 'shelves')

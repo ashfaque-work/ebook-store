@@ -62,12 +62,12 @@ class BookController extends Controller
         ]);
 
         // Covers are marketing images and stay on the public disk.
-        $coverImagePath = $request->file('cover_image')->store('covers', Book::COVER_DISK);
+        $coverImagePath = $request->file('cover_image')->store('covers', Book::coverDisk());
         // The actual ebook is a paid asset: store it on the PRIVATE disk so it
         // is never reachable by direct URL. It is delivered only through the
         // gated library download route after a confirmed purchase.
         $file = $request->file('book_file');
-        $bookFilePath = $file->store('books', Book::FILE_DISK);
+        $bookFilePath = $file->store('books', Book::fileDisk());
 
         $isPublished = $validated['is_published'] ?? true;
 
@@ -86,7 +86,7 @@ class BookController extends Controller
             'file_format' => strtolower($file->getClientOriginalExtension()) ?: 'pdf',
             'file_size' => $file->getSize(),
             'sample_path' => $request->hasFile('sample_file')
-                ? $request->file('sample_file')->store('samples', Book::FILE_DISK)
+                ? $request->file('sample_file')->store('samples', Book::fileDisk())
                 : null,
         ]);
 
@@ -143,27 +143,27 @@ class BookController extends Controller
             // Delete old cover image (use the raw stored key, not the URL the
             // coverImagePath accessor produces).
             if ($book->getRawOriginal('cover_image_path')) {
-                Storage::disk(Book::COVER_DISK)->delete($book->getRawOriginal('cover_image_path'));
+                Storage::disk(Book::coverDisk())->delete($book->getRawOriginal('cover_image_path'));
             }
-            $updateData['cover_image_path'] = $request->file('cover_image')->store('covers', Book::COVER_DISK);
+            $updateData['cover_image_path'] = $request->file('cover_image')->store('covers', Book::coverDisk());
         }
 
         if ($request->hasFile('book_file')) {
             // Delete old book file from the private disk
             if ($book->getRawOriginal('file_path')) {
-                Storage::disk(Book::FILE_DISK)->delete($book->getRawOriginal('file_path'));
+                Storage::disk(Book::fileDisk())->delete($book->getRawOriginal('file_path'));
             }
             $file = $request->file('book_file');
-            $updateData['file_path'] = $file->store('books', Book::FILE_DISK);
+            $updateData['file_path'] = $file->store('books', Book::fileDisk());
             $updateData['file_format'] = strtolower($file->getClientOriginalExtension()) ?: 'pdf';
             $updateData['file_size'] = $file->getSize();
         }
 
         if ($request->hasFile('sample_file')) {
             if ($book->getRawOriginal('sample_path')) {
-                Storage::disk(Book::FILE_DISK)->delete($book->getRawOriginal('sample_path'));
+                Storage::disk(Book::fileDisk())->delete($book->getRawOriginal('sample_path'));
             }
-            $updateData['sample_path'] = $request->file('sample_file')->store('samples', Book::FILE_DISK);
+            $updateData['sample_path'] = $request->file('sample_file')->store('samples', Book::fileDisk());
         }
 
         $book->update($updateData);
@@ -200,13 +200,13 @@ class BookController extends Controller
 
         // Only now is it safe to destroy the files.
         if ($coverPath) {
-            Storage::disk(Book::COVER_DISK)->delete($coverPath);
+            Storage::disk(Book::coverDisk())->delete($coverPath);
         }
         if ($filePath) {
-            Storage::disk(Book::FILE_DISK)->delete($filePath);
+            Storage::disk(Book::fileDisk())->delete($filePath);
         }
         if ($samplePath) {
-            Storage::disk(Book::FILE_DISK)->delete($samplePath);
+            Storage::disk(Book::fileDisk())->delete($samplePath);
         }
 
         return redirect(route('admin.books.index'))->with('toast', [

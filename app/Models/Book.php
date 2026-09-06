@@ -17,18 +17,27 @@ class Book extends Model
     use HasFactory;
 
     /**
-     * The disk holding the paid ebook files. Private (storage/app/private),
-     * so files are only ever served through the gated download route.
+     * The disk holding the paid ebook files — private, so they are only ever
+     * served through an ownership-checked route.
+     *
+     * Configured rather than hardcoded: free hosting has an ephemeral disk, so
+     * production points this at object storage and uploads survive a redeploy.
      */
-    public const FILE_DISK = 'local';
+    public static function fileDisk(): string
+    {
+        return config('store.disks.private', 'local');
+    }
 
     /**
      * The disk holding cover images. Public — covers are marketing assets.
      *
      * Named explicitly because `Storage::url()` resolves against the *default*
-     * disk, which is the private one. Always go through this constant.
+     * disk, which is the private one. Always go through this.
      */
-    public const COVER_DISK = 'public';
+    public static function coverDisk(): string
+    {
+        return config('store.disks.public', 'public');
+    }
 
     protected $fillable = [
         'author_id',
@@ -174,7 +183,7 @@ class Book extends Model
     protected function coverImagePath(): Attribute
     {
         return Attribute::make(
-            get: fn ($value) => $value ? Storage::disk(self::COVER_DISK)->url($value) : null,
+            get: fn ($value) => $value ? Storage::disk(self::coverDisk())->url($value) : null,
         );
     }
 }

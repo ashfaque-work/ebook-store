@@ -6,6 +6,7 @@ use App\Models\Book;
 use App\Models\DownloadLog;
 use App\Models\Order;
 use App\Models\ReadingProgress;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -71,13 +72,13 @@ class LibraryController extends Controller
     /**
      * Stream the ebook file — only if the user actually owns it.
      */
-    public function download(Request $request, Book $book): StreamedResponse
+    public function download(Request $request, Book $book): StreamedResponse|RedirectResponse
     {
         $this->authorize('download', $book);
 
         $path = $book->getRawOriginal('file_path');
 
-        abort_if(! $path || ! Storage::disk(Book::FILE_DISK)->exists($path), 404, 'File not found.');
+        abort_if(! $path || ! Storage::disk(Book::fileDisk())->exists($path), 404, 'File not found.');
 
         // Evidence for refund decisions and for spotting a shared account.
         DownloadLog::create([
@@ -90,6 +91,16 @@ class LibraryController extends Controller
         $extension = pathinfo($path, PATHINFO_EXTENSION) ?: 'pdf';
         $downloadName = Str::slug($book->title).'.'.$extension;
 
-        return Storage::disk(Book::FILE_DISK)->download($path, $downloadName);
+        // On object storage, hand out a short-lived URL rather than pushing
+        // tens of megabytes through the application container.
+        if (config('filesystems.disks.'.Book::fileDisk().'.driver') === 's3') {
+            return redirect()->away(Storage::disk(Book::fileDisk())->temporaryUrl(
+                $path,
+                now()->addMinutes(10),
+                ['ResponseContentDisposition' => 'attachment; filename="'.$downloadName.'"'],
+            ));
+        }
+
+        return Storage::disk(Book::fileDisk())->download($path, $downloadName);
     }
 }

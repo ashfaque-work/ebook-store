@@ -141,18 +141,29 @@ every route for the role that should see it.
 
 ---
 
-## Phase E — Deploy free 🟠
+## Phase E — Deploy free 🟠 *(code complete; accounts are yours)*
 
-*Two or three days.* Full detail in [08-DEPLOYMENT.md](08-DEPLOYMENT.md).
+Everything that can be built without an account exists. Full detail in
+[08-DEPLOYMENT.md](08-DEPLOYMENT.md).
 
-- [ ] Move covers and ebooks to Cloudflare R2 (`s3` driver) — free hosts have ephemeral disks
-- [ ] Provision the database (TiDB Serverless, MySQL-compatible — avoids a Postgres `LIKE` rewrite)
-- [ ] SMTP via Brevo or Resend
-- [ ] Deploy to Render; `QUEUE_CONNECTION=sync` until a worker is affordable
-- [ ] Production `.env`: `APP_DEBUG=false`, real `APP_NAME`/`APP_URL`, cached config and routes
-- [x] CI (Pest on SQLite **and** MySQL, Pint, Prettier, `npm ci`, migration rollback) — moved forward from Phase E
-- [ ] Sentry, uptime monitoring, `/up` health check wired to the platform
-- [ ] Security headers and a CSP that allows `checkout.razorpay.com`
+**Done:**
+
+- [x] `r2` / `r2-public` disks; `PRIVATE_DISK` and `PUBLIC_DISK` choose them by environment
+- [x] `php artisan books:migrate-storage` — streams existing files across, `--dry-run` first
+- [x] Downloads and reader assets presign on object storage instead of streaming through PHP
+- [x] `SecurityHeaders` middleware and a CSP that allows Razorpay, the reader and the font host
+- [x] `Dockerfile`, `docker/` (nginx, php-fpm, supervisor, entrypoint), `render.yaml`, `.dockerignore`
+- [x] `.env.production.example` with every value the free stack needs
+- [x] CI (moved forward to Phase D)
+
+**Yours, because they need accounts or money:**
+
+- [ ] Cloudflare R2 bucket → fill in `R2_*`, then run `books:migrate-storage`
+- [ ] TiDB Serverless database → fill in `DB_*` (MySQL-compatible: nothing in the app changes)
+- [ ] Brevo or Resend SMTP → fill in `MAIL_*`
+- [ ] Create the Render service from `render.yaml` and paste the secrets in
+- [ ] **Submit Razorpay KYC** — the long pole at 2–7 working days; the five pages it needs are live
+- [ ] Sentry DSN, and an uptime monitor pointed at `/up` every 10 minutes to mask the free tier's cold start
 
 **Done when:** a stranger on a phone can find a book, read the sample, pay ₹ and read the
 whole thing — on a URL you did not pay for.
