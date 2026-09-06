@@ -3,6 +3,9 @@
 use App\Models\Order;
 use App\Models\User;
 use App\Services\Payments\FakePaymentGateway;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
+use Tests\TestCase;
 
 /*
 |--------------------------------------------------------------------------
@@ -10,8 +13,8 @@ use App\Services\Payments\FakePaymentGateway;
 |--------------------------------------------------------------------------
 */
 
-pest()->extend(Tests\TestCase::class)
-    ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
+pest()->extend(TestCase::class)
+    ->use(RefreshDatabase::class)
     ->in('Feature');
 
 /*
@@ -67,7 +70,7 @@ function signOut(): void
  */
 function callbackPayloadFor(Order $order, ?string $paymentId = null): array
 {
-    $paymentId ??= 'fake_pay_'.strtolower(Illuminate\Support\Str::random(14));
+    $paymentId ??= 'fake_pay_'.strtolower(Str::random(14));
 
     return [
         'razorpay_order_id' => (string) $order->gateway_order_id,
@@ -101,7 +104,7 @@ function capturedWebhookFor(Order $order, ?string $paymentId = null, ?int $amoun
         'payload' => [
             'payment' => [
                 'entity' => [
-                    'id' => $paymentId ?? 'fake_pay_'.strtolower(Illuminate\Support\Str::random(14)),
+                    'id' => $paymentId ?? 'fake_pay_'.strtolower(Str::random(14)),
                     'order_id' => $order->gateway_order_id,
                     'amount' => $amountPaise ?? $order->total_paise,
                     'currency' => $order->currency,
@@ -136,7 +139,7 @@ function postWebhook(array $payload, ?string $signature = null, ?string $eventId
     );
 }
 
-function actingAsAdmin(): Tests\TestCase
+function actingAsAdmin(): TestCase
 {
     return test()->actingAs(User::factory()->admin()->create());
 }

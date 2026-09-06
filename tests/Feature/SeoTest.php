@@ -2,6 +2,7 @@
 
 use App\Models\Book;
 use App\Models\Genre;
+use App\Models\User;
 
 /**
  * This audience arrives from WhatsApp and Instagram. A book link that renders
@@ -46,7 +47,7 @@ test('ratings are not fabricated before there are reviews', function () {
 test('a draft book tells crawlers to stay away', function () {
     $draft = Book::factory()->unpublished()->create();
 
-    $this->actingAs(App\Models\User::factory()->admin()->create())
+    $this->actingAs(User::factory()->admin()->create())
         ->get(route('books.show', $draft))
         ->assertSee('<meta name="robots" content="noindex, nofollow">', false);
 });

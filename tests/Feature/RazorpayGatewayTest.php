@@ -4,6 +4,7 @@ use App\Models\Book;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\User;
+use App\Services\Payments\PaymentGateway;
 use App\Services\Payments\RazorpayPaymentGateway;
 use Illuminate\Support\Facades\Http;
 
@@ -204,5 +205,5 @@ test('a fully refunded payment cannot be refunded again', function () {
 test('the mock gateway is used when Razorpay is not configured', function () {
     config()->set('services.razorpay.key', null);
 
-    expect(app(App\Services\Payments\PaymentGateway::class)->provider())->toBe('fake');
+    expect(app(PaymentGateway::class)->provider())->toBe('fake');
 });

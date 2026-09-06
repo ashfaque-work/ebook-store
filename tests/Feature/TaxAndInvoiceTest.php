@@ -4,6 +4,7 @@ use App\Models\Book;
 use App\Models\InvoiceSequence;
 use App\Models\Order;
 use App\Models\User;
+use App\Services\Checkout\FulfilOrder;
 use App\Services\Tax\TaxCalculator;
 use Illuminate\Support\Carbon;
 
@@ -127,7 +128,7 @@ test('fulfilling an order twice does not burn a second invoice number', function
 
     // The webhook and the browser callback both call FulfilOrder; the second
     // one must change nothing at all.
-    expect(app(App\Services\Checkout\FulfilOrder::class)($order))->toBeFalse()
+    expect(app(FulfilOrder::class)($order))->toBeFalse()
         ->and($order->fresh()->invoice_number)->toBe($first)
         ->and(InvoiceSequence::currentCount())->toBe(1);
 });

@@ -3,6 +3,7 @@
 use App\Models\Book;
 use App\Models\Order;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 
@@ -94,7 +95,7 @@ test('the idempotency key column rejects a duplicate order outright', function (
         'idempotency_key' => $key,
         'status' => Order::STATUS_PENDING,
         'total_paise' => 0,
-    ]))->toThrow(Illuminate\Database\QueryException::class);
+    ]))->toThrow(QueryException::class);
 });
 
 test('a receipt that fails to send does not fail a paid checkout', function () {

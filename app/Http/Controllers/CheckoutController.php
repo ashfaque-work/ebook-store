@@ -12,6 +12,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -115,7 +116,7 @@ class CheckoutController extends Controller
      */
     private function simulationPayload(string $gatewayOrderId): array
     {
-        $paymentId = 'fake_pay_'.strtolower(\Illuminate\Support\Str::random(14));
+        $paymentId = 'fake_pay_'.strtolower(Str::random(14));
 
         return [
             'razorpay_order_id' => $gatewayOrderId,
