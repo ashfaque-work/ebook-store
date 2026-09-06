@@ -22,6 +22,7 @@ when code and docs disagree, fix one of them in the same commit.
 | — | [08-DEPLOYMENT.md](08-DEPLOYMENT.md) | Free-tier hosting plan, then the paid upgrade path |
 | — | [09-SEO-LEGAL.md](09-SEO-LEGAL.md) | SEO, metadata, and the legal pages payments depend on |
 | — | [10-TESTING-CI.md](10-TESTING-CI.md) | Test strategy, CI pipeline, quality gates |
+| — | [SECURITY-NOTES.md](SECURITY-NOTES.md) | Known, accepted risks and what would change them |
 
 `archive/` holds superseded documents, kept for history. Do not plan from them.
 

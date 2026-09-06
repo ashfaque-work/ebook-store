@@ -98,3 +98,28 @@ jobs:
       # A Vue template error is invisible until build time, and on Render a
       # failed build is a failed deploy.
       - run: npm run build
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    # Informational: a new advisory should be visible the day it lands, but it
+    # should not block a deploy that fixes something else.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+      - run: composer install --prefer-dist --no-interaction --no-progress
+      - run: composer audit
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      # The two known findings both trace to epubjs and need a major bump of
+      # the renderer; see docs/SECURITY-NOTES.md.
+      - run: npm audit --audit-level=critical
