@@ -53,6 +53,13 @@ const isUrl = (...urls) => {
                     </div>
 
                     <template v-if="isAdmin">
+                        <h3 class="px-4 mt-6 text-xs uppercase text-gray-400 font-semibold tracking-wider">Store</h3>
+                        <div class="mt-2">
+                            <NavLink href="/admin/orders" :active="isUrl('admin/orders')" theme="dark">
+                                Orders
+                            </NavLink>
+                        </div>
+
                         <h3 class="px-4 mt-6 text-xs uppercase text-gray-400 font-semibold tracking-wider">Content</h3>
                         <div class="mt-2">
                             <NavLink href="/admin/authors" :active="isUrl('admin/authors')" theme="dark">

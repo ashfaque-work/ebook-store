@@ -3,7 +3,7 @@
 Working documentation for the eBook Store project. These docs are the plan of record;
 when code and docs disagree, fix one of them in the same commit.
 
-**Last reviewed:** 2026-09-06 · **Branch:** `main` · **Stage:** pre-launch
+**Last reviewed:** 2026-09-06 · **Stage:** Phases A and B complete; C (reader), D (UI) and E (deploy) remain
 
 ---
 
@@ -29,13 +29,12 @@ when code and docs disagree, fix one of them in the same commit.
 
 ## The one-paragraph version
 
-The store sells and delivers digital books today: catalogue, cart, mock checkout, gated
-downloads, admin CRUD, role-based access. It cannot take real money, has no reading
-experience, and its UI is unmodified Breeze scaffolding. The three things standing between
-this repo and a live store are **a real payment gateway** (Razorpay — Stripe is not a
-practical option for a domestic Indian business), **the legal pages that gateway approval
-requires**, and **an in-browser reader**, without which this is a file locker rather than a
-place people come to read.
+The store takes real money: Razorpay with webhooks as the source of truth, integer-paise
+accounting, GST and invoice numbering, and refunds that revoke access. The policy pages
+gateway approval depends on are live. What remains is **Razorpay KYC** (yours to submit),
+**an in-browser reader**, without which this is a file locker rather than a place people
+come to read, **a designed UI** — every screen is still Breeze scaffolding — and a
+**deployment**.
 
 ## Working agreements
 

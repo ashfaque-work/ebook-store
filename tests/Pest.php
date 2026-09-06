@@ -101,6 +101,29 @@ function capturedWebhookFor(Order $order, ?string $paymentId = null, ?int $amoun
     ];
 }
 
+/**
+ * Post a webhook the way the gateway does: no session, no CSRF token, and a
+ * raw body whose exact bytes are what the signature covers.
+ *
+ * @param  array<string, mixed>  $payload
+ */
+function postWebhook(array $payload, ?string $signature = null, ?string $eventId = null)
+{
+    [$raw, $sig] = signedWebhook($payload);
+
+    return test()->call(
+        'POST',
+        route('webhooks.razorpay'),
+        [], [], [],
+        [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_X_RAZORPAY_SIGNATURE' => $signature ?? $sig,
+            'HTTP_X_RAZORPAY_EVENT_ID' => $eventId ?? 'evt_'.bin2hex(random_bytes(8)),
+        ],
+        $raw,
+    );
+}
+
 function actingAsAdmin(): Tests\TestCase
 {
     return test()->actingAs(User::factory()->admin()->create());

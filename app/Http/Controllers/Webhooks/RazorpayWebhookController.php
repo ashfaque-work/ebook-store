@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\WebhookEvent;
+use App\Services\Checkout\ApplyRefund;
 use App\Services\Checkout\FulfilOrder;
 use App\Services\Payments\PaymentGateway;
 use App\Services\Payments\PaymentResult;
@@ -55,7 +56,7 @@ class RazorpayWebhookController extends Controller
         match ($type) {
             'payment.captured', 'order.paid' => $this->handleCaptured($payload, $fulfilOrder),
             'payment.failed' => $this->handleFailed($payload),
-            'refund.processed' => $this->handleRefunded($payload),
+            'refund.processed' => $this->handleRefunded($payload, app(ApplyRefund::class)),
             default => null,
         };
 
@@ -112,34 +113,23 @@ class RazorpayWebhookController extends Controller
     }
 
     /** @param array<string, mixed> $payload */
-    private function handleRefunded(array $payload): void
+    private function handleRefunded(array $payload, ApplyRefund $applyRefund): void
     {
         $entity = $payload['payload']['refund']['entity'] ?? [];
-        $paymentId = (string) ($entity['payment_id'] ?? '');
 
-        $payment = Payment::where('gateway_payment_id', $paymentId)->first();
+        $payment = Payment::where('gateway_payment_id', (string) ($entity['payment_id'] ?? ''))->first();
 
         if (! $payment) {
             return;
         }
 
-        $refunded = $payment->refunded_paise + (int) ($entity['amount'] ?? 0);
-        $full = $refunded >= $payment->amount_paise;
-
-        $payment->update([
-            'refunded_paise' => $refunded,
-            'status' => $full ? Payment::STATUS_REFUNDED : Payment::STATUS_PARTIALLY_REFUNDED,
-        ]);
-
-        $order = $payment->order;
-
-        $order->update([
-            'refunded_paise' => $refunded,
-            'refunded_at' => now(),
-            // A full refund revokes library access, because hasPurchased()
-            // only counts paid orders.
-            'status' => $full ? Order::STATUS_REFUNDED : $order->status,
-        ]);
+        // Keyed on the gateway's refund id, so a refund we initiated ourselves
+        // is not counted a second time when the webhook reports it back.
+        $applyRefund(
+            $payment,
+            (string) ($entity['id'] ?? ''),
+            (int) ($entity['amount'] ?? 0),
+        );
     }
 
     /**

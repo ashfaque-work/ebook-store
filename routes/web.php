@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AuthorController as AdminAuthorController;
 use App\Http\Controllers\Admin\BookController as AdminBookController;
 use App\Http\Controllers\Admin\GenreController as AdminGenreController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
@@ -76,6 +77,10 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::resource('authors', AdminAuthorController::class);
     Route::resource('genres', AdminGenreController::class);
     Route::resource('books', AdminBookController::class)->except('show');
+
+    Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
+    Route::get('orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
+    Route::post('orders/{order}/refund', [AdminOrderController::class, 'refund'])->name('orders.refund');
 });
 
 require __DIR__.'/auth.php';

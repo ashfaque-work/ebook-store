@@ -73,6 +73,11 @@ class Order extends Model
         return $this->hasMany(Payment::class);
     }
 
+    public function refunds(): HasMany
+    {
+        return $this->hasMany(Refund::class);
+    }
+
     /** The captured payment a refund would be issued against. */
     public function capturedPayment(): ?Payment
     {

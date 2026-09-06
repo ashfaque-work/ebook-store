@@ -22,24 +22,6 @@ beforeEach(function () {
     $this->order = Order::sole();
 });
 
-/** Post a webhook the way the gateway does: no session, no CSRF token. */
-function postWebhook(array $payload, ?string $signature = null, ?string $eventId = null)
-{
-    [$raw, $sig] = signedWebhook($payload);
-
-    return test()->call(
-        'POST',
-        route('webhooks.razorpay'),
-        [], [], [],
-        array_filter([
-            'CONTENT_TYPE' => 'application/json',
-            'HTTP_X_RAZORPAY_SIGNATURE' => $signature ?? $sig,
-            'HTTP_X_RAZORPAY_EVENT_ID' => $eventId ?? 'evt_'.bin2hex(random_bytes(8)),
-        ]),
-        $raw,
-    );
-}
-
 test('a signed webhook pays the order with no browser involved', function () {
     postWebhook(capturedWebhookFor($this->order))->assertOk();
 

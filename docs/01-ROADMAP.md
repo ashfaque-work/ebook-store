@@ -44,23 +44,35 @@ A10, the draft/publish rules, the Money conversions and the seeder.
 
 ---
 
-## Phase B — Real money 🔴
+## Phase B — Real money ✅ *(code done 2026-09-06; KYC is yours to submit)*
 
-*One to two weeks, most of it waiting on gateway approval. Start the legal pages on day one —
-they are the long pole.* Full detail in [04-PAYMENTS-INDIA.md](04-PAYMENTS-INDIA.md).
+Full detail in [04-PAYMENTS-INDIA.md](04-PAYMENTS-INDIA.md).
 
-- [ ] Write and publish Terms, Privacy, Refund & Cancellation, Shipping/Delivery, Contact — see [09-SEO-LEGAL.md](09-SEO-LEGAL.md)
-- [ ] Submit Razorpay KYC (PAN, bank account, the five live URLs above)
-- [ ] Migrate money columns to **integer paise**; add `currency`, `gateway`, `gateway_order_id`, `gateway_payment_id` to `orders`
-- [ ] Add the `payments` audit table
-- [ ] Redesign the `PaymentGateway` contract for redirect-and-webhook gateways (`createSession` / `verifyCallback` / `verifyWebhook`)
-- [ ] Implement `RazorpayPaymentGateway`; keep `FakePaymentGateway` bound in `testing` and `local`
-- [ ] Add `POST /webhooks/razorpay` — CSRF-exempt, signature-verified, idempotent
-- [ ] GST fields: buyer state for place-of-supply, invoice number series, tax breakdown on the receipt
-- [ ] Refund flow in admin, writing back to `orders.status` and revoking library access
+- [x] Terms, Privacy, Refunds, Delivery and Contact pages, live and linked from the footer
+- [ ] **Submit Razorpay KYC** — PAN, bank account, and the five URLs above. *Only you can do this; it takes 2–7 working days and nothing else in this phase is blocked by it.*
+- [x] Money migrated to **integer paise**; `currency`, `gateway`, `gateway_order_id`, `gateway_payment_id` on `orders`
+- [x] `payments` audit table, `webhook_events` table, `refunds` table
+- [x] `PaymentGateway` contract redesigned for redirect-and-webhook gateways (`createSession` / `verifyCallback` / `verifyWebhook` / `refund`)
+- [x] `RazorpayPaymentGateway` over the REST API; `FakePaymentGateway` implements the same four steps and signs with real HMAC
+- [x] `POST /webhooks/razorpay` — CSRF-exempt, signature-verified against the raw body, idempotent by event id
+- [x] GST: per-book rates, tax-inclusive pricing, place-of-supply, gapless per-financial-year invoice series
+- [x] Admin orders list with revenue tiles, filters and search; full and partial refunds that revoke library access
 
-**Done when:** a real ₹1 payment completes on live keys, the webhook marks the order paid
-with the browser closed mid-payment, and replaying the same webhook twice changes nothing.
+**Done when:** a real ₹1 payment completes on live keys, the webhook marks the
+order paid with the browser closed mid-payment, and replaying the same webhook
+twice changes nothing. *The last two are covered by tests; the first needs live
+keys after KYC.*
+
+**Result:** 144 tests, 573 assertions. The mock gateway runs the same four-step
+flow as Razorpay, so nothing here is only exercised in production.
+
+### To go live once KYC clears
+
+1. Set `RAZORPAY_KEY`, `RAZORPAY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`. Leaving them blank keeps the mock gateway.
+2. Register `https://<your-domain>/webhooks/razorpay` in the Razorpay dashboard for `payment.captured`, `payment.failed` and `refund.processed`.
+3. Fill in the `STORE_*` values in `.env` — the legal pages and the KYC application must agree.
+4. Turn on `STORE_GST_ENABLED` **only** once you hold a GSTIN, and set `STORE_STATE_CODE`.
+5. Make a real ₹1 purchase, then refund it from the admin orders page.
 
 ---
 
