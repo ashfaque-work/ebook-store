@@ -11,6 +11,7 @@ when code and docs disagree, fix one of them in the same commit.
 
 | # | Doc | What it answers |
 |---|-----|-----------------|
+| — | [YOUR-CHECKLIST.md](YOUR-CHECKLIST.md) | **Start here.** Everything left that needs a human, in order |
 | — | [00-AUDIT.md](00-AUDIT.md) | What is built, what is broken, ranked bug register |
 | — | [01-ROADMAP.md](01-ROADMAP.md) | What to build, in what order, with acceptance criteria |
 | — | [02-ARCHITECTURE.md](02-ARCHITECTURE.md) | How the system is wired now and where it is going |

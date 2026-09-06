@@ -118,7 +118,8 @@ What remains is provisioning accounts — object storage, database, SMTP, host �
 Razorpay KYC, which takes 2–7 working days and needs the five legal pages this repo already
 serves.
 
-Step-by-step: [docs/08-DEPLOYMENT.md](docs/08-DEPLOYMENT.md).
+Your remaining tasks, in order: **[docs/YOUR-CHECKLIST.md](docs/YOUR-CHECKLIST.md)**.
+Step-by-step deployment detail: [docs/08-DEPLOYMENT.md](docs/08-DEPLOYMENT.md).
 
 > **Storage matters more than it looks.** Free hosting rebuilds the container on every deploy
 > and takes `storage/app` with it. Move files to object storage *before* the first deploy or
