@@ -53,7 +53,7 @@ test('a seeded book can be bought and downloaded end to end', function () {
     $user = User::factory()->create();
     $book = Book::published()->where('price_paise', '>', 0)->first();
 
-    $this->actingAs($user)->withSession(['cart' => [$book->id]])->post('/checkout');
+    completeCheckout($user, [$book->id]);
 
     $this->actingAs($user)
         ->get(route('library.download', $book))

@@ -28,7 +28,7 @@ beforeEach(function () {
 
 test('a purchased book cannot be deleted and its files are left untouched', function () {
     $customer = User::factory()->create();
-    $this->actingAs($customer)->withSession(['cart' => [$this->book->id]])->post('/checkout');
+    completeCheckout($customer, [$this->book->id]);
 
     expect($customer->hasPurchased($this->book))->toBeTrue();
 
@@ -47,7 +47,7 @@ test('a purchased book cannot be deleted and its files are left untouched', func
 
 test('a purchased book can still be unpublished', function () {
     $customer = User::factory()->create();
-    $this->actingAs($customer)->withSession(['cart' => [$this->book->id]])->post('/checkout');
+    completeCheckout($customer, [$this->book->id]);
 
     $this->actingAs($this->admin)->put(route('admin.books.update', $this->book), [
         'title' => $this->book->title,

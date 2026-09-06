@@ -5,6 +5,8 @@ namespace App\Services\Checkout;
 use App\Mail\OrderConfirmation;
 use App\Models\InvoiceSequence;
 use App\Models\Order;
+use App\Models\Payment;
+use App\Services\Payments\PaymentResult;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
@@ -22,12 +24,11 @@ use Illuminate\Support\Facades\Mail;
 class FulfilOrder
 {
     /**
-     * @param  array{reference?: string|null, payment_id?: string|null}  $payment
      * @return bool true if this call is the one that fulfilled the order
      */
-    public function __invoke(Order $order, array $payment = []): bool
+    public function __invoke(Order $order, ?PaymentResult $result = null): bool
     {
-        $fulfilled = DB::transaction(function () use ($order, $payment) {
+        $fulfilled = DB::transaction(function () use ($order, $result) {
             // Lock the row so a simultaneous webhook waits rather than racing.
             $locked = Order::whereKey($order->getKey())->lockForUpdate()->first();
 
@@ -37,13 +38,31 @@ class FulfilOrder
 
             $locked->update([
                 'status' => Order::STATUS_PAID,
-                'payment_reference' => $payment['reference'] ?? $locked->payment_reference,
+                'payment_reference' => $result?->reference ?? $locked->payment_reference,
+                'gateway_payment_id' => $result?->reference ?? $locked->gateway_payment_id,
+                'failure_reason' => null,
                 'paid_at' => now(),
-                // Receipt numbering is a gapless per-financial-year series.
-                // Reserved inside this transaction so the number is never
-                // burned by an order that then rolls back.
+                // Receipt numbering is a gapless per-financial-year series,
+                // reserved inside this transaction so a number is never burned
+                // by an order that then rolls back.
                 'invoice_number' => $locked->invoice_number ?: InvoiceSequence::next(),
             ]);
+
+            if ($result?->reference) {
+                // Keyed on the gateway's own payment id, so the webhook and the
+                // callback converge on one row rather than writing two.
+                Payment::updateOrCreate(
+                    ['gateway_payment_id' => $result->reference],
+                    [
+                        'order_id' => $locked->id,
+                        'gateway' => $locked->gateway ?? 'unknown',
+                        'status' => Payment::STATUS_CAPTURED,
+                        'amount_paise' => $result->amountPaise ?? $locked->total_paise,
+                        'method' => $result->method,
+                        'payload' => $result->raw ?: null,
+                    ],
+                );
+            }
 
             return true;
         });

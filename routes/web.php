@@ -11,6 +11,7 @@ use App\Http\Controllers\LegalController;
 use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Webhooks\RazorpayWebhookController;
 use Illuminate\Support\Facades\Route;
 
 // Public Routes
@@ -48,8 +49,16 @@ Route::middleware('auth')->group(function () {
 // authenticated. Verification gates the admin panel, where it matters.
 Route::middleware('auth')->group(function () {
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+    Route::get('/checkout/{order}/pay', [CheckoutController::class, 'pay'])->name('checkout.pay');
+    Route::post('/checkout/{order}/verify', [CheckoutController::class, 'verify'])->name('checkout.verify');
     Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
 });
+
+// The gateway's own report of what happened, and the source of truth for
+// payment. Signature-verified and idempotent; no session, no CSRF token.
+Route::post('/webhooks/razorpay', RazorpayWebhookController::class)
+    ->middleware('throttle:120,1')
+    ->name('webhooks.razorpay');
 
 // Customer library (purchased books + gated downloads).
 Route::middleware('auth')->group(function () {

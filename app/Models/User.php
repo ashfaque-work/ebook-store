@@ -108,6 +108,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'name' => $this->name,
             'email' => $this->email,
             'role' => $this->role,
+            'state_code' => $this->state_code,
             'is_admin' => $this->isAdmin(),
             'email_verified_at' => $this->email_verified_at,
         ];

@@ -13,7 +13,7 @@ test('no tax is charged while GST is disabled', function () {
     $user = User::factory()->create();
     $book = Book::factory()->create(['price_paise' => 29900]);
 
-    $this->actingAs($user)->withSession(['cart' => [$book->id]])->post('/checkout');
+    completeCheckout($user, [$book->id]);
 
     $order = Order::sole();
 
@@ -30,7 +30,7 @@ test('enabling GST does not change what the customer pays', function () {
     $user = User::factory()->create();
     $book = Book::factory()->create(['price_paise' => 29900, 'tax_rate' => 18.0]);
 
-    $this->actingAs($user)->withSession(['cart' => [$book->id]])->post('/checkout');
+    completeCheckout($user, [$book->id]);
 
     $order = Order::sole();
 
@@ -77,7 +77,7 @@ test('a paid order is given an invoice number', function () {
     $user = User::factory()->create();
     $book = Book::factory()->create();
 
-    $this->actingAs($user)->withSession(['cart' => [$book->id]])->post('/checkout');
+    completeCheckout($user, [$book->id]);
 
     expect(Order::sole()->invoice_number)->toMatch('#^INV/\d{4}-\d{2}/\d{6}$#');
 });
@@ -87,7 +87,7 @@ test('invoice numbers run in sequence without gaps', function () {
         $user = User::factory()->create();
         $book = Book::factory()->create();
 
-        $this->actingAs($user)->withSession(['cart' => [$book->id]])->post('/checkout');
+        completeCheckout($user, [$book->id]);
 
         return Order::where('user_id', $user->id)->sole()->invoice_number;
     });
@@ -120,7 +120,7 @@ test('fulfilling an order twice does not burn a second invoice number', function
     $user = User::factory()->create();
     $book = Book::factory()->create();
 
-    $this->actingAs($user)->withSession(['cart' => [$book->id]])->post('/checkout');
+    completeCheckout($user, [$book->id]);
 
     $order = Order::sole();
     $first = $order->invoice_number;

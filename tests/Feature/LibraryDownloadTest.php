@@ -22,7 +22,7 @@ test('a user who purchased a book can download the file', function () {
     $book = Book::factory()->create(['file_path' => 'books/sample.pdf']);
 
     // Purchase via the checkout flow.
-    $this->actingAs($user)->withSession(['cart' => [$book->id]])->post('/checkout');
+    completeCheckout($user, [$book->id]);
 
     $this->actingAs($user)
         ->get(route('library.download', $book))
@@ -43,7 +43,7 @@ test('every delivered download is logged', function () {
     $user = User::factory()->create();
     $book = Book::factory()->create(['file_path' => 'books/sample.pdf']);
 
-    $this->actingAs($user)->withSession(['cart' => [$book->id]])->post('/checkout');
+    completeCheckout($user, [$book->id]);
     $this->actingAs($user)->get(route('library.download', $book))->assertOk();
 
     expect(DownloadLog::where('user_id', $user->id)->where('book_id', $book->id)->count())->toBe(1);
@@ -65,7 +65,7 @@ test('downloads are rate limited', function () {
     $user = User::factory()->create();
     $book = Book::factory()->create(['file_path' => 'books/sample.pdf']);
 
-    $this->actingAs($user)->withSession(['cart' => [$book->id]])->post('/checkout');
+    completeCheckout($user, [$book->id]);
 
     // The route allows 20 a minute; the 21st must be turned away.
     foreach (range(1, 20) as $ignored) {
@@ -82,7 +82,7 @@ test('the library lists only purchased books', function () {
     $owned = Book::factory()->create();
     Book::factory()->create();
 
-    $this->actingAs($user)->withSession(['cart' => [$owned->id]])->post('/checkout');
+    completeCheckout($user, [$owned->id]);
 
     $this->actingAs($user)
         ->get('/library')

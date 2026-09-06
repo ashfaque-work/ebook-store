@@ -36,8 +36,14 @@ class Order extends Model
         'currency',
         'tax_type',
         'buyer_state_code',
+        'gateway',
+        'gateway_order_id',
+        'gateway_payment_id',
+        'failure_reason',
         'payment_reference',
         'paid_at',
+        'refunded_at',
+        'refunded_paise',
     ];
 
     protected function casts(): array
@@ -46,7 +52,9 @@ class Order extends Model
             'total_paise' => 'integer',
             'subtotal_paise' => 'integer',
             'tax_paise' => 'integer',
+            'refunded_paise' => 'integer',
             'paid_at' => 'datetime',
+            'refunded_at' => 'datetime',
         ];
     }
 
@@ -58,6 +66,25 @@ class Order extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    /** The captured payment a refund would be issued against. */
+    public function capturedPayment(): ?Payment
+    {
+        return $this->payments()
+            ->whereIn('status', [Payment::STATUS_CAPTURED, Payment::STATUS_PARTIALLY_REFUNDED])
+            ->latest('id')
+            ->first();
+    }
+
+    public function isRefunded(): bool
+    {
+        return $this->status === self::STATUS_REFUNDED;
     }
 
     public function total(): Money

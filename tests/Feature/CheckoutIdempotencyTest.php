@@ -17,7 +17,7 @@ test('a checkout stores an idempotency key derived from the buyer and the books'
     $user = User::factory()->create();
     $book = Book::factory()->create();
 
-    $this->actingAs($user)->withSession(['cart' => [$book->id]])->post('/checkout');
+    completeCheckout($user, [$book->id]);
 
     $order = Order::first();
 
@@ -64,7 +64,7 @@ test('resubmitting a cart that is already paid for returns the original order', 
     $user = User::factory()->create();
     $book = Book::factory()->create();
 
-    $this->actingAs($user)->withSession(['cart' => [$book->id]])->post('/checkout');
+    completeCheckout($user, [$book->id]);
     $first = Order::sole();
 
     // The already-owned filter catches the sequential case and sends them to
@@ -82,7 +82,7 @@ test('the idempotency key column rejects a duplicate order outright', function (
     $user = User::factory()->create();
     $book = Book::factory()->create();
 
-    $this->actingAs($user)->withSession(['cart' => [$book->id]])->post('/checkout');
+    completeCheckout($user, [$book->id]);
 
     $key = Order::sole()->idempotency_key;
 
@@ -93,7 +93,7 @@ test('the idempotency key column rejects a duplicate order outright', function (
         'order_number' => 'ORD-DUPLICATE',
         'idempotency_key' => $key,
         'status' => Order::STATUS_PENDING,
-        'total' => 0,
+        'total_paise' => 0,
     ]))->toThrow(Illuminate\Database\QueryException::class);
 });
 
@@ -105,10 +105,7 @@ test('a receipt that fails to send does not fail a paid checkout', function () {
     // outage would otherwise take checkout down with it (audit bug A6).
     Mail::shouldReceive('to')->andThrow(new RuntimeException('SMTP is down'));
 
-    $this->actingAs($user)
-        ->withSession(['cart' => [$book->id]])
-        ->post('/checkout')
-        ->assertRedirect();
+    completeCheckout($user, [$book->id]);
 
     expect(Order::sole()->status)->toBe(Order::STATUS_PAID)
         ->and($user->hasPurchased($book))->toBeTrue();

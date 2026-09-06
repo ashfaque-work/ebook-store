@@ -8,8 +8,8 @@ test('a user sees only their own orders', function () {
     $other = User::factory()->create();
     $book = Book::factory()->create();
 
-    $this->actingAs($user)->withSession(['cart' => [$book->id]])->post('/checkout');
-    $this->actingAs($other)->withSession(['cart' => [$book->id]])->post('/checkout');
+    completeCheckout($user, [$book->id]);
+    completeCheckout($other, [$book->id]);
 
     $this->actingAs($user)
         ->get('/orders')
@@ -24,7 +24,7 @@ test('a user cannot view another user\'s order', function () {
     $other = User::factory()->create();
     $book = Book::factory()->create();
 
-    $this->actingAs($other)->withSession(['cart' => [$book->id]])->post('/checkout');
+    completeCheckout($other, [$book->id]);
     $order = $other->orders()->first();
 
     $this->actingAs($user)
