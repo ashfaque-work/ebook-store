@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Book;
+use App\Support\Meta;
 use Illuminate\Support\Facades\Session;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -17,6 +18,7 @@ class BookController extends Controller
         $book->load('author', 'genre');
 
         return Inertia::render('Books/Show', [
+            'meta' => Meta::forBook($book)->toArray(),
             'book' => [
                 'id' => $book->id,
                 'slug' => $book->slug,

@@ -14,12 +14,20 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Reader\AnnotationController;
 use App\Http\Controllers\Reader\ReaderController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\Webhooks\RazorpayWebhookController;
 use Illuminate\Support\Facades\Route;
 
 // Public Routes
 Route::get('/', HomeController::class)->name('home');
 Route::get('/books/{book:slug}', [BookController::class, 'show'])->name('books.show');
+
+// Crawlability. Generated rather than stored: a stale sitemap is worse than
+// none, and robots.txt has to know the real APP_URL.
+Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
+Route::get('/robots.txt', fn () => response()
+    ->view('robots')
+    ->header('Content-Type', 'text/plain'))->name('robots');
 
 // Policy pages. Payment gateways require these to be live before they will
 // activate an account, so they are plain public routes with no dependencies.

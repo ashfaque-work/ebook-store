@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Book;
 use App\Models\Genre;
 use App\Models\ReadingProgress;
+use App\Support\Meta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Inertia\Inertia;
@@ -48,7 +49,16 @@ class HomeController extends Controller
             ->paginate(24)
             ->withQueryString();
 
+        $label = $filters['search'] ?? null;
+
         return Inertia::render('Welcome', [
+            'meta' => Meta::make(
+                title: $label ? 'Search: '.$label : 'Browse books',
+                description: 'Digital books you can read in your browser, delivered the moment you buy them.',
+                // A results page is one of infinitely many query strings; the
+                // catalogue itself is the page worth indexing.
+                noindex: true,
+            )->toArray(),
             'mode' => 'results',
             'books' => $books,
             'genres' => $this->genres(),
@@ -65,6 +75,13 @@ class HomeController extends Controller
             ->first();
 
         return Inertia::render('Welcome', [
+            'meta' => Meta::make(
+                title: 'Books worth your evening',
+                description: 'Buy a book and start reading in seconds — in your browser, on any device. '
+                    .'Free first chapters on everything.',
+                canonical: route('home'),
+                image: $featured?->cover_image_path,
+            )->toArray(),
             'mode' => 'shelves',
             'genres' => $this->genres(),
             'filters' => [],
