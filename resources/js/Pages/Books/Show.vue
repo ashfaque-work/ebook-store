@@ -23,18 +23,18 @@ const addToCart = () => {
     <Head :title="book.title" />
 
     <GuestLayout>
-        <div class="max-w-4xl mx-auto bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-6 md:p-8">
+        <div class="max-w-4xl mx-auto bg-white dark:bg-gray-800 shadow-xs sm:rounded-lg p-6 md:p-8">
             <div class="md:flex">
                 <div class="md:w-1/3">
                     <BookCover :src="book.cover_image_path" :title="book.title" :author="book.author?.name"
-                        class="w-full aspect-[2/3] rounded-lg shadow-lg" />
+                        class="w-full aspect-2/3 rounded-lg shadow-lg" />
                 </div>
                 <div class="md:w-2/3 md:pl-8 mt-6 md:mt-0 flex flex-col">
                     <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ book.title }}</h1>
                     <p class="mt-2 text-lg text-gray-600 dark:text-gray-400">
                         by {{ book.author.name }} in {{ book.genre.name }}
                     </p>
-                    <p class="mt-4 text-gray-700 dark:text-gray-300 flex-grow">{{ book.description }}</p>
+                    <p class="mt-4 text-gray-700 dark:text-gray-300 grow">{{ book.description }}</p>
 
                     <div class="mt-6 flex items-center justify-between">
                         <span class="text-3xl font-bold text-blue-600 dark:text-blue-400">{{ formatPrice(book.price_paise) }}</span>

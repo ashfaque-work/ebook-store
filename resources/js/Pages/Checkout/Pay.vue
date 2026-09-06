@@ -87,7 +87,7 @@ const simulateFailure = () =>
 
     <GuestLayout>
         <div class="mx-auto max-w-lg px-4 sm:px-6">
-            <div class="rounded-lg bg-white p-6 shadow-sm dark:bg-gray-800 sm:p-8">
+            <div class="rounded-lg bg-white p-6 shadow-xs dark:bg-gray-800 sm:p-8">
                 <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
                     Complete your payment
                 </h1>
@@ -127,7 +127,7 @@ const simulateFailure = () =>
                 </p>
 
                 <button type="button" @click="pay" :disabled="processing"
-                    class="mt-6 flex w-full items-center justify-center rounded-md bg-blue-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:opacity-60">
+                    class="mt-6 flex w-full items-center justify-center rounded-md bg-blue-600 px-6 py-3 text-base font-medium text-white shadow-xs hover:bg-blue-700 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:opacity-60">
                     {{ processing ? 'Confirming…' : `Pay ${formatPaise(order.total_paise)}` }}
                 </button>
 

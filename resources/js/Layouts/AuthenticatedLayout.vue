@@ -28,7 +28,7 @@ const isUrl = (...urls) => {
     <div>
         <ToastListener />
         <div class="min-h-screen bg-gray-100 dark:bg-gray-900 flex">
-            <aside class="w-64 bg-gray-800 text-white flex-shrink-0">
+            <aside class="w-64 bg-gray-800 text-white shrink-0">
                 <div class="p-4 flex items-center justify-center h-16">
                     <Link href="/dashboard">
                     <ApplicationLogo class="block h-9 w-auto fill-current text-white" />
@@ -86,7 +86,7 @@ const isUrl = (...urls) => {
 
                             <div class="hidden sm:flex sm:items-center sm:ms-6">
                                 <button @click="toggleTheme"
-                                    class="mr-4 p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none">
+                                    class="mr-4 p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-hidden">
                                     <!-- Show MOON icon to switch to Dark Mode -->
                                     <svg v-if="theme === 'light'" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6"
                                         viewBox="0 0 20 20" fill="currentColor">
@@ -104,7 +104,7 @@ const isUrl = (...urls) => {
                                         <template #trigger>
                                             <span class="inline-flex rounded-md">
                                                 <button type="button"
-                                                    class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition ease-in-out duration-150">
+                                                    class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-hidden transition ease-in-out duration-150">
                                                     {{ $page.props.auth.user.name }}
                                                     <svg class="ms-2 -me-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg"
                                                         viewBox="0 0 20 20" fill="currentColor">

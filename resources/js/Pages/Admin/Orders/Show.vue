@@ -48,7 +48,7 @@ const formatDateTime = (value) =>
                 &larr; All orders
             </Link>
 
-            <div class="rounded-lg bg-white p-6 shadow-sm dark:bg-gray-800">
+            <div class="rounded-lg bg-white p-6 shadow-xs dark:bg-gray-800">
                 <dl class="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
                     <div>
                         <dt class="text-gray-500 dark:text-gray-400">Status</dt>
@@ -106,7 +106,7 @@ const formatDateTime = (value) =>
                 </div>
             </div>
 
-            <div v-if="order.refunds?.length" class="rounded-lg bg-white p-6 shadow-sm dark:bg-gray-800">
+            <div v-if="order.refunds?.length" class="rounded-lg bg-white p-6 shadow-xs dark:bg-gray-800">
                 <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Refunds</h3>
                 <ul role="list" class="mt-3 divide-y divide-gray-200 text-sm dark:divide-gray-700">
                     <li v-for="refund in order.refunds" :key="refund.id"
@@ -120,7 +120,7 @@ const formatDateTime = (value) =>
                 </ul>
             </div>
 
-            <div class="rounded-lg bg-white p-6 shadow-sm dark:bg-gray-800">
+            <div class="rounded-lg bg-white p-6 shadow-xs dark:bg-gray-800">
                 <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Refund</h3>
                 <p v-if="!canRefund" class="mt-2 text-sm text-gray-500 dark:text-gray-400">
                     There is nothing left to refund on this order.
@@ -131,7 +131,7 @@ const formatDateTime = (value) =>
                         the customer's library.
                     </p>
                     <button type="button" @click="confirming = true"
-                        class="mt-4 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500">
+                        class="mt-4 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500">
                         Refund this order
                     </button>
                 </template>

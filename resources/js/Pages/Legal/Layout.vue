@@ -33,7 +33,7 @@ const links = [
                 </Link>
             </nav>
 
-            <article class="legal rounded-lg bg-white p-6 shadow-sm dark:bg-gray-800 sm:p-10">
+            <article class="legal rounded-lg bg-white p-6 shadow-xs dark:bg-gray-800 sm:p-10">
                 <h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">{{ title }}</h1>
                 <p v-if="lastUpdated" class="mt-2 text-sm text-gray-500 dark:text-gray-400">
                     Last updated {{ lastUpdated }} · {{ store.legalName }}

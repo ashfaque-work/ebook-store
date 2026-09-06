@@ -33,7 +33,7 @@ const deleteBook = (book) => {
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Books Management</h2>
         </template>
 
-        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xs sm:rounded-lg">
             <div class="p-6 text-gray-900 dark:text-gray-100">
                 <div class="flex justify-end mb-4">
                     <Link href="/admin/books/create">

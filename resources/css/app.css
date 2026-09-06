@@ -1,3 +1,193 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@plugin '@tailwindcss/forms';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+  Ink and paper.
+
+  The store is ink: deep indigo, dense, cover-forward — the feeling of a shelf
+  in low light, where the covers are the only bright things. Indigo rather than
+  the expected cream because a storefront's job is to make covers glow, and
+  covers are designed against white.
+
+  The reader is paper. Opening a book drains the ink out of the interface. That
+  contrast is the identity, and it is also wayfinding: you always know whether
+  you are shopping or reading.
+
+  See docs/06-DESIGN-SYSTEM.md.
+*/
+@theme {
+    /* Brand — fixed in both themes. */
+    --color-ink: oklch(0.21 0.045 273);
+    --color-ink-raised: oklch(0.27 0.052 273);
+    --color-ink-line: oklch(0.35 0.05 273);
+    --color-paper: oklch(0.98 0.008 85);
+    --color-marigold: oklch(0.78 0.148 68);
+    --color-marigold-bright: oklch(0.85 0.14 72);
+    --color-verdigris: oklch(0.6 0.07 175);
+
+    /* Semantic surfaces — the values behind these flip with the theme. */
+    --color-surface: var(--surface);
+    --color-raised: var(--raised);
+    --color-line: var(--line);
+    --color-content: var(--content);
+    --color-muted: var(--muted);
+    --color-accent-text: var(--accent-text);
+
+    /* Two families, sharply distinct in job. Archivo speaks in spines,
+       Literata in pages — it was designed for screen reading, which is
+       exactly what this product exists to do. */
+    --font-display: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+    --font-reading: 'Literata', ui-serif, Georgia, serif;
+    --font-sans: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+
+    /* Two radii, deliberately. One radius on everything is the clearest tell
+       of a templated design: books have crisp edges, controls are soft. */
+    --radius-cover: 2px;
+    --radius-ui: 10px;
+
+    --text-display: clamp(1.75rem, 1.2rem + 2vw, 2.75rem);
+}
+
+:root {
+    --surface: oklch(0.98 0.008 85);
+    --raised: oklch(1 0 0);
+    --line: oklch(0.91 0.008 85);
+    --content: oklch(0.24 0.02 273);
+    --muted: oklch(0.5 0.02 273);
+    /* Marigold fails contrast as text on paper; this is its readable twin. */
+    --accent-text: oklch(0.52 0.11 68);
+
+    color-scheme: light;
+}
+
+.dark {
+    --surface: oklch(0.21 0.045 273);
+    --raised: oklch(0.27 0.052 273);
+    --line: oklch(0.35 0.05 273);
+    --content: oklch(0.92 0.006 85);
+    --muted: oklch(0.7 0.02 273);
+    --accent-text: oklch(0.78 0.148 68);
+
+    color-scheme: dark;
+}
+
+@layer base {
+    /*
+      Tailwind v4 defaults borders to currentColor. Ours follow the theme line
+      colour instead, so a border never has to be told what colour it is.
+    */
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-line);
+    }
+
+    html {
+        -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+        background-color: var(--color-surface);
+        color: var(--color-content);
+        font-family: var(--font-display);
+        font-feature-settings: 'cv11';
+    }
+
+    /* Body copy is Literata. Serif reading text gets the extra leading it
+       needs, and measure is capped so lines stay readable. */
+    p,
+    li,
+    blockquote {
+        font-family: var(--font-reading);
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+        font-family: var(--font-display);
+        letter-spacing: -0.018em;
+        font-weight: 600;
+        text-wrap: balance;
+    }
+
+    /* Visible keyboard focus everywhere, in one place. */
+    :focus-visible {
+        outline: 2px solid var(--color-marigold);
+        outline-offset: 2px;
+        border-radius: 3px;
+    }
+
+    ::selection {
+        background: color-mix(in oklch, var(--color-marigold) 35%, transparent);
+    }
+}
+
+@layer components {
+    /*
+      The shelf: covers sit *on* a hairline rule with their own shadow, scroll
+      snapped, sized so the next cover is half visible — which tells a person
+      the row scrolls better than any arrow button.
+    */
+    .shelf {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(9.5rem, 1fr);
+        gap: 1.25rem;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: thin;
+        padding-bottom: 1.25rem;
+        border-bottom: 1px solid var(--color-line);
+    }
+
+    .shelf > * {
+        scroll-snap-align: start;
+    }
+
+    @media (min-width: 1280px) {
+        /* Wide enough to see everything: scrolling sideways is then worse. */
+        .shelf {
+            grid-auto-flow: row;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            overflow-x: visible;
+        }
+    }
+
+    /* A book is an object with thickness. The shadow belongs to the cover,
+       not to a card wrapped around it. */
+    .cover-shadow {
+        box-shadow:
+            0 1px 2px rgb(0 0 0 / 0.18),
+            0 8px 20px -8px rgb(0 0 0 / 0.35);
+    }
+}
+
+@layer utilities {
+    .measure {
+        max-width: 66ch;
+    }
+
+    .tabular {
+        font-variant-numeric: tabular-nums;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

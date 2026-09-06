@@ -55,7 +55,7 @@ const clearCart = () => {
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
                     <ul role="list" class="divide-y divide-gray-200 dark:divide-gray-700">
                         <li v-for="item in cartItems" :key="item.id" class="flex p-4 sm:p-6">
-                            <div class="flex-shrink-0">
+                            <div class="shrink-0">
                                 <BookCover :src="item.cover_image_path" :title="item.title"
                                     class="w-24 h-36 rounded-md" />
                             </div>
@@ -89,7 +89,7 @@ const clearCart = () => {
                     </p>
                     <div class="mt-6">
                         <button @click="checkout" type="button"
-                            class="w-full flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-blue-700">
+                            class="w-full flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-6 py-3 text-base font-medium text-white shadow-xs hover:bg-blue-700">
                             Checkout
                         </button>
                     </div>

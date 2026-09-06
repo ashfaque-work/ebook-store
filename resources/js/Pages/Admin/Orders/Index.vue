@@ -60,13 +60,13 @@ const tiles = computed(() => [
 
         <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
             <div v-for="tile in tiles" :key="tile.label"
-                class="rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800">
+                class="rounded-lg bg-white p-4 shadow-xs dark:bg-gray-800">
                 <p class="text-xs text-gray-500 dark:text-gray-400">{{ tile.label }}</p>
                 <p class="mt-1 text-xl font-semibold tabular-nums text-gray-900 dark:text-white">{{ tile.value }}</p>
             </div>
         </div>
 
-        <div class="mt-6 rounded-lg bg-white shadow-sm dark:bg-gray-800">
+        <div class="mt-6 rounded-lg bg-white shadow-xs dark:bg-gray-800">
             <div class="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <input v-model="search" type="search" placeholder="Order, invoice, customer…"
                     class="rounded-md border-gray-300 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200" />

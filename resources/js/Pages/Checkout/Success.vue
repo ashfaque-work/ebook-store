@@ -39,7 +39,7 @@ defineProps({
 
                 <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
                     <Link :href="route('library.index')"
-                        class="inline-flex items-center justify-center rounded-md bg-blue-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-blue-700">
+                        class="inline-flex items-center justify-center rounded-md bg-blue-600 px-6 py-3 text-base font-medium text-white shadow-xs hover:bg-blue-700">
                         Go to My Library
                     </Link>
                     <Link href="/"

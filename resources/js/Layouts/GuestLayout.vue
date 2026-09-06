@@ -35,7 +35,7 @@ const policyLinks = [
 
                     <div class="flex items-center">
                         <button @click="toggleTheme"
-                            class="mr-4 p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none">
+                            class="mr-4 p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-hidden">
                             <!-- Show MOON icon to switch to Dark Mode -->
                             <svg v-if="theme === 'light'" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6"
                                 viewBox="0 0 20 20" fill="currentColor">
@@ -61,14 +61,14 @@ const policyLinks = [
                         </span>
                         </Link>
                         <Link v-if="$page.props.auth.user" href="/dashboard"
-                            class="font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">
+                            class="font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline-solid focus:outline-2 focus:rounded-xs focus:outline-red-500">
                         Dashboard</Link>
                         <template v-else>
                             <Link href="/login"
-                                class="font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">
+                                class="font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline-solid focus:outline-2 focus:rounded-xs focus:outline-red-500">
                             Log in</Link>
                             <Link v-if="$page.props.canRegister" href="/register"
-                                class="ms-4 font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">
+                                class="ms-4 font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline-solid focus:outline-2 focus:rounded-xs focus:outline-red-500">
                             Register</Link>
                         </template>
                     </div>
@@ -76,7 +76,7 @@ const policyLinks = [
             </div>
         </nav>
 
-        <main class="flex-grow">
+        <main class="grow">
             <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <slot />
             </div>

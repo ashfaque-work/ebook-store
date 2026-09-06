@@ -23,7 +23,7 @@ const formatDate = (value) =>
 
         <div class="py-12">
             <div class="mx-auto max-w-2xl sm:px-6 lg:px-8">
-                <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-6 md:p-8">
+                <div class="bg-white dark:bg-gray-800 shadow-xs sm:rounded-lg p-6 md:p-8">
                     <div class="flex justify-between text-sm text-gray-500 dark:text-gray-400">
                         <span>Placed {{ formatDate(order.created_at) }}</span>
                         <span class="capitalize">Status: {{ order.status }}</span>

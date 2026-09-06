@@ -6,7 +6,7 @@ const props = defineProps({
     title: { type: String, required: true },
     author: { type: String, default: null },
     /** Tailwind classes for the box. Aspect ratio is fixed at 2:3 by default. */
-    class: { type: String, default: 'w-full aspect-[2/3]' },
+    class: { type: String, default: 'w-full aspect-2/3' },
 });
 
 const failed = ref(false);

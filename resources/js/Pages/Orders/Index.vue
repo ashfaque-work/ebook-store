@@ -32,14 +32,14 @@ const statusClasses = (status) => ({
 
         <div class="py-12">
             <div class="mx-auto max-w-5xl sm:px-6 lg:px-8">
-                <div v-if="isEmpty" class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-8 text-center">
+                <div v-if="isEmpty" class="bg-white dark:bg-gray-800 shadow-xs sm:rounded-lg p-8 text-center">
                     <p class="text-gray-600 dark:text-gray-400 text-lg">You haven't placed any orders yet.</p>
                     <Link href="/" class="mt-4 inline-block text-blue-600 dark:text-blue-400 hover:underline">
                         Browse the store
                     </Link>
                 </div>
 
-                <div v-else class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg overflow-hidden">
+                <div v-else class="bg-white dark:bg-gray-800 shadow-xs sm:rounded-lg overflow-hidden">
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
