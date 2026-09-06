@@ -10,6 +10,14 @@ const page = usePage();
 //Read the simpler 'cartCount' prop directly
 const cartCount = computed(() => page.props.cartCount);
 
+const policyLinks = [
+    { href: '/terms', label: 'Terms' },
+    { href: '/privacy', label: 'Privacy' },
+    { href: '/refunds', label: 'Refunds' },
+    { href: '/delivery', label: 'Delivery' },
+    { href: '/contact', label: 'Contact' },
+];
+
 </script>
 
 <template>
@@ -75,9 +83,16 @@ const cartCount = computed(() => page.props.cartCount);
         </main>
 
         <footer class="bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700">
-            <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
-                <p class="text-center text-sm text-gray-500 dark:text-gray-400">
-                    &copy; {{ new Date().getFullYear() }} {{ $page.props.appName ?? 'eBook Store' }}. All rights reserved.
+            <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                <nav aria-label="Policies"
+                    class="flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-gray-500 dark:text-gray-400">
+                    <Link v-for="link in policyLinks" :key="link.href" :href="link.href"
+                        class="hover:text-gray-900 dark:hover:text-white">{{ link.label }}</Link>
+                </nav>
+                <p class="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                    &copy; {{ new Date().getFullYear() }}
+                    {{ $page.props.store?.legalName ?? $page.props.appName ?? 'eBook Store' }}.
+                    All rights reserved.
                 </p>
             </div>
         </footer>

@@ -7,6 +7,7 @@ use App\Http\Controllers\BookController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\LegalController;
 use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
@@ -15,6 +16,12 @@ use Illuminate\Support\Facades\Route;
 // Public Routes
 Route::get('/', HomeController::class)->name('home');
 Route::get('/books/{book:slug}', [BookController::class, 'show'])->name('books.show');
+
+// Policy pages. Payment gateways require these to be live before they will
+// activate an account, so they are plain public routes with no dependencies.
+Route::get('/{page}', [LegalController::class, 'show'])
+    ->whereIn('page', array_keys(LegalController::PAGES))
+    ->name('legal');
 
 // Cart Routes
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');

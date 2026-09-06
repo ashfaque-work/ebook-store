@@ -44,6 +44,21 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user()?->toInertiaArray(),
             ],
             'appName' => config('app.name'),
+            // Business identity and policy parameters, so the legal pages and
+            // receipts read from one place instead of hardcoded prose.
+            'store' => [
+                'legalName' => config('store.legal_name'),
+                'tradingName' => config('store.trading_name'),
+                'supportEmail' => config('store.support_email'),
+                'supportPhone' => config('store.support_phone'),
+                'address' => config('store.address'),
+                'jurisdiction' => config('store.jurisdiction'),
+                'gstin' => config('store.gstin'),
+                'refundWindowDays' => config('store.refund_window_days'),
+                'refundMaxReadPercent' => config('store.refund_max_read_percent'),
+                'refundProcessingDays' => config('store.refund_processing_days'),
+                'supportResponseHours' => config('store.support_response_hours'),
+            ],
             'canRegister' => Route::has('register'),
             'toast' => fn () => $request->session()->get('toast'),
             'cartCount' => fn () => count(Session::get('cart', [])),
