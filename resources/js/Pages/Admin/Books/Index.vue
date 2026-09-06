@@ -17,75 +17,107 @@ const deleteBook = (book) => {
         return;
     }
 
-    if (confirm(`Delete "${book.title}"? This cannot be undone.`)) {
+    if (confirm(`Delete"${book.title}"? This cannot be undone.`)) {
         router.delete(`/admin/books/${book.id}`);
     }
 };
-
 </script>
 
 <template>
-
     <Head title="Books Management" />
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Books Management</h2>
+            <h2 class="text-content text-xl leading-tight font-semibold">Books Management</h2>
         </template>
 
-        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xs sm:rounded-lg">
-            <div class="p-6 text-gray-900 dark:text-gray-100">
-                <div class="flex justify-end mb-4">
+        <div class="bg-raised overflow-hidden shadow-xs sm:rounded-[--radius-ui]">
+            <div class="text-content p-6">
+                <div class="mb-4 flex justify-end">
                     <Link href="/admin/books/create">
-                    <PrimaryButton>Add Book</PrimaryButton>
+                        <PrimaryButton>Add Book</PrimaryButton>
                     </Link>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-700">
+                    <table class="divide-line min-w-full divide-y">
+                        <thead class="bg-surface">
                             <tr>
-                                <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                    Cover</th>
-                                <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                    Title</th>
-                                <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                    Author</th>
-                                <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                    Genre</th>
-                                <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                    Price</th>
-                                <th scope="col"
-                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                    Actions</th>
+                                <th
+                                    scope="col"
+                                    class="text-muted px-6 py-3 text-left text-xs font-medium tracking-wider uppercase"
+                                >
+                                    Cover
+                                </th>
+                                <th
+                                    scope="col"
+                                    class="text-muted px-6 py-3 text-left text-xs font-medium tracking-wider uppercase"
+                                >
+                                    Title
+                                </th>
+                                <th
+                                    scope="col"
+                                    class="text-muted px-6 py-3 text-left text-xs font-medium tracking-wider uppercase"
+                                >
+                                    Author
+                                </th>
+                                <th
+                                    scope="col"
+                                    class="text-muted px-6 py-3 text-left text-xs font-medium tracking-wider uppercase"
+                                >
+                                    Genre
+                                </th>
+                                <th
+                                    scope="col"
+                                    class="text-muted px-6 py-3 text-left text-xs font-medium tracking-wider uppercase"
+                                >
+                                    Price
+                                </th>
+                                <th
+                                    scope="col"
+                                    class="text-muted px-6 py-3 text-right text-xs font-medium tracking-wider uppercase"
+                                >
+                                    Actions
+                                </th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        <tbody class="bg-raised divide-line divide-y">
                             <tr v-for="book in books.data" :key="book.id">
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <BookCover :src="book.cover_image_path" :title="book.title" class="h-16 w-12 rounded-md" />
+                                    <BookCover
+                                        :src="book.cover_image_path"
+                                        :title="book.title"
+                                        class="h-16 w-12 rounded-[--radius-ui]"
+                                    />
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     {{ book.title }}
-                                    <span v-if="!book.is_published"
-                                        class="ml-2 rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-300">Draft</span>
+                                    <span
+                                        v-if="!book.is_published"
+                                        class="ml-2 rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700"
+                                    >
+                                        Draft
+                                    </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">{{ book.author.name }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">{{ book.genre.name }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">{{ formatPrice(book.price_paise) }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <Link :href="`/admin/books/${book.id}/edit`"
-                                        class="text-blue-600 dark:text-blue-400 hover:underline mr-4">Edit</Link>
-                                    <button @click="deleteBook(book)"
-                                        class="text-red-600 dark:text-red-400 hover:underline">Delete</button>
+                                <td class="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
+                                    <Link
+                                        :href="`/admin/books/${book.id}/edit`"
+                                        class="text-accent-text mr-4 hover:underline"
+                                    >
+                                        Edit
+                                    </Link>
+                                    <button
+                                        @click="deleteBook(book)"
+                                        class="text-red-600 hover:underline dark:text-red-400"
+                                    >
+                                        Delete
+                                    </button>
                                 </td>
                             </tr>
                             <tr v-if="books.data.length === 0">
-                                <td colspan="6" class="px-6 py-4 whitespace-nowrap text-center text-gray-500">
+                                <td colspan="6" class="px-6 py-4 text-center whitespace-nowrap text-gray-500">
                                     No books found.
                                 </td>
                             </tr>

@@ -1,53 +1,67 @@
 <script setup>
 import GuestLayout from '@/Layouts/GuestLayout.vue';
+import UiButton from '@/Components/Ui/UiButton.vue';
 import { Head, Link } from '@inertiajs/vue3';
+import { Check } from 'lucide-vue-next';
 import { formatPaise, formatPrice } from '@/lib/money';
 
-defineProps({
-    order: Object,
-});
+defineProps({ order: Object });
 </script>
 
 <template>
-    <Head title="Order Confirmed" />
+    <Head title="Order confirmed" />
 
     <GuestLayout>
-        <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
-                <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
-                    <svg class="h-6 w-6 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24"
-                        stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                    </svg>
+        <div class="mx-auto max-w-lg px-4 py-14 sm:px-6">
+            <div class="flex items-center gap-3">
+                <span class="bg-verdigris/15 text-verdigris grid size-10 shrink-0 place-content-center rounded-full">
+                    <Check class="size-5" aria-hidden="true" />
+                </span>
+                <div>
+                    <h1 class="text-xl">Your books are ready</h1>
+                    <p class="text-muted text-sm">Order {{ order.order_number }}</p>
                 </div>
+            </div>
 
-                <h1 class="mt-4 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-                    Thank you for your purchase!
-                </h1>
-                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                    Order <span class="font-semibold">{{ order.order_number }}</span> &middot;
-                    Total {{ formatPaise(order.total_paise) }}
-                </p>
-
-                <ul role="list" class="mt-6 divide-y divide-gray-200 dark:divide-gray-700 text-left">
-                    <li v-for="item in order.items" :key="item.id"
-                        class="flex justify-between py-3 text-sm text-gray-700 dark:text-gray-300">
+            <div class="border-line bg-raised mt-8 rounded-[--radius-ui] border p-6">
+                <ul role="list" class="divide-line divide-y">
+                    <li v-for="item in order.items" :key="item.id" class="flex justify-between gap-4 py-3 text-sm">
                         <span>{{ item.title }}</span>
-                        <span>{{ formatPrice(item.price_paise) }}</span>
+                        <span class="tabular shrink-0">{{ formatPrice(item.price_paise) }}</span>
                     </li>
                 </ul>
 
-                <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-                    <Link :href="route('library.index')"
-                        class="inline-flex items-center justify-center rounded-md bg-blue-600 px-6 py-3 text-base font-medium text-white shadow-xs hover:bg-blue-700">
-                        Go to My Library
-                    </Link>
-                    <Link href="/"
-                        class="inline-flex items-center justify-center rounded-md border border-gray-300 dark:border-gray-600 px-6 py-3 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
-                        Continue Shopping
-                    </Link>
+                <div v-if="order.tax_paise > 0" class="border-line text-muted mt-3 space-y-1 border-t pt-3 text-sm">
+                    <div class="flex justify-between">
+                        <span>Subtotal</span>
+                        <span class="tabular">{{ formatPaise(order.subtotal_paise) }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>{{ order.tax_type === 'igst' ? 'IGST' : 'CGST + SGST' }}</span>
+                        <span class="tabular">{{ formatPaise(order.tax_paise) }}</span>
+                    </div>
                 </div>
+
+                <div class="border-line mt-3 flex justify-between border-t pt-3 font-semibold">
+                    <span>Total paid</span>
+                    <span class="tabular">{{ formatPaise(order.total_paise) }}</span>
+                </div>
+
+                <p v-if="order.invoice_number" class="text-muted mt-4 text-xs">
+                    Invoice {{ order.invoice_number }} &middot; a receipt is on its way to your inbox
+                </p>
             </div>
+
+            <div class="mt-8 grid gap-3 sm:grid-cols-2">
+                <UiButton href="/library" size="lg">Start reading</UiButton>
+                <UiButton href="/" variant="secondary" size="lg">Keep browsing</UiButton>
+            </div>
+
+            <p class="text-muted mt-6 text-sm">
+                Something wrong with this order?
+                <Link href="/contact" class="text-accent-text hover:underline">Tell us</Link>
+                and we will sort it out.
+            </p>
         </div>
     </GuestLayout>
 </template>

@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue';
-import GuestLayout from '@/Layouts/GuestLayout.vue';
+import AuthLayout from '@/Layouts/AuthLayout.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
@@ -20,19 +20,18 @@ const verificationLinkSent = computed(() => props.status === 'verification-link-
 </script>
 
 <template>
-    <GuestLayout>
-
+    <AuthLayout title="Verify your email">
         <Head title="Email Verification" />
 
         <div
-            class="w-full sm:max-w-md mx-auto mt-6 px-6 py-4 bg-white dark:bg-gray-800 shadow-md overflow-hidden sm:rounded-lg">
-            <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+            class="bg-raised mx-auto mt-6 w-full overflow-hidden px-6 py-4 shadow-md sm:max-w-md sm:rounded-[--radius-ui]"
+        >
+            <div class="text-muted mb-4 text-sm">
                 Thanks for signing up! Before getting started, could you verify your email address by clicking on the
-                link
-                we just emailed to you? If you didn't receive the email, we will gladly send you another.
+                link we just emailed to you? If you didn't receive the email, we will gladly send you another.
             </div>
 
-            <div class="mb-4 font-medium text-sm text-green-600 dark:text-green-400" v-if="verificationLinkSent">
+            <div class="mb-4 text-sm font-medium text-green-600 dark:text-green-400" v-if="verificationLinkSent">
                 A new verification link has been sent to the email address you provided during registration.
             </div>
 
@@ -42,11 +41,16 @@ const verificationLinkSent = computed(() => props.status === 'verification-link-
                         Resend Verification Email
                     </PrimaryButton>
 
-                    <Link href="/logout" method="post" as="button"
-                        class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800">
-                    Log Out</Link>
+                    <Link
+                        href="/logout"
+                        method="post"
+                        as="button"
+                        class="text-muted rounded-[--radius-ui] text-sm underline hover:text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden dark:hover:text-gray-100 dark:focus:ring-offset-gray-800"
+                    >
+                        Log Out
+                    </Link>
                 </div>
             </form>
         </div>
-    </GuestLayout>
+    </AuthLayout>
 </template>

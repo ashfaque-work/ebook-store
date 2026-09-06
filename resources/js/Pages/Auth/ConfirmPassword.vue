@@ -1,5 +1,5 @@
 <script setup>
-import GuestLayout from '@/Layouts/GuestLayout.vue';
+import AuthLayout from '@/Layouts/AuthLayout.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -18,12 +18,11 @@ const submit = () => {
 </script>
 
 <template>
-    <GuestLayout>
+    <AuthLayout title="Confirm your password" subtitle="Please confirm it before continuing.">
         <Head title="Confirm Password" />
 
-        <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-            This is a secure area of the application. Please confirm your
-            password before continuing.
+        <div class="text-muted mb-4 text-sm">
+            This is a secure area of the application. Please confirm your password before continuing.
         </div>
 
         <form @submit.prevent="submit">
@@ -42,14 +41,10 @@ const submit = () => {
             </div>
 
             <div class="mt-4 flex justify-end">
-                <PrimaryButton
-                    class="ms-4"
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
-                >
+                <PrimaryButton class="ms-4" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
                     Confirm
                 </PrimaryButton>
             </div>
         </form>
-    </GuestLayout>
+    </AuthLayout>
 </template>

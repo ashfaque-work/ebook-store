@@ -26,14 +26,18 @@ const links = [
     <GuestLayout>
         <div class="mx-auto max-w-3xl px-4 sm:px-6">
             <nav aria-label="Policies" class="mb-8 flex flex-wrap gap-x-4 gap-y-2 text-sm">
-                <Link v-for="link in links" :key="link.href" :href="link.href"
+                <Link
+                    v-for="link in links"
+                    :key="link.href"
+                    :href="link.href"
                     class="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-                    :class="{ 'font-semibold text-gray-900 dark:text-white': $page.url.startsWith(link.href) }">
+                    :class="{ 'font-semibold text-gray-900 dark:text-white': $page.url.startsWith(link.href) }"
+                >
                     {{ link.label }}
                 </Link>
             </nav>
 
-            <article class="legal rounded-lg bg-white p-6 shadow-xs dark:bg-gray-800 sm:p-10">
+            <article class="legal rounded-lg bg-white p-6 shadow-xs sm:p-10 dark:bg-gray-800">
                 <h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">{{ title }}</h1>
                 <p v-if="lastUpdated" class="mt-2 text-sm text-gray-500 dark:text-gray-400">
                     Last updated {{ lastUpdated }} · {{ store.legalName }}

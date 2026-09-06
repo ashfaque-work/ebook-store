@@ -1,100 +1,114 @@
 <script setup>
 import GuestLayout from '@/Layouts/GuestLayout.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
-import { computed } from 'vue';
-import { formatPaise, formatPrice } from '@/lib/money';
 import BookCover from '@/Components/BookCover.vue';
+import ConfirmDialog from '@/Components/Ui/ConfirmDialog.vue';
+import EmptyState from '@/Components/Ui/EmptyState.vue';
+import UiButton from '@/Components/Ui/UiButton.vue';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
+import { formatPaise, formatPrice } from '@/lib/money';
 
 const props = defineProps({
-    cartItems: Array, // Now receiving an array of full Book objects
+    cartItems: Array,
     total: Number,
 });
 
-const isCartEmpty = computed(() => props.cartItems.length === 0);
+const isEmpty = computed(() => props.cartItems.length === 0);
+
+const clearing = ref(false);
+const checkingOut = ref(false);
 
 const checkout = () => {
-    // Unauthenticated users are redirected to login by the route middleware.
-    router.post(route('checkout.store'));
+    checkingOut.value = true;
+    router.post(route('checkout.store'), {}, { onFinish: () => (checkingOut.value = false) });
 };
 
-const removeItem = (bookId) => {
-    if (confirm('Are you sure you want to remove this item?')) {
-        router.delete(`/cart/${bookId}`);
-    }
-};
-
-const clearCart = () => {
-    if (confirm('Are you sure you want to clear your entire cart?')) {
-        router.delete(`/cart`);
-    }
-}
+const removeItem = (id) => router.delete(`/cart/${id}`, { preserveScroll: true });
+const clearCart = () => router.delete('/cart');
 </script>
 
 <template>
-
-    <Head title="Your Shopping Cart" />
+    <Head title="Your cart" />
 
     <GuestLayout>
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center mb-8">
-                <h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Your Shopping Cart</h1>
-                <button v-if="!isCartEmpty" @click="clearCart"
-                    class="text-sm font-medium text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400">
-                    Clear Cart
+        <div class="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+            <div class="flex items-baseline justify-between gap-4">
+                <h1 class="text-2xl">Your cart</h1>
+                <button
+                    v-if="!isEmpty"
+                    type="button"
+                    @click="clearing = true"
+                    class="text-muted hover:text-content text-sm"
+                >
+                    Clear cart
                 </button>
             </div>
 
+            <EmptyState
+                v-if="isEmpty"
+                class="mt-8"
+                title="Your cart is empty"
+                body="Books you add will show up here. Nothing is charged until you check out."
+            >
+                <UiButton href="/">Browse the shelves</UiButton>
+            </EmptyState>
 
-            <div v-if="isCartEmpty" class="text-center bg-white dark:bg-gray-800 rounded-lg shadow-md p-8">
-                <p class="text-gray-600 dark:text-gray-400 text-lg">Your cart is empty.</p>
-                <Link href="/" class="mt-4 inline-block text-blue-600 dark:text-blue-400 hover:underline">Continue
-                Shopping</Link>
-            </div>
+            <template v-else>
+                <ul role="list" class="divide-line border-line mt-8 divide-y border-y">
+                    <li v-for="item in cartItems" :key="item.id" class="flex gap-4 py-5">
+                        <Link :href="`/books/${item.slug}`" class="shrink-0">
+                            <BookCover
+                                :src="item.cover_image_path"
+                                :title="item.title"
+                                class="cover-shadow aspect-2/3 w-16 rounded-[--radius-cover]"
+                            />
+                        </Link>
 
-            <div v-else>
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-                    <ul role="list" class="divide-y divide-gray-200 dark:divide-gray-700">
-                        <li v-for="item in cartItems" :key="item.id" class="flex p-4 sm:p-6">
-                            <div class="shrink-0">
-                                <BookCover :src="item.cover_image_path" :title="item.title"
-                                    class="w-24 h-36 rounded-md" />
+                        <div class="flex min-w-0 flex-1 flex-col justify-between">
+                            <div>
+                                <Link :href="`/books/${item.slug}`" class="font-semibold hover:underline">
+                                    {{ item.title }}
+                                </Link>
+                                <p class="text-muted mt-0.5 text-sm">Instant download &middot; read in your browser</p>
                             </div>
-                            <div class="ml-4 flex-1 flex flex-col justify-between">
-                                <div>
-                                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">
-                                        <Link :href="`/books/${item.slug}`">{{ item.title }}</Link>
-                                    </h3>
-                                </div>
-                                <div class="flex-1 flex items-end justify-between text-sm">
-                                    <p class="text-gray-800 dark:text-gray-200 font-semibold">{{ formatPrice(item.price_paise) }}</p>
-                                    <div class="flex">
-                                        <button @click="removeItem(item.id)" type="button"
-                                            class="font-medium text-red-600 dark:text-red-400 hover:text-red-500">
-                                            Remove
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
 
-                <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                    <div class="flex justify-between text-lg font-medium text-gray-900 dark:text-white">
-                        <p>Total</p>
-                        <p>{{ formatPaise(total) }}</p>
+                            <div class="mt-3 flex items-end justify-between gap-4">
+                                <p class="tabular font-semibold">{{ formatPrice(item.price_paise) }}</p>
+                                <button
+                                    type="button"
+                                    @click="removeItem(item.id)"
+                                    class="text-muted hover:text-content text-sm underline hover:no-underline"
+                                >
+                                    Remove
+                                </button>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+
+                <div class="border-line bg-raised mt-8 rounded-[--radius-ui] border p-6">
+                    <div class="flex items-baseline justify-between text-lg font-semibold">
+                        <span>Total</span>
+                        <span class="tabular">{{ formatPaise(total) }}</span>
                     </div>
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Instant digital delivery &mdash; download
-                        your books right after checkout.
+                    <p class="text-muted mt-1 text-sm">
+                        No delivery, no waiting. Your books are in your library the moment payment clears.
                     </p>
-                    <div class="mt-6">
-                        <button @click="checkout" type="button"
-                            class="w-full flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-6 py-3 text-base font-medium text-white shadow-xs hover:bg-blue-700">
-                            Checkout
-                        </button>
-                    </div>
+
+                    <UiButton class="mt-6" size="lg" block :disabled="checkingOut" @click="checkout">
+                        {{ checkingOut ? 'Taking you to payment…' : 'Check out' }}
+                    </UiButton>
                 </div>
-            </div>
+            </template>
         </div>
+
+        <ConfirmDialog
+            v-model:open="clearing"
+            title="Clear your cart?"
+            body="This removes everything in it. Nothing has been charged."
+            confirm-label="Clear cart"
+            destructive
+            @confirm="clearCart"
+        />
     </GuestLayout>
 </template>

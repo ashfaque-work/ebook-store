@@ -57,17 +57,20 @@ export async function createEpubEngine({ url, element, onRelocate, onReady }) {
             // Generating locations is what makes a percentage meaningful, and
             // it is slow on a big book — do it after the first page is on
             // screen rather than making the reader wait for it.
-            book.locations.generate(1600).then(() => {
-                locationsReady = true;
-                const cfi = rendition.currentLocation()?.start?.cfi;
-                if (cfi) {
-                    percent = Math.round((book.locations.percentageFromCfi(cfi) || 0) * 100);
-                    onRelocate?.({ location: cfi, percent, chapter: null });
-                }
-            }).catch(() => {
-                // A book we cannot index still reads fine; only the percentage
-                // is lost, so this is not worth surfacing.
-            });
+            book.locations
+                .generate(1600)
+                .then(() => {
+                    locationsReady = true;
+                    const cfi = rendition.currentLocation()?.start?.cfi;
+                    if (cfi) {
+                        percent = Math.round((book.locations.percentageFromCfi(cfi) || 0) * 100);
+                        onRelocate?.({ location: cfi, percent, chapter: null });
+                    }
+                })
+                .catch(() => {
+                    // A book we cannot index still reads fine; only the percentage
+                    // is lost, so this is not worth surfacing.
+                });
         },
 
         next: () => rendition.next(),
@@ -138,9 +141,7 @@ function chapterLabel(book, location) {
     const href = location?.start?.href;
     if (!href) return null;
 
-    const item = book.navigation?.toc?.find(
-        (entry) => entry.href === href || entry.href?.split('#')[0] === href,
-    );
+    const item = book.navigation?.toc?.find((entry) => entry.href === href || entry.href?.split('#')[0] === href);
 
     return item?.label?.trim() ?? null;
 }

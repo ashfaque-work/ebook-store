@@ -1,77 +1,78 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import EmptyState from '@/Components/Ui/EmptyState.vue';
 import Pagination from '@/Components/Pagination.vue';
+import UiButton from '@/Components/Ui/UiButton.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import { formatPaise, formatPrice } from '@/lib/money';
+import { formatPaise } from '@/lib/money';
 
-const props = defineProps({
-    orders: Object, // Laravel paginator: { data, links, ... }
-});
+const props = defineProps({ orders: Object });
 
 const isEmpty = computed(() => props.orders.data.length === 0);
 
 const formatDate = (value) =>
-    new Date(value).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    new Date(value).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
 
-const statusClasses = (status) => ({
-    paid: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-    pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-    failed: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-    refunded: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
-}[status] ?? 'bg-gray-100 text-gray-800');
+const statusClasses = (status) =>
+    ({
+        paid: 'bg-verdigris/15 text-verdigris',
+        pending: 'bg-marigold/20 text-accent-text',
+        failed: 'bg-red-500/15 text-red-600 dark:text-red-400',
+        refunded: 'bg-line text-muted',
+    })[status] ?? 'bg-line text-muted';
+
+const statusLabel = (status) =>
+    ({
+        paid: 'Paid',
+        pending: 'Awaiting payment',
+        failed: 'Failed',
+        refunded: 'Refunded',
+    })[status] ?? status;
 </script>
 
 <template>
-    <Head title="My Orders" />
+    <Head title="My orders" />
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">My Orders</h2>
+            <h1 class="text-lg font-semibold">My orders</h1>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-5xl sm:px-6 lg:px-8">
-                <div v-if="isEmpty" class="bg-white dark:bg-gray-800 shadow-xs sm:rounded-lg p-8 text-center">
-                    <p class="text-gray-600 dark:text-gray-400 text-lg">You haven't placed any orders yet.</p>
-                    <Link href="/" class="mt-4 inline-block text-blue-600 dark:text-blue-400 hover:underline">
-                        Browse the store
+        <div class="mx-auto max-w-3xl">
+            <EmptyState
+                v-if="isEmpty"
+                title="No orders yet"
+                body="Every purchase you make shows up here with its receipt and invoice number."
+            >
+                <UiButton href="/">Browse the shelves</UiButton>
+            </EmptyState>
+
+            <ul v-else role="list" class="divide-line border-line divide-y border-y">
+                <li v-for="order in orders.data" :key="order.id">
+                    <Link
+                        :href="`/orders/${order.id}`"
+                        class="hover:bg-line/30 flex flex-wrap items-center gap-x-4 gap-y-2 py-4 transition-colors"
+                    >
+                        <div class="min-w-0 flex-1">
+                            <p class="font-semibold">{{ order.order_number }}</p>
+                            <p class="text-muted text-sm">
+                                {{ formatDate(order.created_at) }} &middot; {{ order.items_count }} book{{
+                                    order.items_count === 1 ? '' : 's'
+                                }}
+                            </p>
+                        </div>
+
+                        <span class="rounded-full px-2.5 py-1 text-xs font-medium" :class="statusClasses(order.status)">
+                            {{ statusLabel(order.status) }}
+                        </span>
+
+                        <p class="tabular w-24 shrink-0 text-end font-semibold">{{ formatPaise(order.total_paise) }}</p>
                     </Link>
-                </div>
+                </li>
+            </ul>
 
-                <div v-else class="bg-white dark:bg-gray-800 shadow-xs sm:rounded-lg overflow-hidden">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-700">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Order</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Date</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Items</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Total</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Status</th>
-                                <th class="px-6 py-3"></th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                            <tr v-for="order in orders.data" :key="order.id">
-                                <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-white">{{ order.order_number }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-400">{{ formatDate(order.created_at) }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-400">{{ order.items_count }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white">{{ formatPaise(order.total_paise) }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full capitalize"
-                                        :class="statusClasses(order.status)">{{ order.status }}</span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right">
-                                    <Link :href="route('orders.show', order.id)"
-                                        class="text-blue-600 dark:text-blue-400 hover:underline">View</Link>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <Pagination :links="orders.links" />
-            </div>
+            <Pagination v-if="!isEmpty" :links="orders.links" />
         </div>
     </AuthenticatedLayout>
 </template>

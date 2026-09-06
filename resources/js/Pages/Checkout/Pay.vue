@@ -78,8 +78,7 @@ const payWithRazorpay = async () => {
 const pay = () => (isMock.value ? confirm(props.simulation) : payWithRazorpay());
 
 /** Exercises the failure path locally: a payload that will not verify. */
-const simulateFailure = () =>
-    confirm({ ...props.simulation, razorpay_signature: 'deliberately-invalid-signature' });
+const simulateFailure = () => confirm({ ...props.simulation, razorpay_signature: 'deliberately-invalid-signature' });
 </script>
 
 <template>
@@ -87,24 +86,25 @@ const simulateFailure = () =>
 
     <GuestLayout>
         <div class="mx-auto max-w-lg px-4 sm:px-6">
-            <div class="rounded-lg bg-white p-6 shadow-xs dark:bg-gray-800 sm:p-8">
-                <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-                    Complete your payment
-                </h1>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    Order {{ order.order_number }}
-                </p>
+            <div class="rounded-[--radius-ui] bg-white p-6 shadow-xs sm:p-8">
+                <h1 class="text-content text-2xl font-bold tracking-tight">Complete your payment</h1>
+                <p class="text-muted mt-1 text-sm">Order {{ order.order_number }}</p>
 
-                <ul role="list" class="mt-6 divide-y divide-gray-200 dark:divide-gray-700">
-                    <li v-for="item in order.items" :key="item.id"
-                        class="flex justify-between py-3 text-sm text-gray-700 dark:text-gray-300">
+                <ul role="list" class="divide-line mt-6 divide-y">
+                    <li
+                        v-for="item in order.items"
+                        :key="item.id"
+                        class="text-content flex justify-between py-3 text-sm"
+                    >
                         <span>{{ item.title }}</span>
                         <span>{{ formatPrice(item.price_paise) }}</span>
                     </li>
                 </ul>
 
-                <div v-if="order.tax_paise > 0"
-                    class="mt-4 space-y-1 border-t border-gray-200 pt-4 text-sm text-gray-600 dark:border-gray-700 dark:text-gray-400">
+                <div
+                    v-if="order.tax_paise > 0"
+                    class="mt-4 space-y-1 border-t border-gray-200 pt-4 text-sm text-gray-600"
+                >
                     <div class="flex justify-between">
                         <span>Subtotal</span>
                         <span>{{ formatPaise(order.subtotal_paise) }}</span>
@@ -115,35 +115,50 @@ const simulateFailure = () =>
                     </div>
                 </div>
 
-                <div
-                    class="mt-4 flex justify-between border-t border-gray-200 pt-4 text-lg font-medium text-gray-900 dark:border-gray-700 dark:text-white">
+                <div class="mt-4 flex justify-between border-t border-gray-200 pt-4 text-lg font-medium text-gray-900">
                     <span>Total</span>
                     <span>{{ formatPaise(order.total_paise) }}</span>
                 </div>
 
-                <p v-if="error" role="alert"
-                    class="mt-6 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
+                <p
+                    v-if="error"
+                    role="alert"
+                    class="mt-6 rounded-[--radius-ui] bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300"
+                >
                     {{ error }}
                 </p>
 
-                <button type="button" @click="pay" :disabled="processing"
-                    class="mt-6 flex w-full items-center justify-center rounded-md bg-blue-600 px-6 py-3 text-base font-medium text-white shadow-xs hover:bg-blue-700 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:opacity-60">
+                <button
+                    type="button"
+                    @click="pay"
+                    :disabled="processing"
+                    class="bg-marigold text-ink hover:bg-marigold-bright focus-visible:outline-marigold mt-6 flex w-full items-center justify-center rounded-[--radius-ui] px-6 py-3 text-base font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid disabled:opacity-60"
+                >
                     {{ processing ? 'Confirming…' : `Pay ${formatPaise(order.total_paise)}` }}
                 </button>
 
-                <p class="mt-3 text-center text-xs text-gray-500 dark:text-gray-400">
+                <p class="text-muted mt-3 text-center text-xs">
                     Your card and UPI details are handled by the payment provider and never reach our servers.
                 </p>
 
-                <div v-if="isMock"
-                    class="mt-6 rounded-md border border-amber-300 bg-amber-50 p-4 text-sm dark:border-amber-800 dark:bg-amber-950">
+                <div
+                    v-if="isMock"
+                    class="mt-6 rounded-[--radius-ui] border border-amber-300 bg-amber-50 p-4 text-sm dark:border-amber-800 dark:bg-amber-950"
+                >
                     <p class="font-medium text-amber-900 dark:text-amber-200">Mock gateway</p>
                     <p class="mt-1 text-amber-800 dark:text-amber-300">
-                        No money moves. Set <code>RAZORPAY_KEY</code> and <code>RAZORPAY_SECRET</code> to use the real
-                        one — the flow is identical either way.
+                        No money moves. Set
+                        <code>RAZORPAY_KEY</code>
+                        and
+                        <code>RAZORPAY_SECRET</code>
+                        to use the real one — the flow is identical either way.
                     </p>
-                    <button type="button" @click="simulateFailure" :disabled="processing"
-                        class="mt-3 text-amber-900 underline hover:no-underline dark:text-amber-200">
+                    <button
+                        type="button"
+                        @click="simulateFailure"
+                        :disabled="processing"
+                        class="mt-3 text-amber-900 underline hover:no-underline dark:text-amber-200"
+                    >
                         Simulate a declined payment
                     </button>
                 </div>

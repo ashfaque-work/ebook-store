@@ -108,9 +108,7 @@ async function buildToc(doc, outline) {
     const entries = await Promise.all(
         outline.slice(0, 200).map(async (item) => {
             try {
-                const dest = typeof item.dest === 'string'
-                    ? await doc.getDestination(item.dest)
-                    : item.dest;
+                const dest = typeof item.dest === 'string' ? await doc.getDestination(item.dest) : item.dest;
                 const index = await doc.getPageIndex(dest[0]);
 
                 return { label: item.title, href: String(index + 1) };

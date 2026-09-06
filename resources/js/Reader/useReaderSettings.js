@@ -40,13 +40,17 @@ function load() {
 export function useReaderSettings() {
     const settings = reactive(load());
 
-    watch(settings, () => {
-        try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-        } catch {
-            // Not worth telling anyone about.
-        }
-    }, { deep: true });
+    watch(
+        settings,
+        () => {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+            } catch {
+                // Not worth telling anyone about.
+            }
+        },
+        { deep: true },
+    );
 
     const theme = computed(() => THEMES[settings.theme] ?? THEMES.paper);
 

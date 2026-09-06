@@ -22,6 +22,7 @@ class BookFactory extends Factory
             'title' => $title,
             'slug' => Str::slug($title),
             'description' => fake()->paragraph(),
+            'excerpt' => fake()->paragraph(4),
             'language' => 'en',
             'page_count' => fake()->numberBetween(120, 640),
             'price_paise' => fake()->numberBetween(4900, 89900),

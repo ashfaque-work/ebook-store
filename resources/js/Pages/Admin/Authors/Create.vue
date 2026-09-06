@@ -14,35 +14,40 @@ const submit = () => {
 </script>
 
 <template>
-
     <Head title="Add New Author" />
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Add New Author</h2>
+            <h2 class="text-content text-xl leading-tight font-semibold">Add New Author</h2>
         </template>
 
-        <div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 shadow-xs sm:rounded-lg p-6">
+        <div class="bg-raised mx-auto max-w-2xl p-6 shadow-xs sm:rounded-[--radius-ui]">
             <form @submit.prevent="submit">
                 <div>
-                    <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
-                    <input type="text" v-model="form.name" id="name"
-                        class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-blue-500 dark:focus:border-blue-600 focus:ring-blue-500 dark:focus:ring-blue-600 rounded-md shadow-xs"
-                        required />
-                    <div v-if="form.errors.name" class="text-sm text-red-600 mt-2">{{ form.errors.name }}</div>
+                    <label for="name" class="text-content block text-sm font-medium">Name</label>
+                    <input
+                        type="text"
+                        v-model="form.name"
+                        id="name"
+                        class="border-line bg-surface text-content focus:border-marigold focus:ring-marigold mt-1 block w-full rounded-[--radius-ui] shadow-xs"
+                        required
+                    />
+                    <div v-if="form.errors.name" class="mt-2 text-sm text-red-600">{{ form.errors.name }}</div>
                 </div>
 
                 <div class="mt-4">
-                    <label for="bio"
-                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Biography</label>
-                    <textarea v-model="form.bio" id="bio" rows="4"
-                        class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-blue-500 dark:focus:border-blue-600 focus:ring-blue-500 dark:focus:ring-blue-600 rounded-md shadow-xs"></textarea>
-                    <div v-if="form.errors.bio" class="text-sm text-red-600 mt-2">{{ form.errors.bio }}</div>
+                    <label for="bio" class="text-content block text-sm font-medium">Biography</label>
+                    <textarea
+                        v-model="form.bio"
+                        id="bio"
+                        rows="4"
+                        class="border-line bg-surface text-content focus:border-marigold focus:ring-marigold mt-1 block w-full rounded-[--radius-ui] shadow-xs"
+                    ></textarea>
+                    <div v-if="form.errors.bio" class="mt-2 text-sm text-red-600">{{ form.errors.bio }}</div>
                 </div>
 
-                <div class="flex items-center justify-end mt-6">
-                    <Link href="/admin/authors" class="text-gray-600 dark:text-gray-400 hover:underline mr-4">Cancel
-                    </Link>
+                <div class="mt-6 flex items-center justify-end">
+                    <Link href="/admin/authors" class="text-muted mr-4 hover:underline">Cancel</Link>
                     <PrimaryButton :disabled="form.processing">Save Author</PrimaryButton>
                 </div>
             </form>

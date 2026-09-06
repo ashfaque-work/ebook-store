@@ -3,13 +3,28 @@
 use App\Models\Book;
 use App\Models\Genre;
 
-test('the catalogue paginates books', function () {
+test('an unfiltered visit gets shelves, not a page of results', function () {
     Book::factory()->count(15)->create();
 
+    // Browsing and searching answer different questions, so they are different
+    // views: one opens a book, the other lists matches.
     $this->get('/')
         ->assertInertia(fn ($page) => $page
             ->component('Welcome')
-            ->has('books.data', 12)        // first page caps at 12
+            ->where('mode', 'shelves')
+            ->has('featured')
+            ->has('newest', 10)
+            ->missing('books')
+        );
+});
+
+test('searching paginates the results', function () {
+    Book::factory()->count(30)->create(['title' => 'Monsoon Diaries']);
+
+    $this->get('/?search=Monsoon')
+        ->assertInertia(fn ($page) => $page
+            ->where('mode', 'results')
+            ->has('books.data', 24)        // a results page caps at 24
             ->has('books.links')
         );
 });

@@ -1,14 +1,13 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import UiButton from '@/Components/Ui/UiButton.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { formatPaise, formatPrice } from '@/lib/money';
 
-defineProps({
-    order: Object,
-});
+defineProps({ order: Object });
 
 const formatDate = (value) =>
-    new Date(value).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    value ? new Date(value).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' }) : null;
 </script>
 
 <template>
@@ -16,67 +15,72 @@ const formatDate = (value) =>
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                Order {{ order.order_number }}
-            </h2>
+            <h1 class="text-lg font-semibold">Order {{ order.order_number }}</h1>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-2xl sm:px-6 lg:px-8">
-                <div class="bg-white dark:bg-gray-800 shadow-xs sm:rounded-lg p-6 md:p-8">
-                    <div class="flex justify-between text-sm text-gray-500 dark:text-gray-400">
-                        <span>Placed {{ formatDate(order.created_at) }}</span>
-                        <span class="capitalize">Status: {{ order.status }}</span>
-                        <span v-if="order.invoice_number">Invoice {{ order.invoice_number }}</span>
+        <div class="mx-auto max-w-2xl">
+            <Link href="/orders" class="text-muted hover:text-content text-sm">&larr; All orders</Link>
+
+            <div class="border-line bg-raised mt-4 rounded-[--radius-ui] border p-6">
+                <dl class="grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">
+                    <div>
+                        <dt class="text-muted">Placed</dt>
+                        <dd class="mt-0.5 font-medium">{{ formatDate(order.created_at) }}</dd>
                     </div>
+                    <div>
+                        <dt class="text-muted">Status</dt>
+                        <dd class="mt-0.5 font-medium capitalize">{{ order.status }}</dd>
+                    </div>
+                    <div v-if="order.invoice_number">
+                        <dt class="text-muted">Invoice</dt>
+                        <dd class="mt-0.5 font-medium">{{ order.invoice_number }}</dd>
+                    </div>
+                </dl>
 
-                    <ul role="list" class="mt-6 divide-y divide-gray-200 dark:divide-gray-700">
-                        <li v-for="item in order.items" :key="item.id"
-                            class="flex justify-between py-3 text-sm text-gray-700 dark:text-gray-300">
-                            <span>{{ item.title }}</span>
-                            <span>{{ formatPrice(item.price_paise) }}</span>
-                        </li>
-                    </ul>
+                <ul role="list" class="divide-line border-line mt-6 divide-y border-t">
+                    <li v-for="item in order.items" :key="item.id" class="flex justify-between gap-4 py-3 text-sm">
+                        <span>{{ item.title }}</span>
+                        <span class="tabular shrink-0">{{ formatPrice(item.price_paise) }}</span>
+                    </li>
+                </ul>
 
-                    <!-- Tax breakdown, shown only when GST is actually charged. -->
-                    <div v-if="order.tax_paise > 0"
-                        class="mt-4 space-y-1 border-t border-gray-200 pt-4 text-sm text-gray-600 dark:border-gray-700 dark:text-gray-400">
+                <div v-if="order.tax_paise > 0" class="border-line text-muted mt-3 space-y-1 border-t pt-3 text-sm">
+                    <div class="flex justify-between">
+                        <span>Subtotal</span>
+                        <span class="tabular">{{ formatPaise(order.subtotal_paise) }}</span>
+                    </div>
+                    <div v-if="order.tax_type === 'igst'" class="flex justify-between">
+                        <span>IGST</span>
+                        <span class="tabular">{{ formatPaise(order.tax_paise) }}</span>
+                    </div>
+                    <template v-else>
                         <div class="flex justify-between">
-                            <span>Subtotal</span>
-                            <span>{{ formatPaise(order.subtotal_paise) }}</span>
+                            <span>CGST</span>
+                            <span class="tabular">{{ formatPaise(Math.round(order.tax_paise / 2)) }}</span>
                         </div>
-                        <div v-if="order.tax_type === 'igst'" class="flex justify-between">
-                            <span>IGST</span>
-                            <span>{{ formatPaise(order.tax_paise) }}</span>
+                        <div class="flex justify-between">
+                            <span>SGST</span>
+                            <span class="tabular">
+                                {{ formatPaise(order.tax_paise - Math.round(order.tax_paise / 2)) }}
+                            </span>
                         </div>
-                        <template v-else>
-                            <div class="flex justify-between">
-                                <span>CGST</span>
-                                <span>{{ formatPaise(Math.round(order.tax_paise / 2)) }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>SGST</span>
-                                <span>{{ formatPaise(order.tax_paise - Math.round(order.tax_paise / 2)) }}</span>
-                            </div>
-                        </template>
-                    </div>
-
-                    <div class="mt-4 flex justify-between border-t border-gray-200 dark:border-gray-700 pt-4 text-lg font-medium text-gray-900 dark:text-white">
-                        <span>Total</span>
-                        <span>{{ formatPaise(order.total_paise) }}</span>
-                    </div>
-
-                    <div class="mt-8 flex gap-3">
-                        <Link :href="route('library.index')"
-                            class="inline-flex items-center justify-center rounded-md bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700">
-                            My Library
-                        </Link>
-                        <Link :href="route('orders.index')"
-                            class="inline-flex items-center justify-center rounded-md border border-gray-300 dark:border-gray-600 px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
-                            All Orders
-                        </Link>
-                    </div>
+                    </template>
                 </div>
+
+                <div class="border-line mt-3 flex justify-between border-t pt-3 text-lg font-semibold">
+                    <span>Total</span>
+                    <span class="tabular">{{ formatPaise(order.total_paise) }}</span>
+                </div>
+
+                <div v-if="order.refunded_paise > 0" class="text-muted mt-2 flex justify-between text-sm">
+                    <span>Refunded</span>
+                    <span class="tabular">&minus;{{ formatPaise(order.refunded_paise) }}</span>
+                </div>
+            </div>
+
+            <div class="mt-6 flex flex-wrap gap-3">
+                <UiButton href="/library">My library</UiButton>
+                <UiButton href="/contact" variant="secondary">Something wrong? Tell us</UiButton>
             </div>
         </div>
     </AuthenticatedLayout>

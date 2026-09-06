@@ -30,12 +30,21 @@ const showSettings = ref(false);
 const chromeVisible = ref(true);
 const showSampleEnd = ref(false);
 
-const { settings, resolved, themeNames, biggerText, smallerText, looserLines, tighterLines, widerPage, narrowerPage, canGrow, canShrink } =
-    useReaderSettings();
+const {
+    settings,
+    resolved,
+    themeNames,
+    biggerText,
+    smallerText,
+    looserLines,
+    tighterLines,
+    widerPage,
+    narrowerPage,
+    canGrow,
+    canShrink,
+} = useReaderSettings();
 
-const sync = useProgressSync(
-    props.isSample ? null : route('reader.progress', props.book.id),
-);
+const sync = useProgressSync(props.isSample ? null : route('reader.progress', props.book.id));
 
 /* ------------------------------------------------------------------ chrome */
 
@@ -90,9 +99,10 @@ const goTo = (href) => {
 
 onMounted(async () => {
     try {
-        const factory = props.book.format === 'pdf'
-            ? (await import('@/Reader/pdfEngine')).createPdfEngine
-            : (await import('@/Reader/epubEngine')).createEpubEngine;
+        const factory =
+            props.book.format === 'pdf'
+                ? (await import('@/Reader/pdfEngine')).createPdfEngine
+                : (await import('@/Reader/epubEngine')).createEpubEngine;
 
         engine.value = await factory({
             url: props.assetUrl,
@@ -112,7 +122,8 @@ onMounted(async () => {
 
         props.highlights.forEach((h) => engine.value.highlight(h.location, h.color));
     } catch (e) {
-        error.value = 'This book could not be opened. Try reloading; if it keeps happening, tell us and we will fix the file.';
+        error.value =
+            'This book could not be opened. Try reloading; if it keeps happening, tell us and we will fix the file.';
     } finally {
         loading.value = false;
         revealChrome();
@@ -189,9 +200,7 @@ const onTouchEnd = (e) => {
 
 /* ----------------------------------------------------------- annotations */
 
-const isBookmarked = computed(() =>
-    props.bookmarks.some((b) => b.location === location.value),
-);
+const isBookmarked = computed(() => props.bookmarks.some((b) => b.location === location.value));
 
 const toggleBookmark = () => {
     if (props.isSample || !location.value) return;
@@ -200,29 +209,39 @@ const toggleBookmark = () => {
 
     if (existing) {
         router.delete(route('reader.bookmarks.destroy', [props.book.id, existing.id]), {
-            preserveScroll: true, preserveState: true, only: ['bookmarks'],
+            preserveScroll: true,
+            preserveState: true,
+            only: ['bookmarks'],
         });
     } else {
-        router.post(route('reader.bookmarks.store', props.book.id), {
-            location: location.value,
-            label: chapter.value,
-        }, { preserveScroll: true, preserveState: true, only: ['bookmarks'] });
+        router.post(
+            route('reader.bookmarks.store', props.book.id),
+            {
+                location: location.value,
+                label: chapter.value,
+            },
+            { preserveScroll: true, preserveState: true, only: ['bookmarks'] },
+        );
     }
 
     revealChrome();
 };
 
 const saveHighlight = (at, text) => {
-    router.post(route('reader.highlights.store', props.book.id), {
-        location: at,
-        text: text.slice(0, 5000),
-        color: '#F0A830',
-    }, {
-        preserveScroll: true,
-        preserveState: true,
-        only: ['highlights'],
-        onSuccess: () => engine.value?.highlight(at, '#F0A830'),
-    });
+    router.post(
+        route('reader.highlights.store', props.book.id),
+        {
+            location: at,
+            text: text.slice(0, 5000),
+            color: '#F0A830',
+        },
+        {
+            preserveScroll: true,
+            preserveState: true,
+            only: ['highlights'],
+            onSuccess: () => engine.value?.highlight(at, '#F0A830'),
+        },
+    );
 };
 
 /* ---------------------------------------------------------------- reading time */
@@ -247,11 +266,17 @@ const timeLeft = computed(() => {
 <template>
     <Head :title="`Reading ${book.title}`" />
 
-    <div class="reader" :style="{ background: resolved.background, color: resolved.foreground }"
-        @mousemove="revealChrome">
+    <div
+        class="reader"
+        :style="{ background: resolved.background, color: resolved.foreground }"
+        @mousemove="revealChrome"
+    >
         <!-- Top bar -->
-        <header class="bar top" :class="{ hidden: !chromeVisible }"
-            :style="{ background: resolved.background, borderColor: resolved.muted + '33' }">
+        <header
+            class="bar top"
+            :class="{ hidden: !chromeVisible }"
+            :style="{ background: resolved.background, borderColor: resolved.muted + '33' }"
+        >
             <Link :href="isSample ? `/books/${book.slug}` : '/library'" class="icon" aria-label="Leave the reader">
                 &larr;
             </Link>
@@ -262,8 +287,14 @@ const timeLeft = computed(() => {
             </p>
 
             <div class="actions">
-                <button v-if="!isSample" type="button" class="icon" @click="toggleBookmark"
-                    :aria-pressed="isBookmarked" :aria-label="isBookmarked ? 'Remove bookmark' : 'Add bookmark'">
+                <button
+                    v-if="!isSample"
+                    type="button"
+                    class="icon"
+                    @click="toggleBookmark"
+                    :aria-pressed="isBookmarked"
+                    :aria-label="isBookmarked ? 'Remove bookmark' : 'Add bookmark'"
+                >
                     {{ isBookmarked ? '★' : '☆' }}
                 </button>
                 <button type="button" class="icon" @click="showToc = !showToc" aria-label="Contents">☰</button>
@@ -274,15 +305,23 @@ const timeLeft = computed(() => {
         </header>
 
         <!-- The page -->
-        <div ref="viewport" class="viewport" @click="onViewportClick" @touchstart.passive="onTouchStart"
-            @touchend.passive="onTouchEnd" />
+        <div
+            ref="viewport"
+            class="viewport"
+            @click="onViewportClick"
+            @touchstart.passive="onTouchStart"
+            @touchend.passive="onTouchEnd"
+        />
 
         <p v-if="loading" class="notice" :style="{ color: resolved.muted }">Opening the book…</p>
         <p v-else-if="error" role="alert" class="notice">{{ error }}</p>
 
         <!-- Bottom bar -->
-        <footer class="bar bottom" :class="{ hidden: !chromeVisible }"
-            :style="{ background: resolved.background, borderColor: resolved.muted + '33' }">
+        <footer
+            class="bar bottom"
+            :class="{ hidden: !chromeVisible }"
+            :style="{ background: resolved.background, borderColor: resolved.muted + '33' }"
+        >
             <div class="track" :style="{ background: resolved.muted + '33' }">
                 <div class="fill" :style="{ width: `${percent}%` }" />
             </div>
@@ -308,8 +347,13 @@ const timeLeft = computed(() => {
 
             <template v-if="bookmarks.length">
                 <h2 class="mt">Bookmarks</h2>
-                <button v-for="mark in bookmarks" :key="mark.id" type="button" class="toc-item"
-                    @click="goTo(mark.location)">
+                <button
+                    v-for="mark in bookmarks"
+                    :key="mark.id"
+                    type="button"
+                    class="toc-item"
+                    @click="goTo(mark.location)"
+                >
                     {{ mark.label || 'Bookmark' }}
                 </button>
             </template>
@@ -323,8 +367,14 @@ const timeLeft = computed(() => {
             </div>
 
             <div class="row">
-                <button v-for="option in themeNames" :key="option.value" type="button" class="chip"
-                    :class="{ on: settings.theme === option.value }" @click="settings.theme = option.value">
+                <button
+                    v-for="option in themeNames"
+                    :key="option.value"
+                    type="button"
+                    class="chip"
+                    :class="{ on: settings.theme === option.value }"
+                    @click="settings.theme = option.value"
+                >
                     {{ option.label }}
                 </button>
             </div>
@@ -353,7 +403,11 @@ const timeLeft = computed(() => {
             </label>
 
             <p class="hint" :style="{ color: resolved.muted }">
-                Arrow keys or space to turn the page. <kbd>t</kbd> for contents, <kbd>b</kbd> to bookmark.
+                Arrow keys or space to turn the page.
+                <kbd>t</kbd>
+                for contents,
+                <kbd>b</kbd>
+                to bookmark.
             </p>
         </aside>
 
@@ -403,15 +457,33 @@ const timeLeft = computed(() => {
     padding: 0.625rem 1rem;
     font-family: ui-sans-serif, system-ui, sans-serif;
     font-size: 0.875rem;
-    transition: opacity 0.25s ease, transform 0.25s ease;
+    transition:
+        opacity 0.25s ease,
+        transform 0.25s ease;
 }
 
-.top { top: 0; border-bottom: 1px solid; }
-.bottom { bottom: 0; flex-direction: column; align-items: stretch; gap: 0.375rem; border-top: 1px solid; }
+.top {
+    top: 0;
+    border-bottom: 1px solid;
+}
+.bottom {
+    bottom: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.375rem;
+    border-top: 1px solid;
+}
 
-.bar.hidden { opacity: 0; pointer-events: none; }
-.top.hidden { transform: translateY(-100%); }
-.bottom.hidden { transform: translateY(100%); }
+.bar.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+.top.hidden {
+    transform: translateY(-100%);
+}
+.bottom.hidden {
+    transform: translateY(100%);
+}
 
 .chapter {
     flex: 1;
@@ -425,14 +497,17 @@ const timeLeft = computed(() => {
 .badge {
     margin-right: 0.5rem;
     border-radius: 999px;
-    background: #F0A830;
-    color: #12172B;
+    background: #f0a830;
+    color: #12172b;
     padding: 0.1rem 0.5rem;
     font-size: 0.75rem;
     font-weight: 600;
 }
 
-.actions { display: flex; gap: 0.25rem; }
+.actions {
+    display: flex;
+    gap: 0.25rem;
+}
 
 .icon {
     display: inline-flex;
@@ -449,16 +524,33 @@ const timeLeft = computed(() => {
     text-decoration: none;
 }
 
-.icon:hover { background: rgba(128, 128, 128, 0.15); }
-.icon:focus-visible, .chip:focus-visible, .toc-item:focus-visible {
-    outline: 2px solid #F0A830;
+.icon:hover {
+    background: rgba(128, 128, 128, 0.15);
+}
+.icon:focus-visible,
+.chip:focus-visible,
+.toc-item:focus-visible {
+    outline: 2px solid #f0a830;
     outline-offset: 2px;
 }
 
-.track { height: 3px; border-radius: 999px; overflow: hidden; }
-.fill { height: 100%; background: #F0A830; transition: width 0.2s ease; }
+.track {
+    height: 3px;
+    border-radius: 999px;
+    overflow: hidden;
+}
+.fill {
+    height: 100%;
+    background: #f0a830;
+    transition: width 0.2s ease;
+}
 
-.meta { display: flex; justify-content: space-between; margin: 0; font-size: 0.75rem; }
+.meta {
+    display: flex;
+    justify-content: space-between;
+    margin: 0;
+    font-size: 0.75rem;
+}
 
 .notice {
     position: absolute;
@@ -471,7 +563,8 @@ const timeLeft = computed(() => {
     font-family: ui-sans-serif, system-ui, sans-serif;
 }
 
-.drawer, .panel {
+.drawer,
+.panel {
     position: absolute;
     top: 0;
     bottom: 0;
@@ -483,12 +576,28 @@ const timeLeft = computed(() => {
     font-family: ui-sans-serif, system-ui, sans-serif;
 }
 
-.drawer { left: 0; }
-.panel { right: 0; }
+.drawer {
+    left: 0;
+}
+.panel {
+    right: 0;
+}
 
-.drawer-head { display: flex; align-items: center; justify-content: space-between; }
-.drawer-head h2 { margin: 0; font-size: 1rem; font-weight: 600; }
-.mt { margin-top: 1.5rem; font-size: 1rem; font-weight: 600; }
+.drawer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.drawer-head h2 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+.mt {
+    margin-top: 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+}
 
 .toc-item {
     display: block;
@@ -504,12 +613,29 @@ const timeLeft = computed(() => {
     border-radius: 6px;
 }
 
-.toc-item:hover { background: rgba(128, 128, 128, 0.12); }
-.empty { font-size: 0.875rem; }
+.toc-item:hover {
+    background: rgba(128, 128, 128, 0.12);
+}
+.empty {
+    font-size: 0.875rem;
+}
 
-.row { display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap; }
-.row-label { font-size: 0.8125rem; opacity: 0.7; flex: 1; }
-.check { cursor: pointer; font-size: 0.875rem; }
+.row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+.row-label {
+    font-size: 0.8125rem;
+    opacity: 0.7;
+    flex: 1;
+}
+.check {
+    cursor: pointer;
+    font-size: 0.875rem;
+}
 
 .chip {
     border: 1px solid rgba(128, 128, 128, 0.4);
@@ -521,10 +647,22 @@ const timeLeft = computed(() => {
     cursor: pointer;
 }
 
-.chip.on { background: #F0A830; border-color: #F0A830; color: #12172B; font-weight: 600; }
-.chip:disabled { opacity: 0.4; cursor: not-allowed; }
+.chip.on {
+    background: #f0a830;
+    border-color: #f0a830;
+    color: #12172b;
+    font-weight: 600;
+}
+.chip:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
 
-.hint { margin-top: 1.5rem; font-size: 0.75rem; line-height: 1.6; }
+.hint {
+    margin-top: 1.5rem;
+    font-size: 0.75rem;
+    line-height: 1.6;
+}
 kbd {
     border: 1px solid currentColor;
     border-radius: 4px;
@@ -544,23 +682,44 @@ kbd {
     font-family: ui-sans-serif, system-ui, sans-serif;
 }
 
-.sample-end h2 { margin: 0; font-size: 1.5rem; font-weight: 600; }
-.sample-end p { margin: 0; max-width: 36ch; }
-.sample-actions { display: grid; gap: 0.75rem; justify-items: center; margin-top: 0.5rem; }
+.sample-end h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+.sample-end p {
+    margin: 0;
+    max-width: 36ch;
+}
+.sample-actions {
+    display: grid;
+    gap: 0.75rem;
+    justify-items: center;
+    margin-top: 0.5rem;
+}
 
 .buy {
     display: inline-block;
     border-radius: 10px;
-    background: #F0A830;
-    color: #12172B;
+    background: #f0a830;
+    color: #12172b;
     padding: 0.75rem 1.5rem;
     font-weight: 600;
     text-decoration: none;
 }
 
-.again { background: none; border: 0; font-size: 0.875rem; cursor: pointer; text-decoration: underline; }
+.again {
+    background: none;
+    border: 0;
+    font-size: 0.875rem;
+    cursor: pointer;
+    text-decoration: underline;
+}
 
 @media (prefers-reduced-motion: reduce) {
-    .bar, .fill { transition: none; }
+    .bar,
+    .fill {
+        transition: none;
+    }
 }
 </style>

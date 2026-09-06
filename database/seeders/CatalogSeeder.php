@@ -96,6 +96,7 @@ class CatalogSeeder extends Seeder
                         'author_id' => $author->id,
                         'genre_id' => $genre->id,
                         'description' => $this->blurb($title),
+                        'excerpt' => $this->excerpt(),
                         'language' => 'en',
                         'page_count' => random_int(148, 512),
                         // Realistic Indian ebook pricing, in paise.
@@ -121,6 +122,18 @@ class CatalogSeeder extends Seeder
 
         // One free book, so the "Free" price path is exercised.
         Book::where('slug', Str::slug('Kitchen Light'))->update(['price_paise' => 0]);
+    }
+
+    /**
+     * Stand-in opening lines. The home page leads with these rather than with
+     * marketing copy, so seeded data needs something that reads like prose.
+     */
+    private function excerpt(): string
+    {
+        return 'It was the hour of the unexpected guest, and the rain had not stopped since morning. '
+            .'She had counted the trains going north — four since noon — and each one had taken '
+            .'somebody else away from the platform where she stood, holding a suitcase she had '
+            .'not opened in eleven years.';
     }
 
     private function blurb(string $title): string

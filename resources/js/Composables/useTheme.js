@@ -2,7 +2,9 @@ import { ref, watchEffect } from 'vue';
 
 export function useTheme() {
     // Initialize theme from localStorage or user's OS preference
-    const theme = ref(localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+    const theme = ref(
+        localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
+    );
 
     // Function to toggle the theme
     const toggleTheme = () => {

@@ -9,8 +9,19 @@ test('unpublished books are hidden from the catalogue', function () {
 
     $this->get('/')->assertInertia(fn ($page) => $page
         ->component('Welcome')
+        ->has('newest', 1)
+        ->where('newest.0.id', $live->id)
+    );
+});
+
+test('unpublished books are hidden from search results too', function () {
+    Book::factory()->create(['title' => 'Salt and Monsoon']);
+    Book::factory()->unpublished()->create(['title' => 'Salt and Silence']);
+
+    $this->get('/?search=Salt')->assertInertia(fn ($page) => $page
+        ->where('mode', 'results')
         ->has('books.data', 1)
-        ->where('books.data.0.id', $live->id)
+        ->where('books.data.0.title', 'Salt and Monsoon')
     );
 });
 

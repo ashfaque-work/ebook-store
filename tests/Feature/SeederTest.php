@@ -22,7 +22,11 @@ test('the catalog seeder produces a browsable store', function () {
     // The placeholder ebook must exist, or every seeded download 404s.
     expect(Storage::disk(Book::FILE_DISK)->exists('books/sample.pdf'))->toBeTrue();
 
-    $this->get('/')->assertInertia(fn ($page) => $page->has('books.data', 12));
+    $this->get('/')->assertInertia(fn ($page) => $page
+        ->where('mode', 'shelves')
+        ->has('newest', 10)
+        ->has('featured.excerpt')
+    );
 });
 
 test('the seeder is safe to run twice', function () {

@@ -16,49 +16,65 @@ const deleteGenre = (id) => {
 </script>
 
 <template>
-
     <Head title="Genres Management" />
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Genres Management</h2>
+            <h2 class="text-content text-xl leading-tight font-semibold">Genres Management</h2>
         </template>
 
-        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xs sm:rounded-lg">
-            <div class="p-6 text-gray-900 dark:text-gray-100">
-                <div class="flex justify-end mb-4">
+        <div class="bg-raised overflow-hidden shadow-xs sm:rounded-[--radius-ui]">
+            <div class="text-content p-6">
+                <div class="mb-4 flex justify-end">
                     <Link href="/admin/genres/create">
-                    <PrimaryButton>Add Genre</PrimaryButton>
+                        <PrimaryButton>Add Genre</PrimaryButton>
                     </Link>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-700">
+                    <table class="divide-line min-w-full divide-y">
+                        <thead class="bg-surface">
                             <tr>
-                                <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                    Name</th>
-                                <th scope="col"
-                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                    Slug</th>
-                                <th scope="col"
-                                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                    Actions</th>
+                                <th
+                                    scope="col"
+                                    class="text-muted px-6 py-3 text-left text-xs font-medium tracking-wider uppercase"
+                                >
+                                    Name
+                                </th>
+                                <th
+                                    scope="col"
+                                    class="text-muted px-6 py-3 text-left text-xs font-medium tracking-wider uppercase"
+                                >
+                                    Slug
+                                </th>
+                                <th
+                                    scope="col"
+                                    class="text-muted px-6 py-3 text-right text-xs font-medium tracking-wider uppercase"
+                                >
+                                    Actions
+                                </th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        <tbody class="bg-raised divide-line divide-y">
                             <tr v-for="genre in genres.data" :key="genre.id">
                                 <td class="px-6 py-4 whitespace-nowrap">{{ genre.name }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">{{ genre.slug }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <Link :href="`/admin/genres/${genre.id}/edit`"
-                                        class="text-blue-600 dark:text-blue-400 hover:underline mr-4">Edit</Link>
-                                    <button @click="deleteGenre(genre.id)"
-                                        class="text-red-600 dark:text-red-400 hover:underline">Delete</button>
+                                <td class="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
+                                    <Link
+                                        :href="`/admin/genres/${genre.id}/edit`"
+                                        class="text-accent-text mr-4 hover:underline"
+                                    >
+                                        Edit
+                                    </Link>
+                                    <button
+                                        @click="deleteGenre(genre.id)"
+                                        class="text-red-600 hover:underline dark:text-red-400"
+                                    >
+                                        Delete
+                                    </button>
                                 </td>
                             </tr>
                             <tr v-if="genres.data.length === 0">
-                                <td colspan="3" class="px-6 py-4 whitespace-nowrap text-center text-gray-500">
+                                <td colspan="3" class="px-6 py-4 text-center whitespace-nowrap text-gray-500">
                                     No genres found.
                                 </td>
                             </tr>

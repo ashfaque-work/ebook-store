@@ -13,7 +13,7 @@ watch(
         if (toastData) {
             toast(toastData.message, { type: toastData.type });
         }
-    }
+    },
 );
 
 // This handles the case where the component is mounted on a page

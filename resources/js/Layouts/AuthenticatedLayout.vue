@@ -1,138 +1,197 @@
 <script setup>
-import { computed, ref } from 'vue';
-import ApplicationLogo from '@/Components/ApplicationLogo.vue';
+import { Link, usePage } from '@inertiajs/vue3';
+import { computed, ref, watch } from 'vue';
+import {
+    BookOpen,
+    ChevronDown,
+    Library,
+    Menu,
+    Moon,
+    Receipt,
+    ShoppingBag,
+    Sun,
+    Tags,
+    UserRound,
+    Users,
+    X,
+} from 'lucide-vue-next';
+import { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
-import NavLink from '@/Components/NavLink.vue';
-import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
-import { Link, usePage } from '@inertiajs/vue3';
 import { useTheme } from '@/Composables/useTheme';
-import ToastListener from '@/Components/ToastListener.vue'; // 1. Import the new listener
+import ToastListener from '@/Components/ToastListener.vue';
 
-const showingNavigationDropdown = ref(false);
-const page = usePage();
 const { theme, toggleTheme } = useTheme();
+const page = usePage();
 
-const isAdmin = computed(() => page.props.auth.user?.role === 'admin');
+const navOpen = ref(false);
 
-const isUrl = (...urls) => {
-    let currentUrl = page.url.substring(1);
-    if (urls[0] === '') {
-        return currentUrl === '';
-    }
-    return urls.filter((url) => currentUrl.startsWith(url)).length;
-};
+const user = computed(() => page.props.auth?.user ?? null);
+const isAdmin = computed(() => Boolean(user.value?.is_admin));
+
+// Close the drawer on navigation, or it hangs around over the new page.
+watch(
+    () => page.url,
+    () => (navOpen.value = false),
+);
+
+const sections = computed(() => [
+    {
+        heading: 'Reading',
+        items: [
+            { href: '/library', label: 'My library', icon: Library },
+            { href: '/orders', label: 'My orders', icon: Receipt },
+            { href: '/', label: 'Browse the store', icon: ShoppingBag },
+        ],
+    },
+    ...(isAdmin.value
+        ? [
+              {
+                  heading: 'Store',
+                  items: [{ href: '/admin/orders', label: 'Orders', icon: Receipt }],
+              },
+              {
+                  heading: 'Catalogue',
+                  items: [
+                      { href: '/admin/books', label: 'Books', icon: BookOpen },
+                      { href: '/admin/authors', label: 'Authors', icon: Users },
+                      { href: '/admin/genres', label: 'Genres', icon: Tags },
+                  ],
+              },
+          ]
+        : []),
+]);
+
+const isCurrent = (href) => (href === '/' ? page.url === '/' : page.url.startsWith(href));
 </script>
 
 <template>
-    <div>
+    <div class="bg-surface text-content min-h-screen">
         <ToastListener />
-        <div class="min-h-screen bg-gray-100 dark:bg-gray-900 flex">
-            <aside class="w-64 bg-gray-800 text-white shrink-0">
-                <div class="p-4 flex items-center justify-center h-16">
-                    <Link href="/dashboard">
-                    <ApplicationLogo class="block h-9 w-auto fill-current text-white" />
+
+        <a
+            href="#main"
+            class="focus:bg-marigold focus:text-ink sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:rounded-[--radius-ui] focus:px-4 focus:py-2"
+        >
+            Skip to content
+        </a>
+
+        <div class="lg:flex">
+            <!-- Sidebar, from lg up. Below that it is a drawer: the fixed
+ w-64 aside used to crush the content column on a phone. -->
+            <aside class="border-line bg-raised hidden w-64 shrink-0 border-e lg:block">
+                <div class="sticky top-0 flex h-screen flex-col">
+                    <Link href="/dashboard" class="flex h-16 items-center px-5 text-lg font-bold tracking-tight">
+                        {{ $page.props.store?.tradingName ?? $page.props.appName ?? 'Bookstore' }}
                     </Link>
+
+                    <nav aria-label="Account" class="flex-1 overflow-y-auto px-3 pb-6">
+                        <template v-for="section in sections" :key="section.heading">
+                            <h2 class="text-muted px-2 pt-5 pb-1 text-xs font-semibold">{{ section.heading }}</h2>
+                            <Link
+                                v-for="item in section.items"
+                                :key="item.href"
+                                :href="item.href"
+                                class="flex items-center gap-3 rounded-[--radius-ui] px-2 py-2 text-sm transition-colors"
+                                :class="
+                                    isCurrent(item.href)
+                                        ? 'bg-marigold/15 text-content font-semibold'
+                                        : 'text-muted hover:bg-line/50 hover:text-content'
+                                "
+                                :aria-current="isCurrent(item.href) ? 'page' : undefined"
+                            >
+                                <component :is="item.icon" class="size-4 shrink-0" aria-hidden="true" />
+                                {{ item.label }}
+                            </Link>
+                        </template>
+                    </nav>
                 </div>
-                <nav class="mt-4 flex-1">
-                    <h3 class="px-4 text-xs uppercase text-gray-400 font-semibold tracking-wider">Main Menu</h3>
-                    <div class="mt-2">
-                        <NavLink href="/dashboard" :active="isUrl('dashboard')" theme="dark">
-                            Dashboard
-                        </NavLink>
-                    </div>
-
-                    <h3 class="px-4 mt-6 text-xs uppercase text-gray-400 font-semibold tracking-wider">My Account</h3>
-                    <div class="mt-2">
-                        <NavLink href="/library" :active="isUrl('library')" theme="dark">
-                            My Library
-                        </NavLink>
-                        <NavLink href="/orders" :active="isUrl('orders')" theme="dark">
-                            My Orders
-                        </NavLink>
-                    </div>
-
-                    <template v-if="isAdmin">
-                        <h3 class="px-4 mt-6 text-xs uppercase text-gray-400 font-semibold tracking-wider">Store</h3>
-                        <div class="mt-2">
-                            <NavLink href="/admin/orders" :active="isUrl('admin/orders')" theme="dark">
-                                Orders
-                            </NavLink>
-                        </div>
-
-                        <h3 class="px-4 mt-6 text-xs uppercase text-gray-400 font-semibold tracking-wider">Content</h3>
-                        <div class="mt-2">
-                            <NavLink href="/admin/authors" :active="isUrl('admin/authors')" theme="dark">
-                                Authors
-                            </NavLink>
-                            <NavLink href="/admin/genres" :active="isUrl('admin/genres')" theme="dark">
-                                Genres
-                            </NavLink>
-                            <NavLink href="/admin/books" :active="isUrl('admin/books')" theme="dark">
-                                Books
-                            </NavLink>
-                        </div>
-                    </template>
-                </nav>
             </aside>
 
-            <div class="flex-1 flex flex-col">
-                <nav class="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
-                    <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-                        <div class="flex justify-between h-16">
-                            <div class="flex items-center">
-                                <slot name="header" />
-                            </div>
+            <div class="min-w-0 flex-1">
+                <header class="border-line bg-surface/85 sticky top-0 z-20 border-b backdrop-blur">
+                    <div class="flex h-16 items-center gap-3 px-4 sm:px-6">
+                        <button
+                            type="button"
+                            @click="navOpen = true"
+                            class="text-muted hover:bg-line/50 hover:text-content rounded-[--radius-ui] p-2 lg:hidden"
+                            aria-label="Open navigation"
+                        >
+                            <Menu class="size-5" aria-hidden="true" />
+                        </button>
 
-                            <div class="hidden sm:flex sm:items-center sm:ms-6">
-                                <button @click="toggleTheme"
-                                    class="mr-4 p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-hidden">
-                                    <!-- Show MOON icon to switch to Dark Mode -->
-                                    <svg v-if="theme === 'light'" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6"
-                                        viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
-                                    </svg>
-                                    <!-- Show new, better SUN icon to switch to Light Mode -->
-                                    <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                        fill="currentColor" class="h-6 w-6">
-                                        <path
-                                            d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.106a.75.75 0 010 1.06l-1.591 1.59a.75.75 0 11-1.06-1.06l1.59-1.591a.75.75 0 011.06 0zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.894 17.894a.75.75 0 011.06 0l1.59 1.591a.75.75 0 11-1.06 1.06l-1.591-1.59a.75.75 0 010-1.06zM12 18a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM5.106 17.894a.75.75 0 010-1.06l1.591-1.59a.75.75 0 111.06 1.06l-1.59 1.591a.75.75 0 01-1.06 0zM4.5 12a.75.75 0 01.75-.75h2.25a.75.75 0 010 1.5H5.25a.75.75 0 01-.75-.75zM6.106 5.106a.75.75 0 011.06 0l1.59 1.591a.75.75 0 01-1.06 1.06l-1.591-1.59a.75.75 0 010-1.06z" />
-                                    </svg>
-                                </button>
-                                <div class="ms-3 relative">
-                                    <Dropdown align="right" width="48">
-                                        <template #trigger>
-                                            <span class="inline-flex rounded-md">
-                                                <button type="button"
-                                                    class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-hidden transition ease-in-out duration-150">
-                                                    {{ $page.props.auth.user.name }}
-                                                    <svg class="ms-2 -me-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg"
-                                                        viewBox="0 0 20 20" fill="currentColor">
-                                                        <path fill-rule="evenodd"
-                                                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                            clip-rule="evenodd" />
-                                                    </svg>
-                                                </button>
-                                            </span>
-                                        </template>
-
-                                        <template #content>
-                                            <DropdownLink href="/profile"> Profile </DropdownLink>
-                                            <DropdownLink href="/logout" method="post" as="button">
-                                                Log Out
-                                            </DropdownLink>
-                                        </template>
-                                    </Dropdown>
-                                </div>
-                            </div>
+                        <div class="min-w-0 flex-1">
+                            <slot name="header" />
                         </div>
-                    </div>
-                </nav>
 
-                <main class="flex-1 overflow-y-auto p-6">
+                        <button
+                            type="button"
+                            @click="toggleTheme"
+                            class="text-muted hover:bg-line/50 hover:text-content rounded-[--radius-ui] p-2"
+                            :aria-label="theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'"
+                        >
+                            <Moon v-if="theme === 'light'" class="size-5" aria-hidden="true" />
+                            <Sun v-else class="size-5" aria-hidden="true" />
+                        </button>
+
+                        <Dropdown align="right" width="48">
+                            <template #trigger>
+                                <button
+                                    type="button"
+                                    class="text-muted hover:bg-line/50 hover:text-content flex items-center gap-2 rounded-[--radius-ui] px-2 py-2 text-sm"
+                                >
+                                    <UserRound class="size-4" aria-hidden="true" />
+                                    <span class="hidden max-w-32 truncate sm:inline">{{ user?.name }}</span>
+                                    <ChevronDown class="size-4" aria-hidden="true" />
+                                </button>
+                            </template>
+                            <template #content>
+                                <DropdownLink href="/profile">Profile</DropdownLink>
+                                <DropdownLink href="/logout" method="post" as="button">Sign out</DropdownLink>
+                            </template>
+                        </Dropdown>
+                    </div>
+                </header>
+
+                <main id="main" class="px-4 py-6 sm:px-6 lg:px-8">
                     <slot />
                 </main>
             </div>
         </div>
+
+        <DialogRoot v-model:open="navOpen">
+            <DialogPortal>
+                <DialogOverlay class="bg-ink/60 fixed inset-0 z-40 backdrop-blur-xs lg:hidden" />
+                <DialogContent
+                    class="border-line bg-raised fixed inset-y-0 start-0 z-50 flex w-72 max-w-[85vw] flex-col overflow-y-auto border-e p-4 lg:hidden"
+                >
+                    <div class="mb-2 flex items-center justify-between">
+                        <DialogTitle class="text-muted text-sm font-semibold">Navigation</DialogTitle>
+                        <DialogClose
+                            class="text-muted hover:bg-line/50 rounded-[--radius-ui] p-2"
+                            aria-label="Close navigation"
+                        >
+                            <X class="size-5" aria-hidden="true" />
+                        </DialogClose>
+                    </div>
+
+                    <template v-for="section in sections" :key="section.heading">
+                        <h2 class="text-muted px-2 pt-4 pb-1 text-xs font-semibold">{{ section.heading }}</h2>
+                        <Link
+                            v-for="item in section.items"
+                            :key="item.href"
+                            :href="item.href"
+                            class="flex items-center gap-3 rounded-[--radius-ui] px-2 py-2.5 text-sm"
+                            :class="
+                                isCurrent(item.href) ? 'bg-marigold/15 font-semibold' : 'text-muted hover:bg-line/50'
+                            "
+                        >
+                            <component :is="item.icon" class="size-4 shrink-0" aria-hidden="true" />
+                            {{ item.label }}
+                        </Link>
+                    </template>
+                </DialogContent>
+            </DialogPortal>
+        </DialogRoot>
     </div>
 </template>

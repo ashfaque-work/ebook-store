@@ -36,6 +36,7 @@ class Book extends Model
         'title',
         'slug',
         'description',
+        'excerpt',
         'language',
         'isbn',
         'page_count',
