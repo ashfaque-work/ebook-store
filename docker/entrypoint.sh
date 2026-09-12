@@ -4,6 +4,12 @@ set -e
 # Caches are built at boot rather than at image build time because they bake
 # in environment values, and the environment is not known until the container
 # starts on the platform.
+# Hosting platforms tell the container which port to bind through $PORT, and
+# route nothing to a service listening elsewhere. nginx.conf ships with 8080 so
+# the image runs unchanged locally; this rewrites it when the platform asks for
+# something else.
+sed -i "s/listen 8080;/listen ${PORT:-8080};/" /etc/nginx/nginx.conf
+
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache

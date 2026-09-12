@@ -52,7 +52,12 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'http://localhost'),
+    // RENDER_EXTERNAL_URL is set by the host and already carries the scheme.
+    // Falling back to it removes a chicken-and-egg on the first deploy: the URL
+    // is not known until the service exists, and cover URLs, canonical links
+    // and the sitemap all derive from this. An explicit APP_URL still wins, so
+    // a custom domain is a one-line change later.
+    'url' => env('APP_URL') ?: env('RENDER_EXTERNAL_URL', 'http://localhost'),
 
     /*
     |--------------------------------------------------------------------------

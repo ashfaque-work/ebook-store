@@ -25,8 +25,10 @@ services:
         value: false
       - key: APP_KEY
         sync: false
-      - key: APP_URL
-        sync: false
+      # Deliberately not set: config/app.php falls back to RENDER_EXTERNAL_URL,
+      # which Render populates with the real https:// URL. The URL does not
+      # exist until the service does, so asking for it up front means deploying
+      # once with a wrong value. Add APP_URL explicitly for a custom domain.
       - key: LOG_CHANNEL
         value: stderr
 
@@ -77,8 +79,12 @@ services:
       - key: R2_PUBLIC_URL
         sync: false
 
+      # log until an SMTP provider exists. With `smtp` and an empty MAIL_HOST
+      # the first person to register gets a 500 after their account is created,
+      # because verification mail is sent during that request. Switch this to
+      # smtp in the dashboard at the same time as filling MAIL_HOST.
       - key: MAIL_MAILER
-        value: smtp
+        value: log
       - key: MAIL_HOST
         sync: false
       - key: MAIL_PORT

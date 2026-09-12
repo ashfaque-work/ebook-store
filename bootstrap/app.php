@@ -15,6 +15,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Every PaaS terminates TLS at its own proxy and forwards the original
+        // scheme in a header. Untrusted, Laravel sees plain HTTP and generates
+        // http:// for canonical links, the sitemap, Open Graph tags and the
+        // gateway's callback URL — on a site that is only reachable over https.
+        //
+        // Trusting all proxies is the right call where the container has no
+        // public address of its own and every request arrives through the
+        // platform's load balancer, whose addresses are not fixed.
+        $middleware->trustProxies(at: '*');
+
         $middleware->web(append: [
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
