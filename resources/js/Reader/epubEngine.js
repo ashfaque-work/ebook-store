@@ -83,6 +83,23 @@ export async function createEpubEngine({ url, element, onRelocate, onReady }) {
         prev: () => rendition.prev(),
         goTo: (href) => rendition.display(href),
 
+        /**
+         * Jump to a fraction of the way through the book.
+         *
+         * Needs the location index, which is generated in the background after
+         * the first page renders. Until it is ready there is no mapping from a
+         * percentage to a place in the text, so this does nothing rather than
+         * guessing and throwing the reader somewhere arbitrary.
+         */
+        async goToPercent(fraction) {
+            if (!locationsReady) return;
+
+            const clamped = Math.min(Math.max(fraction, 0), 1);
+            const cfi = book.locations.cfiFromPercentage(clamped);
+
+            if (cfi) await rendition.display(cfi);
+        },
+
         /** epub.js styles the iframe's own document, not our page. */
         applyTheme({ background, foreground, fontSize, lineHeight, fontFamily, maxWidth }) {
             rendition.themes.override('color', foreground, true);

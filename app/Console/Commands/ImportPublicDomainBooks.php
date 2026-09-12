@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Author;
 use App\Models\Book;
 use App\Models\Genre;
+use App\Support\EpubStats;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -267,6 +268,9 @@ class ImportPublicDomainBooks extends Command
             // excerpt as the book's opening lines, and a blurb is not that.
             'excerpt' => null,
             'language' => 'en',
+            // Without this the reader can never say how much is left, which is
+            // the difference between "20 minutes" and an unknown commitment.
+            'page_count' => EpubStats::pageCount($epub),
             'price' => $price / 100,
             'price_paise' => $price,
             'is_published' => true,

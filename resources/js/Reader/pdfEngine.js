@@ -74,6 +74,10 @@ export async function createPdfEngine({ url, element, onRelocate, onReady }) {
         prev: () => renderPage(current - 1),
         goTo: (location) => renderPage(Number.parseInt(location, 10) || 1),
 
+        // Page one is the floor: rounding a small fraction down gives 0, which
+        // is not a page.
+        goToPercent: (fraction) => renderPage(Math.max(1, Math.round(fraction * doc.numPages))),
+
         applyTheme({ background, fontSize }) {
             element.style.background = background;
             // A PDF has fixed type, so the size control becomes a zoom.

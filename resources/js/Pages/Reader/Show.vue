@@ -1,5 +1,6 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
+import { ArrowLeft, Bookmark, List, Type, X } from 'lucide-vue-next';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { formatPrice } from '@/lib/money';
 import { useReaderSettings } from '@/Reader/useReaderSettings';
@@ -244,6 +245,30 @@ const saveHighlight = (at, text) => {
     );
 };
 
+/* ---------------------------------------------------------------- seeking */
+
+const seeking = ref(false);
+const seekDraft = ref(0);
+
+// While a drag is in progress the thumb follows the finger, not the book —
+// otherwise it snaps back to the current page on every frame.
+const seekValue = computed(() => (seeking.value ? seekDraft.value : percent.value));
+
+const onSeekInput = (event) => {
+    seeking.value = true;
+    seekDraft.value = Number(event.target.value);
+    revealChrome();
+};
+
+// On release, not on every input: rendering a new location is expensive, and
+// doing it per pixel of drag makes the whole reader stutter.
+const onSeekCommit = (event) => {
+    const target = Number(event.target.value);
+    seeking.value = false;
+    engine.value?.goToPercent?.(target / 100);
+    revealChrome();
+};
+
 /* ---------------------------------------------------------------- reading time */
 
 const timeLeft = computed(() => {
@@ -278,7 +303,7 @@ const timeLeft = computed(() => {
             :style="{ background: resolved.background, borderColor: resolved.muted + '33' }"
         >
             <Link :href="isSample ? `/books/${book.slug}` : '/library'" class="icon" aria-label="Leave the reader">
-                &larr;
+                <ArrowLeft class="glyph" />
             </Link>
 
             <p class="chapter" :style="{ color: resolved.muted }">
@@ -295,11 +320,13 @@ const timeLeft = computed(() => {
                     :aria-pressed="isBookmarked"
                     :aria-label="isBookmarked ? 'Remove bookmark' : 'Add bookmark'"
                 >
-                    {{ isBookmarked ? '★' : '☆' }}
+                    <Bookmark class="glyph" :fill="isBookmarked ? 'currentColor' : 'none'" />
                 </button>
-                <button type="button" class="icon" @click="showToc = !showToc" aria-label="Contents">☰</button>
+                <button type="button" class="icon" @click="showToc = !showToc" aria-label="Contents">
+                    <List class="glyph" />
+                </button>
                 <button type="button" class="icon" @click="showSettings = !showSettings" aria-label="Reading settings">
-                    Aa
+                    <Type class="glyph" />
                 </button>
             </div>
         </header>
@@ -322,12 +349,33 @@ const timeLeft = computed(() => {
             :class="{ hidden: !chromeVisible }"
             :style="{ background: resolved.background, borderColor: resolved.muted + '33' }"
         >
-            <div class="track" :style="{ background: resolved.muted + '33' }">
-                <div class="fill" :style="{ width: `${percent}%` }" />
-            </div>
+            <!--
+              Draggable, because a progress bar you cannot move is a progress
+              bar that makes you scroll a chapter at a time to find the bit you
+              half remember. A range input rather than a custom control: it
+              arrives with keyboard support and a real thumb on touch.
+            -->
+            <label class="sr-only" :for="`seek-${book.id}`">Position in the book</label>
+            <input
+                :id="`seek-${book.id}`"
+                class="seek"
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                :value="seekValue"
+                :style="{ '--seek': `${seekValue}%` }"
+                :aria-valuetext="`${seekValue}% through the book`"
+                @input="onSeekInput"
+                @change="onSeekCommit"
+                @pointerdown="seeking = true"
+                @keydown.stop
+                @click.stop
+            />
             <p class="meta" :style="{ color: resolved.muted }">
-                <span>{{ percent }}%</span>
-                <span v-if="timeLeft">{{ timeLeft }}</span>
+                <span>{{ seekValue }}%</span>
+                <span v-if="seeking">release to jump</span>
+                <span v-else-if="timeLeft">{{ timeLeft }}</span>
             </p>
         </footer>
 
@@ -335,7 +383,9 @@ const timeLeft = computed(() => {
         <aside v-if="showToc" class="drawer" :style="{ background: resolved.background }">
             <div class="drawer-head">
                 <h2>Contents</h2>
-                <button type="button" class="icon" @click="showToc = false" aria-label="Close contents">✕</button>
+                <button type="button" class="icon" @click="showToc = false" aria-label="Close contents">
+                    <X class="glyph" />
+                </button>
             </div>
 
             <nav v-if="toc.length" aria-label="Contents">
@@ -532,6 +582,82 @@ const timeLeft = computed(() => {
 .toc-item:focus-visible {
     outline: 2px solid #f0a830;
     outline-offset: 2px;
+}
+
+.glyph {
+    width: 1.125rem;
+    height: 1.125rem;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* The scrubber. Track filled to the left of the thumb, so position reads at a
+   glance the way a progress bar does. */
+.seek {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 1.25rem;
+    background: transparent;
+    cursor: pointer;
+}
+
+.seek::-webkit-slider-runnable-track {
+    height: 3px;
+    border-radius: 999px;
+    background: linear-gradient(
+        to right,
+        #f0a830 0%,
+        #f0a830 var(--seek, 0%),
+        rgba(128, 128, 128, 0.28) var(--seek, 0%),
+        rgba(128, 128, 128, 0.28) 100%
+    );
+}
+
+.seek::-moz-range-track {
+    height: 3px;
+    border-radius: 999px;
+    background: rgba(128, 128, 128, 0.28);
+}
+
+.seek::-moz-range-progress {
+    height: 3px;
+    border-radius: 999px;
+    background: #f0a830;
+}
+
+.seek::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 0.875rem;
+    height: 0.875rem;
+    margin-top: -0.3125rem;
+    border-radius: 999px;
+    background: #f0a830;
+    border: 2px solid rgba(0, 0, 0, 0.25);
+}
+
+.seek::-moz-range-thumb {
+    width: 0.875rem;
+    height: 0.875rem;
+    border-radius: 999px;
+    background: #f0a830;
+    border: 2px solid rgba(0, 0, 0, 0.25);
+}
+
+.seek:focus-visible {
+    outline: 2px solid #f0a830;
+    outline-offset: 4px;
 }
 
 .track {
