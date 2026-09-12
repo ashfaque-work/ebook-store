@@ -43,6 +43,12 @@ class ImportPublicDomainBooks extends Command
      */
     private const AGENT = 'ebook-store catalogue importer (one-off, low volume)';
 
+    /**
+     * A stop, so that asking for more books than exist walks a bounded number
+     * of pages instead of the whole archive.
+     */
+    private const MAX_PAGES = 40;
+
     private int $imported = 0;
 
     private int $skipped = 0;
@@ -51,6 +57,14 @@ class ImportPublicDomainBooks extends Command
 
     public function handle(): int
     {
+        // Artisan resolves a command once and reuses the instance, so these
+        // survive between invocations in a single process. Left over, the
+        // count is already satisfied before the first request goes out and the
+        // second run does nothing at all.
+        $this->imported = 0;
+        $this->skipped = 0;
+        $this->failed = 0;
+
         $wanted = max(1, (int) $this->option('count'));
         $dryRun = (bool) $this->option('dry-run');
 
@@ -76,7 +90,13 @@ class ImportPublicDomainBooks extends Command
         $bar = $dryRun ? null : $this->output->createProgressBar($wanted);
         $bar?->start();
 
-        while ($page && $this->imported + $this->skipped < $wanted) {
+        // Counting only what lands, not what is passed over: the popular pages
+        // are stable, so a second run meets everything from the first before it
+        // reaches anything new. Counting skips would make every re-run a no-op.
+        $pagesRead = 0;
+
+        while ($page && $this->imported < $wanted && $pagesRead < self::MAX_PAGES) {
+            $pagesRead++;
             try {
                 $response = Http::withUserAgent(self::AGENT)->timeout(60)->retry(3, 2000)->get($page);
             } catch (Throwable $e) {
@@ -96,7 +116,7 @@ class ImportPublicDomainBooks extends Command
             $body = $response->json();
 
             foreach ($body['results'] ?? [] as $entry) {
-                if ($this->imported + $this->skipped >= $wanted) {
+                if ($this->imported >= $wanted) {
                     break;
                 }
 
@@ -112,7 +132,7 @@ class ImportPublicDomainBooks extends Command
                 }
 
                 $this->importOne($entry);
-                $bar?->setProgress(min($wanted, $this->imported + $this->skipped));
+                $bar?->setProgress(min($wanted, $this->imported));
             }
 
             $page = $body['next'] ?? null;

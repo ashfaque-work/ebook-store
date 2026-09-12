@@ -196,3 +196,35 @@ test('an unreachable catalogue fails loudly instead of importing nothing quietly
 
     $this->artisan('store:import-books', ['--count' => 5])->assertFailed();
 });
+
+test('a second run adds new books instead of stopping at the ones it already has', function () {
+    Http::fake([
+        'https://gutendex.com/books?*page=2*' => Http::response([
+            'results' => [gutendexEntry(3), gutendexEntry(4)],
+            'next' => null,
+        ]),
+        'https://gutendex.com/*' => Http::response([
+            'results' => [gutendexEntry(1), gutendexEntry(2)],
+            'next' => 'https://gutendex.com/books?page=2',
+        ]),
+        'https://example.test/*' => Http::response('BYTES'),
+    ]);
+
+    $this->artisan('store:import-books', ['--count' => 2])->assertSuccessful();
+    expect(Book::count())->toBe(2);
+
+    // The popular pages are stable, so the second run meets both of the first
+    // run's books before it reaches anything new. Counting those skips toward
+    // the target would make every re-run a no-op.
+    $this->artisan('store:import-books', ['--count' => 2])->assertSuccessful();
+
+    expect(Book::count())->toBe(4);
+});
+
+test('asking for more books than exist stops instead of hanging', function () {
+    fakeCatalogue([gutendexEntry(1)]);
+
+    $this->artisan('store:import-books', ['--count' => 500])->assertSuccessful();
+
+    expect(Book::count())->toBe(1);
+});
