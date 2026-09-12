@@ -263,7 +263,9 @@ class ImportPublicDomainBooks extends Command
             'title' => $title,
             'slug' => $slug,
             'description' => $summary !== '' ? $summary : null,
-            'excerpt' => $summary !== '' ? Str::limit($summary, 180) : null,
+            // Deliberately not derived from the summary: the store presents an
+            // excerpt as the book's opening lines, and a blurb is not that.
+            'excerpt' => null,
             'language' => 'en',
             'price' => $price / 100,
             'price_paise' => $price,

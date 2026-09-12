@@ -171,6 +171,173 @@
     }
 }
 
+@layer components {
+    /*
+      Motion, kept to two ideas: things arrive from slightly below, and covers
+      lift towards the light. Anything more and a bookshop starts behaving like
+      a landing page for software.
+
+      Everything here starts in its final state. `will-reveal` is added by
+      script, so a reader without JavaScript — or an IntersectionObserver that
+      never fires — sees the page, just without the entrance.
+    */
+    .will-reveal {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+
+    .will-reveal.is-revealed,
+    .is-revealed {
+        opacity: 1;
+        transform: none;
+        transition:
+            opacity 620ms cubic-bezier(0.22, 1, 0.36, 1),
+            transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* Staggered, so a row of covers arrives as a row rather than a block. */
+    .reveal-stagger > * {
+        animation: reveal-rise 640ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .reveal-stagger > *:nth-child(1) { animation-delay: 60ms; }
+    .reveal-stagger > *:nth-child(2) { animation-delay: 140ms; }
+    .reveal-stagger > *:nth-child(3) { animation-delay: 220ms; }
+    .reveal-stagger > *:nth-child(4) { animation-delay: 300ms; }
+    .reveal-stagger > *:nth-child(5) { animation-delay: 380ms; }
+
+    @keyframes reveal-rise {
+        from {
+            opacity: 0;
+            transform: translateY(18px);
+        }
+    }
+
+    /*
+      The hero's light. A single warm source behind the covers, which is what
+      makes the shelf read as a shelf in low light rather than a dark rectangle
+      with pictures on it.
+    */
+    .hero-glow {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+            radial-gradient(60% 60% at 72% 38%, color-mix(in oklch, var(--color-marigold) 20%, transparent), transparent 70%),
+            radial-gradient(50% 50% at 12% 82%, color-mix(in oklch, var(--color-verdigris) 14%, transparent), transparent 72%);
+    }
+
+    /*
+      Covers fanned as they would be on a table: overlapping, each one turned a
+      little further, the nearest fully lit.
+    */
+    .cover-fan {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        align-items: end;
+    }
+
+    .cover-fan > * {
+        grid-row: 1;
+        transition:
+            transform 520ms cubic-bezier(0.22, 1, 0.36, 1),
+            filter 520ms ease;
+    }
+
+    .cover-fan > *:nth-child(1) {
+        grid-column: 1;
+        transform: rotate(-7deg) translateY(8%) scale(0.9);
+        filter: brightness(0.72);
+        z-index: 1;
+    }
+
+    .cover-fan > *:nth-child(2) {
+        grid-column: 2;
+        z-index: 3;
+    }
+
+    .cover-fan > *:nth-child(3) {
+        grid-column: 3;
+        transform: rotate(7deg) translateY(8%) scale(0.9);
+        filter: brightness(0.72);
+        z-index: 2;
+    }
+
+    .cover-fan:hover > *:nth-child(1) {
+        transform: rotate(-11deg) translateY(4%) scale(0.94);
+        filter: brightness(0.86);
+    }
+
+    .cover-fan:hover > *:nth-child(2) {
+        transform: translateY(-3%) scale(1.03);
+    }
+
+    .cover-fan:hover > *:nth-child(3) {
+        transform: rotate(11deg) translateY(4%) scale(0.94);
+        filter: brightness(0.86);
+    }
+
+    /*
+      The stand-in jacket. A cloth-like ground with a little tonal variation
+      across it, so a shelf of these does not read as a row of identical
+      rectangles.
+    */
+    .book-plate {
+        background:
+            linear-gradient(160deg, oklch(0.33 0.06 268) 0%, oklch(0.25 0.05 272) 55%, oklch(0.21 0.045 275) 100%);
+        box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
+    }
+
+    /* The binding edge, where a real jacket folds around the boards. */
+    .book-plate-spine {
+        position: absolute;
+        inset-block: 0;
+        left: 0;
+        width: 7px;
+        background: linear-gradient(90deg, rgb(0 0 0 / 0.45), rgb(0 0 0 / 0.05));
+    }
+
+    /* A cover lifts towards the light rather than growing a box-shadow. */
+    .cover-lift {
+        transition:
+            transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
+            box-shadow 320ms ease;
+    }
+
+    .group:hover .cover-lift {
+        transform: translateY(-6px);
+        box-shadow:
+            0 2px 4px rgb(0 0 0 / 0.2),
+            0 18px 34px -12px rgb(0 0 0 / 0.5),
+            0 0 0 1px color-mix(in oklch, var(--color-marigold) 28%, transparent);
+    }
+
+    /* Arrows on a shelf: present, but not competing with the covers. */
+    .shelf-arrow {
+        display: grid;
+        place-items: center;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 999px;
+        border: 1px solid var(--color-line);
+        background: var(--color-raised);
+        color: var(--color-muted);
+        transition:
+            color 180ms ease,
+            border-color 180ms ease,
+            opacity 180ms ease;
+    }
+
+    .shelf-arrow:hover:not(:disabled) {
+        color: var(--color-content);
+        border-color: var(--color-marigold);
+    }
+
+    .shelf-arrow:disabled {
+        opacity: 0.35;
+    }
+}
+
 @layer utilities {
     .measure {
         max-width: 66ch;

@@ -90,6 +90,13 @@ class HomeController extends Controller
             'filters' => [],
             'featured' => $featured ? $this->featurePayload($featured) : null,
             'newest' => $this->shelfBooks(Book::published()->latest('published_at')->limit(10)),
+            // The hero says how big the shelf is and how much of it costs
+            // nothing. Both are the actual counts: a landing page that rounds
+            // its own catalogue up is the first thing a reader catches you on.
+            'stats' => [
+                'books' => Book::published()->count(),
+                'free' => Book::published()->where('price_paise', 0)->count(),
+            ],
             // Reviews and related rows are not needed for first paint.
             'shelves' => Inertia::defer(fn () => $this->genreShelves($featured)),
             'continueReading' => $request->user()

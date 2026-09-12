@@ -1,0 +1,160 @@
+- generic [ref=f1e3]:
+  - link "Skip to content" [ref=f1e4] [cursor=pointer]:
+    - /url: "#main"
+  - banner [ref=f1e5]:
+    - generic [ref=f1e6]:
+      - link "Laravel" [ref=f1e7] [cursor=pointer]:
+        - /url: /
+      - navigation "Main" [ref=f1e8]:
+        - link "Browse" [ref=f1e9] [cursor=pointer]:
+          - /url: /
+      - generic [ref=f1e10]:
+        - button "Switch to dark mode" [ref=f1e11]
+        - link "Cart, empty" [ref=f1e14] [cursor=pointer]:
+          - /url: /cart
+        - link "Sign in" [ref=f1e18] [cursor=pointer]:
+          - /url: /login
+        - link "Create account" [ref=f1e19] [cursor=pointer]:
+          - /url: /register
+  - main [ref=f1e20]:
+    - generic [ref=f1e22]:
+      - generic [ref=f1e23]:
+        - paragraph [ref=f1e24]: An independent ebook shop
+        - heading "Read something remarkable tonight." [level=1] [ref=f1e25]
+        - paragraph [ref=f1e26]: 55 classics, free to read this minute — in your browser, on any device. Nothing to install, nothing to sync.
+        - generic [ref=f1e27]:
+          - link "Start reading" [ref=f1e28] [cursor=pointer]:
+            - /url: /books/the-passionate-elopement
+          - link "Browse the shelves" [ref=f1e29] [cursor=pointer]:
+            - /url: "#shelves"
+        - generic [ref=f1e30]:
+          - generic [ref=f1e31]:
+            - term [ref=f1e32]: "55"
+            - definition [ref=f1e33]: books on the shelves
+          - generic [ref=f1e34]:
+            - term [ref=f1e35]: "55"
+            - definition [ref=f1e36]: free, no card needed
+      - generic [ref=f1e37]:
+        - link "The Works of Edgar Allan Poe — Volume 2" [ref=f1e38] [cursor=pointer]:
+          - /url: /books/the-works-of-edgar-allan-poe-volume-2
+          - img "Cover of The Works of Edgar Allan Poe — Volume 2 by Edgar Allan Poe" [ref=f1e39]
+        - link "The Passionate Elopement" [ref=f1e40] [cursor=pointer]:
+          - /url: /books/the-passionate-elopement
+          - img "Cover of The Passionate Elopement by Compton MacKenzie" [ref=f1e41]
+        - 'link "That Which Hath Wings: A Novel of the Day" [ref=f1e42] [cursor=pointer]':
+          - /url: /books/that-which-hath-wings-a-novel-of-the-day
+          - 'img "Cover of That Which Hath Wings: A Novel of the Day by Richard Dehan" [ref=f1e43]'
+    - generic [ref=f1e45]:
+      - link [ref=f1e46] [cursor=pointer]:
+        - /url: /books/the-passionate-elopement
+        - img "Cover of The Passionate Elopement by Compton MacKenzie" [ref=f1e47]
+      - generic [ref=f1e48]:
+        - paragraph [ref=f1e49]: The first lines
+        - blockquote [ref=f1e50]:
+          - paragraph [ref=f1e51]: "\"The Passionate Elopement\" by Compton MacKenzie is a novel written in the early 20th century. The story is set in the picturesque town of Curtain Wells, which serves as an inland s..."
+        - paragraph [ref=f1e52]: The Passionate Elopement
+        - paragraph [ref=f1e53]: Compton MacKenzie
+        - generic [ref=f1e54]:
+          - link "Look inside" [ref=f1e55] [cursor=pointer]:
+            - /url: /books/the-passionate-elopement
+          - generic [ref=f1e56]: Free
+    - generic [ref=f1e57]:
+      - generic [ref=f1e58]:
+        - searchbox "Search books" [ref=f1e59]
+        - link "Adventure" [ref=f1e60] [cursor=pointer]:
+          - /url: /?genre=adventure
+        - link "American Literature" [ref=f1e61] [cursor=pointer]:
+          - /url: /?genre=american-literature
+        - link "Arthurian Legends" [ref=f1e62] [cursor=pointer]:
+          - /url: /?genre=arthurian-legends
+        - link "Banned Books from Anne Haight's list" [ref=f1e63] [cursor=pointer]:
+          - /url: /?genre=banned-books-from-anne-haights-list
+        - link "Best Books Ever Listings" [ref=f1e64] [cursor=pointer]:
+          - /url: /?genre=best-books-ever-listings
+        - link "Bestsellers, American, 1895-1923" [ref=f1e65] [cursor=pointer]:
+          - /url: /?genre=bestsellers-american-1895-1923
+        - link "Biographies" [ref=f1e66] [cursor=pointer]:
+          - /url: /?genre=biographies
+        - link "British Literature" [ref=f1e67] [cursor=pointer]:
+          - /url: /?genre=british-literature
+      - generic [ref=f1e68]:
+        - generic [ref=f1e69]:
+          - heading "New this week" [level=2] [ref=f1e70]
+          - generic [aria-hidden] [ref=f1e72]:
+            - button [disabled] [ref=f1e73]
+            - button [disabled] [ref=f1e76]
+        - generic [ref=f1e79]:
+          - link [ref=f1e80] [cursor=pointer]:
+            - /url: /books/the-passionate-elopement
+            - img "Cover of The Passionate Elopement by Compton MacKenzie" [ref=f1e81]
+            - heading "The Passionate Elopement" [level=3] [ref=f1e82]
+            - paragraph [ref=f1e83]: Compton MacKenzie
+            - paragraph [ref=f1e84]: Free
+          - link [ref=f1e85] [cursor=pointer]:
+            - /url: /books/the-works-of-edgar-allan-poe-volume-2
+            - img "Cover of The Works of Edgar Allan Poe — Volume 2 by Edgar Allan Poe" [ref=f1e86]
+            - heading "The Works of Edgar Allan Poe — Volume 2" [level=3] [ref=f1e87]
+            - paragraph [ref=f1e88]: Edgar Allan Poe
+            - paragraph [ref=f1e89]: Free
+          - link [ref=f1e90] [cursor=pointer]:
+            - /url: /books/that-which-hath-wings-a-novel-of-the-day
+            - 'img "Cover of That Which Hath Wings: A Novel of the Day by Richard Dehan" [ref=f1e91]'
+            - 'heading "That Which Hath Wings: A Novel of the Day" [level=3] [ref=f1e92]'
+            - paragraph [ref=f1e93]: Richard Dehan
+            - paragraph [ref=f1e94]: Free
+          - link [ref=f1e95] [cursor=pointer]:
+            - /url: /books/what-will-people-say-a-novel
+            - img "Cover of What Will People Say? A Novel by Rupert Hughes" [ref=f1e96]
+            - heading "What Will People Say? A Novel" [level=3] [ref=f1e97]
+            - paragraph [ref=f1e98]: Rupert Hughes
+            - paragraph [ref=f1e99]: Free
+          - link [ref=f1e100] [cursor=pointer]:
+            - /url: /books/the-boy-with-wings
+            - img "Cover of The Boy with Wings by Berta Ruck" [ref=f1e101]
+            - heading "The Boy with Wings" [level=3] [ref=f1e102]
+            - paragraph [ref=f1e103]: Berta Ruck
+            - paragraph [ref=f1e104]: Free
+          - link [ref=f1e105] [cursor=pointer]:
+            - /url: /books/the-countess-of-pembrokes-arcadia
+            - img "Cover of The Countess of Pembroke's Arcadia by Philip Sidney" [ref=f1e106]
+            - heading "The Countess of Pembroke's Arcadia" [level=3] [ref=f1e107]
+            - paragraph [ref=f1e108]: Philip Sidney
+            - paragraph [ref=f1e109]: Free
+          - link [ref=f1e110] [cursor=pointer]:
+            - /url: /books/doctor-cupid-a-novel
+            - 'img "Cover of Doctor Cupid: A Novel by Rhoda Broughton" [ref=f1e111]'
+            - 'heading "Doctor Cupid: A Novel" [level=3] [ref=f1e112]'
+            - paragraph [ref=f1e113]: Rhoda Broughton
+            - paragraph [ref=f1e114]: Free
+          - link [ref=f1e115] [cursor=pointer]:
+            - /url: /books/on-the-cross-a-romance-of-the-passion-play-at-oberammergau
+            - 'img "Cover of On the Cross: A Romance of the Passion Play at Oberammergau by Wilhelmine von Hillern" [ref=f1e116]'
+            - 'heading "On the Cross: A Romance of the Passion Play at Oberammergau" [level=3] [ref=f1e117]'
+            - paragraph [ref=f1e118]: Wilhelmine von Hillern
+            - paragraph [ref=f1e119]: Free
+          - link [ref=f1e120] [cursor=pointer]:
+            - /url: /books/manon-lescaut
+            - img "Cover of Manon Lescaut by abbé Prévost" [ref=f1e121]
+            - heading "Manon Lescaut" [level=3] [ref=f1e122]
+            - paragraph [ref=f1e123]: abbé Prévost
+            - paragraph [ref=f1e124]: Free
+          - link [ref=f1e125] [cursor=pointer]:
+            - /url: /books/a-farewell-to-arms
+            - img "Cover of A farewell to arms by Ernest Hemingway" [ref=f1e126]
+            - heading "A farewell to arms" [level=3] [ref=f1e127]
+            - paragraph [ref=f1e128]: Ernest Hemingway
+            - paragraph [ref=f1e129]: Free
+  - contentinfo [ref=f1e133]:
+    - generic [ref=f1e134]:
+      - navigation "Policies" [ref=f1e135]:
+        - link "Terms" [ref=f1e136] [cursor=pointer]:
+          - /url: /terms
+        - link "Privacy" [ref=f1e137] [cursor=pointer]:
+          - /url: /privacy
+        - link "Refunds" [ref=f1e138] [cursor=pointer]:
+          - /url: /refunds
+        - link "Delivery" [ref=f1e139] [cursor=pointer]:
+          - /url: /delivery
+        - link "Contact" [ref=f1e140] [cursor=pointer]:
+          - /url: /contact
+      - paragraph [ref=f1e141]: © 2026 Your Registered Business Name. Digital books, delivered instantly.

@@ -16,13 +16,17 @@ defineProps({
             :src="book.cover_image_path"
             :title="book.title"
             :author="book.author?.name"
-            class="cover-shadow aspect-2/3 w-full rounded-[--radius-cover] transition group-hover:-translate-y-0.5"
+            class="cover-shadow cover-lift aspect-2/3 w-full rounded-[--radius-cover]"
         />
 
-        <h3 class="font-reading text-content mt-3 text-sm/snug font-semibold">{{ book.title }}</h3>
+        <h3
+            class="font-reading text-content group-hover:text-accent-text mt-3 text-sm/snug font-semibold transition-colors"
+        >
+            {{ book.title }}
+        </h3>
         <p class="text-muted mt-0.5 truncate text-xs">{{ book.author?.name }}</p>
         <p class="tabular mt-1 text-xs font-semibold" :class="owned ? 'text-verdigris' : 'text-accent-text'">
-            {{ owned ? 'In your library' : formatPrice(book.price_paise) }}
+            {{ owned ? 'In your library' : book.price_paise === 0 ? 'Free' : formatPrice(book.price_paise) }}
         </p>
     </Link>
 </template>

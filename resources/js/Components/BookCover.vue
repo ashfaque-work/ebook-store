@@ -41,16 +41,26 @@ const initials = computed(() =>
         :class="[$props.class, 'bg-gray-200 object-cover dark:bg-gray-700']"
     />
 
+    <!--
+      No artwork. Rather than a grey box, this is a plausible jacket: a cloth
+      ground, a spine down the binding edge, and the title set as a publisher
+      would set it. On a dark shelf an unlit rectangle reads as a hole in the
+      page; this reads as a book whose cover simply is not very exciting.
+    -->
     <div
         v-else
         role="img"
         :aria-label="alt"
-        :class="[
-            $props.class,
-            'flex flex-col items-center justify-center gap-2 bg-gray-800 p-3 text-center dark:bg-gray-900',
-        ]"
+        :class="[$props.class, 'book-plate relative flex flex-col justify-between overflow-hidden p-3 text-center']"
     >
-        <span class="text-2xl font-bold tracking-tight text-amber-400">{{ initials }}</span>
-        <span class="line-clamp-3 text-xs leading-snug font-medium text-gray-300">{{ title }}</span>
+        <span class="book-plate-spine" aria-hidden="true" />
+
+        <span class="mt-4 text-xl font-bold tracking-tight text-amber-300/90">{{ initials }}</span>
+
+        <span class="font-reading line-clamp-4 px-1 text-[0.72rem] leading-snug font-semibold text-white/85">
+            {{ title }}
+        </span>
+
+        <span class="line-clamp-1 text-[0.62rem] tracking-wide text-white/45 uppercase">{{ author ?? '&nbsp;' }}</span>
     </div>
 </template>

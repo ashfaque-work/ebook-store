@@ -7,7 +7,7 @@ import UiButton from '@/Components/Ui/UiButton.vue';
 import EmptyState from '@/Components/Ui/EmptyState.vue';
 import Pagination from '@/Components/Pagination.vue';
 import { Deferred, Head, Link, router } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { formatPrice } from '@/lib/money';
 
 const props = defineProps({
@@ -18,9 +18,23 @@ const props = defineProps({
     featured: { type: Object, default: null },
     newest: { type: Array, default: () => [] },
     shelves: { type: Array, default: null },
+    stats: { type: Object, default: () => ({ books: 0, free: 0 }) },
     continueReading: { type: Object, default: null },
     // results mode
     books: { type: Object, default: null },
+});
+
+// Three covers, middle one first so the fan reads outward from the newest.
+const fanned = computed(() => {
+    const pool = (props.newest ?? []).filter((b) => b.cover_image_path).slice(0, 3);
+    return pool.length === 3 ? [pool[1], pool[0], pool[2]] : pool;
+});
+
+// Straight into a book rather than onto a product page: the first free title
+// on the shelf, or the shelves themselves if somehow nothing is free.
+const startReadingHref = computed(() => {
+    const free = (props.newest ?? []).find((b) => b.price_paise === 0);
+    return free ? `/books/${free.slug}` : '#shelves';
 });
 
 const search = ref(props.filters?.search ?? '');
@@ -61,44 +75,111 @@ const clearFilters = () => {
  characteristic moment is reading the first lines, so that is what
  leads — set at true reading size, in the reading face.
             -->
-            <section v-if="featured" class="border-line border-b">
+            <!--
+              The shelf in low light. Covers are the only bright thing on the
+              page, which is the whole argument for an indigo storefront: book
+              jackets are designed against white and glow against this.
+            -->
+            <section class="relative isolate overflow-hidden">
+                <div class="hero-glow" aria-hidden="true" />
+
                 <div
-                    class="mx-auto grid max-w-[1200px] gap-8 px-4 py-12 sm:px-6 md:grid-cols-[minmax(0,15rem)_1fr] md:gap-12 md:py-20"
+                    class="relative mx-auto grid max-w-[1200px] items-center gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1.05fr_1fr] md:gap-14 md:py-24"
                 >
-                    <Link :href="`/books/${featured.slug}`" class="mx-auto w-40 md:mx-0 md:w-full">
+                    <div>
+                        <p class="text-accent-text text-xs font-semibold tracking-[0.18em] uppercase">
+                            An independent ebook shop
+                        </p>
+
+                        <h1 class="mt-4 text-[clamp(2.2rem,1.4rem+3.2vw,3.6rem)] leading-[1.05]">
+                            Read something<br />
+                            remarkable tonight.
+                        </h1>
+
+                        <p class="text-muted measure mt-5 text-base/relaxed">
+                            {{ stats.free }} classics, free to read this minute — in your browser, on any device.
+                            Nothing to install, nothing to sync.
+                        </p>
+
+                        <div class="mt-8 flex flex-wrap items-center gap-3">
+                            <UiButton :href="startReadingHref" size="lg">Start reading</UiButton>
+                            <UiButton href="#shelves" variant="secondary" size="lg">Browse the shelves</UiButton>
+                        </div>
+
+                        <dl class="text-muted mt-10 flex flex-wrap gap-x-8 gap-y-3 text-sm">
+                            <div class="flex items-baseline gap-2">
+                                <dt class="tabular text-content font-semibold">{{ stats.books }}</dt>
+                                <dd>books on the shelves</dd>
+                            </div>
+                            <div class="flex items-baseline gap-2">
+                                <dt class="tabular text-content font-semibold">{{ stats.free }}</dt>
+                                <dd>free, no card needed</dd>
+                            </div>
+                        </dl>
+                    </div>
+
+                    <!-- Covers fanned as they would lie on a table. -->
+                    <div v-if="fanned.length" class="cover-fan reveal-stagger mx-auto w-full max-w-md md:max-w-none">
+                        <Link
+                            v-for="book in fanned"
+                            :key="book.id"
+                            :href="`/books/${book.slug}`"
+                            :aria-label="book.title"
+                            class="block"
+                        >
+                            <BookCover
+                                :src="book.cover_image_path"
+                                :title="book.title"
+                                :author="book.author?.name"
+                                class="cover-shadow aspect-2/3 w-full rounded-[--radius-cover]"
+                            />
+                        </Link>
+                    </div>
+                </div>
+            </section>
+
+            <!--
+              The first lines of an actual book, at true reading size. A shop
+              window that shows you the prose rather than describing it.
+            -->
+            <section v-if="featured" class="border-line bg-raised/40 border-y">
+                <div
+                    ref="firstLines"
+                    class="mx-auto grid max-w-[1200px] gap-8 px-4 py-12 sm:px-6 md:grid-cols-[minmax(0,11rem)_1fr] md:gap-12"
+                >
+                    <Link :href="`/books/${featured.slug}`" class="group mx-auto w-32 md:mx-0 md:w-full">
                         <BookCover
                             :src="featured.cover_image_path"
                             :title="featured.title"
                             :author="featured.author"
-                            class="cover-shadow aspect-2/3 w-full rounded-[--radius-cover]"
+                            class="cover-shadow cover-lift aspect-2/3 w-full rounded-[--radius-cover]"
                         />
                     </Link>
 
                     <div class="flex flex-col justify-center">
-                        <blockquote class="font-reading text-content measure text-lg/relaxed md:text-xl/relaxed">
+                        <p class="text-muted text-xs font-semibold tracking-[0.18em] uppercase">
+                            {{ featured.isExcerpt ? 'The first lines' : 'What it is about' }}
+                        </p>
+
+                        <blockquote class="font-reading text-content measure mt-4 text-lg/relaxed md:text-xl/relaxed">
                             <p>{{ featured.excerpt }}</p>
                         </blockquote>
 
-                        <p class="mt-6 text-2xl font-semibold tracking-tight">{{ featured.title }}</p>
-                        <p class="text-muted mt-1 text-sm">
-                            {{ featured.author }}
-                            <span v-if="!featured.isExcerpt">&middot; from the description</span>
-                        </p>
+                        <p class="mt-6 text-xl font-semibold tracking-tight">{{ featured.title }}</p>
+                        <p class="text-muted mt-1 text-sm">{{ featured.author }}</p>
 
-                        <div class="mt-7 flex flex-wrap items-center gap-4">
-                            <UiButton v-if="featured.hasSample" :href="`/read/${featured.slug}/sample`" size="lg">
+                        <div class="mt-6 flex flex-wrap items-center gap-4">
+                            <UiButton v-if="featured.hasSample" :href="`/read/${featured.slug}/sample`">
                                 Read the first chapter
                             </UiButton>
-                            <UiButton v-else :href="`/books/${featured.slug}`" size="lg">Look inside</UiButton>
-                            <span class="text-muted text-sm">
-                                {{ formatPrice(featured.price_paise) }} &middot; read in your browser or download
-                            </span>
+                            <UiButton v-else :href="`/books/${featured.slug}`">Look inside</UiButton>
+                            <span class="text-muted text-sm">{{ formatPrice(featured.price_paise) }}</span>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <div class="mx-auto max-w-[1200px] px-4 py-10 sm:px-6">
+            <div id="shelves" class="mx-auto max-w-[1200px] px-4 py-10 sm:px-6">
                 <!-- Where a returning reader wants to land. -->
                 <Link
                     v-if="continueReading"
