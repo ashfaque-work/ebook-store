@@ -17,6 +17,17 @@ const props = defineProps({
 });
 
 const adding = ref(false);
+const claiming = ref(false);
+
+const isFree = computed(() => props.book.price_paise === 0);
+
+// One click, not a cart and a checkout with nothing to charge. Guests go via
+// the sign-in page and land back here, because the book still has to be
+// attached to an account for the library and the reader to work.
+const claimFree = () => {
+    claiming.value = true;
+    router.post(route('books.claim', props.book.id), {}, { onFinish: () => (claiming.value = false) });
+};
 
 const addToCart = () => {
     adding.value = true;
@@ -72,6 +83,11 @@ const facts = computed(() =>
                                 <UiButton :href="`/read/${book.slug}`" size="lg" block>Read</UiButton>
                                 <UiButton :href="route('library.download', book.id)" external variant="secondary" block>
                                     Download
+                                </UiButton>
+                            </template>
+                            <template v-else-if="isFree">
+                                <UiButton size="lg" block :disabled="claiming" @click="claimFree">
+                                    {{ claiming ? 'Opening…' : 'Read free' }}
                                 </UiButton>
                             </template>
                             <template v-else>
@@ -156,6 +172,11 @@ const facts = computed(() =>
 
             <template v-if="isPurchased">
                 <UiButton :href="`/read/${book.slug}`" block>Read</UiButton>
+            </template>
+            <template v-else-if="isFree">
+                <UiButton block :disabled="claiming" @click="claimFree">
+                    {{ claiming ? 'Opening…' : 'Read free' }}
+                </UiButton>
             </template>
             <template v-else>
                 <UiButton v-if="hasSample" :href="`/read/${book.slug}/sample`" variant="secondary" class="shrink-0">

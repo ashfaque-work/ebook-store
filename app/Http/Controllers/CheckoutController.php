@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\CheckoutException;
+use App\Models\Book;
 use App\Models\Order;
 use App\Services\Checkout\FulfilOrder;
 use App\Services\Checkout\PlaceOrder;
@@ -29,8 +30,8 @@ use Inertia\Response;
 class CheckoutController extends Controller
 {
     public function store(
-        PaymentGateway $gateway,
         PlaceOrder $placeOrder,
+        FulfilOrder $fulfil,
     ): RedirectResponse {
         $user = auth()->user();
 
@@ -46,7 +47,19 @@ class CheckoutController extends Controller
         }
 
         try {
-            $order = $placeOrder($user, Session::get('cart', []), $user->state_code);
+            $cart = Session::get('cart', []);
+
+            // Before placing anything: an order that cannot be paid for should
+            // not exist. Asked after the fact, this leaves a pending order
+            // behind every time someone tries during the review window.
+            if (! config('store.payments_enabled') && Book::whereIn('id', $cart)->where('price_paise', '>', 0)->exists()) {
+                return redirect()->route('cart.index')->with('toast', [
+                    'type' => 'info',
+                    'message' => 'Purchasing opens shortly. Your cart is saved.',
+                ]);
+            }
+
+            $order = $placeOrder($user, $cart, $user->state_code);
 
             if ($order->isPaid()) {
                 Session::forget('cart');
@@ -57,7 +70,20 @@ class CheckoutController extends Controller
                 ]);
             }
 
-            $gateway->createSession($order);
+            // A free order is complete the moment it is placed. It still goes
+            // through the same order, invoice and library machinery — only the
+            // gateway is skipped, because there is nothing for it to charge.
+            if ($order->isFree()) {
+                $fulfil($order);
+                Session::forget('cart');
+
+                return redirect()->route('checkout.success', $order);
+            }
+
+            // Resolved here rather than injected: with no keys configured the
+            // container refuses to build one in production, and a free order
+            // must not be stopped by the absence of something it never uses.
+            app(PaymentGateway::class)->createSession($order);
 
             return redirect()->route('checkout.pay', $order);
         } catch (CheckoutException $e) {

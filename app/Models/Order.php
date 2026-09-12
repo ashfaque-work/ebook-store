@@ -92,6 +92,18 @@ class Order extends Model
         return $this->status === self::STATUS_REFUNDED;
     }
 
+    /**
+     * Nothing to collect, so nothing to collect it with.
+     *
+     * A zero-total order needs no gateway, no payment page and no webhook —
+     * and sending one through all three is both absurd for the reader and a
+     * failure waiting to happen, since a gateway will reject a ₹0 charge.
+     */
+    public function isFree(): bool
+    {
+        return $this->total_paise === 0;
+    }
+
     public function total(): Money
     {
         return Money::fromPaise($this->total_paise);

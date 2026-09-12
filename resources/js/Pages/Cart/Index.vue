@@ -19,6 +19,15 @@ const isEmpty = computed(() => props.cartItems.length === 0);
 // people around in that window, so the button should not invite them into it.
 const paymentsEnabled = computed(() => usePage().props.store.paymentsEnabled);
 
+// Nothing to charge means nothing to hold: a free cart completes without ever
+// touching the gateway, so the payments hold does not apply to it.
+const isFreeCart = computed(() => props.total === 0);
+
+const checkoutLabel = computed(() => {
+    if (checkingOut.value) return isFreeCart.value ? 'Adding to your library…' : 'Taking you to payment…';
+    return isFreeCart.value ? 'Add to my library' : 'Check out';
+});
+
 const clearing = ref(false);
 const checkingOut = ref(false);
 
@@ -99,9 +108,9 @@ const clearCart = () => router.delete('/cart');
                         No delivery, no waiting. Your books are in your library the moment payment clears.
                     </p>
 
-                    <template v-if="paymentsEnabled">
+                    <template v-if="paymentsEnabled || isFreeCart">
                         <UiButton class="mt-6" size="lg" block :disabled="checkingOut" @click="checkout">
-                            {{ checkingOut ? 'Taking you to payment…' : 'Check out' }}
+                            {{ checkoutLabel }}
                         </UiButton>
                     </template>
                     <template v-else>

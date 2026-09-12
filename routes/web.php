@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\ClaimFreeBookController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LegalController;
 use App\Http\Controllers\LibraryController;
@@ -60,14 +61,24 @@ Route::middleware('auth')->group(function () {
 // Checkout. Deliberately NOT behind `verified` — making someone complete an
 // email round-trip before they can pay costs sales, and the account is already
 // authenticated. Verification gates the admin panel, where it matters.
-// EnsurePaymentsAreEnabled holds this group closed while Razorpay reviews the
-// account, so the store can be live and readable — which that review requires —
+Route::middleware('auth')->group(function () {
+    // Not behind EnsurePaymentsAreEnabled: store() completes a free order
+    // itself and only reaches the gateway when there is money involved, so a
+    // free book stays available while Razorpay reviews the account.
+    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+    Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
+
+    // Claim a free book without the detour through a cart and a checkout that
+    // has nothing to charge for.
+    Route::post('/books/{book}/claim', ClaimFreeBookController::class)->name('books.claim');
+});
+
+// The paying half of checkout. Held closed while the gateway account is in
+// review, so the store can be live and readable — which that review requires —
 // without a customer meeting a 500 at the one moment that matters.
 Route::middleware(['auth', EnsurePaymentsAreEnabled::class])->group(function () {
-    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
     Route::get('/checkout/{order}/pay', [CheckoutController::class, 'pay'])->name('checkout.pay');
     Route::post('/checkout/{order}/verify', [CheckoutController::class, 'verify'])->name('checkout.verify');
-    Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
 
     // The simulated gateway's checkout. 404s unless the mock gateway is the
     // one bound, so it is registered unconditionally and routes stay cacheable.
