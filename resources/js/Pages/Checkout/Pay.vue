@@ -75,10 +75,33 @@ const payWithRazorpay = async () => {
     checkout.open();
 };
 
-const pay = () => (isMock.value ? confirm(props.simulation) : payWithRazorpay());
+/**
+ * What the simulated gateway can be made to do. Each drives the same server
+ * code Razorpay would drive — none of them shortcut verification or
+ * fulfilment.
+ */
+const outcomes = [
+    { key: 'paid', label: 'Payment succeeds', hint: 'Signed callback, verified, order fulfilled.' },
+    { key: 'failed', label: 'Bank declines the card', hint: 'Order marked failed; the cart survives for a retry.' },
+    { key: 'abandoned', label: 'Customer closes the window', hint: 'Nothing charged; the order waits, still payable.' },
+    {
+        key: 'webhook',
+        label: 'Paid, but the browser never returns',
+        hint: 'Closed tab or dead battery. Only the webhook can save this customer.',
+    },
+];
 
-/** Exercises the failure path locally: a payload that will not verify. */
-const simulateFailure = () => confirm({ ...props.simulation, razorpay_signature: 'deliberately-invalid-signature' });
+const simulate = (outcome) => {
+    processing.value = true;
+    error.value = null;
+    router.post(
+        route('checkout.simulate', props.order.id),
+        { outcome },
+        { onFinish: () => (processing.value = false) },
+    );
+};
+
+const pay = () => (isMock.value ? simulate('paid') : payWithRazorpay());
 </script>
 
 <template>
@@ -145,7 +168,7 @@ const simulateFailure = () => confirm({ ...props.simulation, razorpay_signature:
                     v-if="isMock"
                     class="mt-6 rounded-[--radius-ui] border border-amber-300 bg-amber-50 p-4 text-sm dark:border-amber-800 dark:bg-amber-950"
                 >
-                    <p class="font-medium text-amber-900 dark:text-amber-200">Mock gateway</p>
+                    <p class="font-medium text-amber-900 dark:text-amber-200">Simulated gateway</p>
                     <p class="mt-1 text-amber-800 dark:text-amber-300">
                         No money moves. Set
                         <code>RAZORPAY_KEY</code>
@@ -153,14 +176,25 @@ const simulateFailure = () => confirm({ ...props.simulation, razorpay_signature:
                         <code>RAZORPAY_SECRET</code>
                         to use the real one — the flow is identical either way.
                     </p>
-                    <button
-                        type="button"
-                        @click="simulateFailure"
-                        :disabled="processing"
-                        class="mt-3 text-amber-900 underline hover:no-underline dark:text-amber-200"
-                    >
-                        Simulate a declined payment
-                    </button>
+
+                    <p class="mt-3 font-medium text-amber-900 dark:text-amber-200">Choose what happens</p>
+                    <ul role="list" class="mt-2 space-y-2">
+                        <li v-for="outcome in outcomes" :key="outcome.key">
+                            <button
+                                type="button"
+                                @click="simulate(outcome.key)"
+                                :disabled="processing"
+                                class="w-full rounded-[--radius-ui] border border-amber-300 px-3 py-2 text-left hover:bg-amber-100 disabled:opacity-60 dark:border-amber-800 dark:hover:bg-amber-900"
+                            >
+                                <span class="block font-medium text-amber-900 dark:text-amber-200">
+                                    {{ outcome.label }}
+                                </span>
+                                <span class="block text-xs text-amber-800 dark:text-amber-300">
+                                    {{ outcome.hint }}
+                                </span>
+                            </button>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>

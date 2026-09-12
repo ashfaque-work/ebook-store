@@ -14,6 +14,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Reader\AnnotationController;
 use App\Http\Controllers\Reader\ReaderController;
+use App\Http\Controllers\SimulatedGatewayController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\Webhooks\RazorpayWebhookController;
 use Illuminate\Support\Facades\Route;
@@ -63,6 +64,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout/{order}/pay', [CheckoutController::class, 'pay'])->name('checkout.pay');
     Route::post('/checkout/{order}/verify', [CheckoutController::class, 'verify'])->name('checkout.verify');
     Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
+
+    // The simulated gateway's checkout. 404s unless the mock gateway is the
+    // one bound, so it is registered unconditionally and routes stay cacheable.
+    Route::post('/checkout/{order}/simulate', SimulatedGatewayController::class)->name('checkout.simulate');
 });
 
 // The gateway's own report of what happened, and the source of truth for

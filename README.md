@@ -81,9 +81,24 @@ every path is visible immediately.
 | Admin | `admin@example.com` | `password` |
 | Customer | `customer@example.com` | `password` |
 
-**Payments run on a mock gateway** until `RAZORPAY_KEY` and `RAZORPAY_SECRET` are set. It
-implements the same four steps as Razorpay and signs its callbacks with real HMAC, so the
-local flow exercises the production code path rather than stepping around it.
+**Payments run on a simulated gateway** until `RAZORPAY_KEY` and `RAZORPAY_SECRET` are set,
+so the whole store can be run and demoed before KYC clears. It implements the same four
+steps as Razorpay and signs its callbacks with real HMAC, and the pay page lets you choose
+what happens:
+
+| Outcome | What it rehearses |
+|---|---|
+| Payment succeeds | Signed callback, verified against the gateway, order fulfilled |
+| Bank declines the card | Order marked failed, cart preserved for a retry |
+| Customer closes the window | Nothing charged, order still payable |
+| Paid, browser never returns | Fulfilment by **webhook alone** — the path that saves a closed tab |
+
+The last one is the reason this exists: it is the hardest thing to test against live keys
+and the most expensive to get wrong. Every outcome drives the real controllers, signature
+checks and fulfilment — none of them shortcut anything.
+
+The simulated gateway is **refused in production**. A deploy that forgets the keys fails
+loudly at checkout instead of quietly giving books away.
 
 ### Commands
 
