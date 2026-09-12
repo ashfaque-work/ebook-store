@@ -125,7 +125,10 @@ class HomeController extends Controller
     {
         return Genre::query()
             ->withCount(['books' => fn ($q) => $q->where('is_published', true)])
-            ->having('books_count', '>', 0)
+            // whereHas, not having(): withCount builds a correlated subquery
+            // rather than a GROUP BY, and SQLite rejects a HAVING clause on a
+            // non-aggregate query outright.
+            ->whereHas('books', fn ($q) => $q->where('is_published', true))
             ->orderByDesc('books_count')
             ->limit(4)
             ->get()
@@ -140,6 +143,9 @@ class HomeController extends Controller
                         ->limit(10),
                 ),
             ])
+            // Excluding the featured book can empty a genre that only had the
+            // one. A heading over an empty row reads as a broken page.
+            ->reject(fn (array $shelf) => $shelf['books']->isEmpty())
             ->values()
             ->all();
     }

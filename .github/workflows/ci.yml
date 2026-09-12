@@ -58,9 +58,20 @@ jobs:
           DB_USERNAME: root
           DB_PASSWORD: password
 
+      # Asserting the outcome, not just the exit code. MySQL refuses to drop an
+      # index InnoDB is using to satisfy a foreign key, and a down() that hits
+      # that can leave most of the schema standing while still looking like it
+      # worked. SQLite enforces none of it, so this job is the only thing that
+      # catches it.
       - name: Check migrations roll back cleanly
         if: matrix.db == 'mysql'
-        run: php artisan migrate:fresh --seed && php artisan migrate:reset
+        run: |
+          php artisan migrate:fresh --seed
+          php artisan migrate:reset
+          LEFT=$(php artisan tinker --execute="echo count(DB::select('SHOW TABLES'));")
+          echo "tables remaining after reset: $LEFT"
+          # Only the migrations table itself should survive a reset.
+          test "$LEFT" -le 1
         env:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1

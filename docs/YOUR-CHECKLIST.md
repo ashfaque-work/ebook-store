@@ -8,14 +8,30 @@ Tick these off in the file as you go.
 
 ---
 
-## 0. Two things to verify locally (30 minutes, do these first)
+## 0. Done for you — both gaps are now closed ✅
 
-Both are gaps I could not close: no browser and no MySQL were available.
+These were the two things I could not verify when the code was written. Both have since
+been driven in a real browser and against a real MySQL server, and the four bugs that
+surfaced are fixed.
 
-- [ ] **Open a real book in the reader.** Put an actual `.epub` in `storage/app/private/books/`, attach it to a book through `/admin/books`, then open `/read/<slug>`. Check: pages turn, the table of contents works, the percentage moves, closing and reopening resumes in the same place. epub.js and pdf.js are wired but have never rendered a real file.
-- [ ] **Run the migrations on MySQL.** `php artisan migrate:fresh --seed`. Ten migrations have only ever run against SQLite locally. CI covers MySQL, but you should see it once.
+- [x] **A real EPUB renders, paginates, and resumes.** Table of contents, all three themes, keyboard shortcuts and the sample-end buy panel all work. A PDF renders too.
+- [x] **A book was bought end to end** through the mock gateway — cart, pay page, signed callback, invoice number, library, reader.
+- [x] **Migrations apply, seed and roll back cleanly on MySQL**, repeatedly.
+- [x] **The mobile layouts hold at 360px**, including the admin drawer.
 
-If either misbehaves, that is a real bug and worth fixing before anything below.
+**One thing on your machine still needs a hand.** Your `ebook_store` MySQL database is in a
+broken state — its tables report *"doesn't exist in engine"* and `DROP DATABASE` fails with
+*"Directory not empty"*, meaning orphaned InnoDB `.ibd` files are left in MySQL's data
+directory. Nothing was lost (the tables were already unreadable), and it is not caused by
+this application. To clear it:
+
+1. Stop MySQL.
+2. Delete the leftover `ebook_store` folder in your MySQL data directory (XAMPP: `xampp/mysql/data/ebook_store`).
+3. Start MySQL, then `CREATE DATABASE ebook_store CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`
+4. `php artisan migrate --seed`
+
+Or simply point `DB_DATABASE` at a new name and skip the cleanup entirely — that is what I
+did to verify the migrations.
 
 ---
 

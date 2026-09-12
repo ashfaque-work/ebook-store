@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\HandleInertiaRequests;
 use App\Models\Order;
 use App\Models\User;
 use App\Services\Payments\FakePaymentGateway;
@@ -137,6 +138,30 @@ function postWebhook(array $payload, ?string $signature = null, ?string $eventId
         ],
         $raw,
     );
+}
+
+/**
+ * Request a deferred prop the way the browser does, after first paint.
+ *
+ * Deferred props are invisible to an ordinary page assertion — the closure
+ * does not run on the first response — so without this, a broken query inside
+ * one stays green forever. The version header matters: Inertia answers 409 to
+ * a partial reload that does not carry the current asset version.
+ *
+ * @param  array<int, string>|string  $props
+ */
+function inertiaPartial(string $uri, string $component, array|string $props)
+{
+    // Ask the middleware itself rather than the facade: the version resolver
+    // is only bound while a request is being handled.
+    $version = app(HandleInertiaRequests::class)->version(request());
+
+    return test()->get($uri, [
+        'X-Inertia' => 'true',
+        'X-Inertia-Version' => (string) $version,
+        'X-Inertia-Partial-Component' => $component,
+        'X-Inertia-Partial-Data' => is_array($props) ? implode(',', $props) : $props,
+    ]);
 }
 
 function actingAsAdmin(): TestCase

@@ -49,7 +49,7 @@ chapter.
 | Database | MySQL 8 (SQLite in tests) |
 | Payments | Razorpay |
 | Storage | Local disk, or any S3-compatible bucket (Cloudflare R2) |
-| Tests | Pest — 225 tests, 829 assertions |
+| Tests | Pest — 233 tests, 853 assertions |
 
 ---
 
@@ -136,12 +136,19 @@ accepted risks.
 
 ---
 
+## Verified in a browser
+
+The reader, the purchase flow and the responsive layouts were driven end to end in
+Chromium on 2026-09-12: a real EPUB renders and paginates, the table of contents and the
+three themes work, reading position survives a reload, a PDF renders, and a book was bought
+through the mock gateway and read. Migrations apply, seed and roll back cleanly on MySQL.
+
+That pass found four real bugs, all fixed — see the commit history.
+
 ## Not yet done
 
 Recorded honestly rather than omitted:
 
-- **The reader has not been opened in a real browser.** It is tested at the HTTP boundary; epub.js and pdf.js integration against actual files is unverified.
-- **Migrations have only run against SQLite** locally. CI runs them on MySQL, including a rollback.
 - **PDF text selection and highlighting.** PDFs render to canvas; highlights are EPUB-only.
 - **Auto-generated samples.** Admins upload a sample file per book.
 - **PDF watermarking on download**, infinite scroll, and a Lighthouse pass — see [docs/01-ROADMAP.md](docs/01-ROADMAP.md).

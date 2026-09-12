@@ -133,8 +133,10 @@ Full spec in [06-DESIGN-SYSTEM.md](06-DESIGN-SYSTEM.md).
   axes less so, so headings use tight tracking instead. A real deviation from
   the spec, recorded rather than hidden.
 - **Lighthouse verification.** Targets of ≥95 accessibility and ≥90
-  performance are in the spec and unmeasured here: no browser was run. The
-  work that earns them is done; the number is unconfirmed.
+  performance are in the spec and still unmeasured — the browser pass on
+  2026-09-12 checked behaviour and layout, not scores. What it did confirm:
+  no horizontal overflow at 360px, the admin drawer works, and the console is
+  clean on every page exercised.
 
 **Result:** 205 tests, 765 assertions, including a smoke test that renders
 every route for the role that should see it.

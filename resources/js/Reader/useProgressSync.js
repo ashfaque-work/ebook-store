@@ -59,13 +59,20 @@ export function useProgressSync(url, { intervalMs = 10000 } = {}) {
         }
     };
 
+    // Named rather than inline so it can actually be removed. This is a SPA:
+    // opening the reader, leaving for the library and coming back used to add
+    // a pagehide listener every time, each one outliving its component and
+    // firing a redundant write on close.
+    const onPageHide = () => flush(true);
+
     onMounted(() => {
         document.addEventListener('visibilitychange', onHidden);
-        window.addEventListener('pagehide', () => flush(true));
+        window.addEventListener('pagehide', onPageHide);
     });
 
     onBeforeUnmount(() => {
         document.removeEventListener('visibilitychange', onHidden);
+        window.removeEventListener('pagehide', onPageHide);
         flush(true);
     });
 

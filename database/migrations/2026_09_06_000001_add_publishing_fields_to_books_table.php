@@ -38,10 +38,28 @@ return new class extends Migration
 
     public function down(): void
     {
+        // Same trap as the orders migration: InnoDB uses the (genre_id, …)
+        // composite index to satisfy the genre_id foreign key and will not let
+        // it go while the constraint stands. SQLite does not care, so only a
+        // rollback on MySQL surfaces this.
+        $onMysql = DB::getDriverName() === 'mysql';
+
+        if ($onMysql) {
+            Schema::table('books', fn (Blueprint $table) => $table->dropForeign(['genre_id']));
+        }
+
         Schema::table('books', function (Blueprint $table) {
             $table->dropIndex(['is_published', 'created_at']);
             $table->dropIndex(['genre_id', 'is_published']);
+        });
 
+        if ($onMysql) {
+            Schema::table('books', function (Blueprint $table) {
+                $table->foreign('genre_id')->references('id')->on('genres')->cascadeOnDelete();
+            });
+        }
+
+        Schema::table('books', function (Blueprint $table) {
             $table->dropColumn([
                 'is_published', 'published_at', 'is_featured',
                 'language', 'isbn', 'page_count',

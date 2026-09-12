@@ -183,6 +183,26 @@ purchase on live keys followed by a real refund.
 
 ---
 
+## 5a. Two blind spots worth knowing about
+
+Both were found by driving the app in a browser on 2026-09-12, while 225 tests were green.
+
+**Deferred props run no code on the first response.** `Inertia::defer()` closures are only
+evaluated on the follow-up partial reload, so a broken query inside one is invisible to an
+ordinary page assertion. The genre shelves threw a 500 for days behind a passing suite. Use
+the `inertiaPartial()` helper in `tests/Pest.php`, and give **every** deferred prop a test
+that actually asks for it.
+
+**SQLite forgives what MySQL does not.** Two `down()` methods dropped a composite index that
+InnoDB was using to satisfy a foreign key; MySQL refuses, SQLite does not care. The matrix
+job catches this only because it now asserts how many tables survive a reset — checking the
+exit code alone was not enough.
+
+The lesson for both: a green suite proves the code paths the suite exercises, and deferred
+props and rollbacks are easy to leave unexercised while looking covered.
+
+---
+
 ## 6. What not to test
 
 Time is finite and this is a solo project. Skip: Breeze's own auth internals (already covered

@@ -10,7 +10,13 @@
 export async function createEpubEngine({ url, element, onRelocate, onReady }) {
     const { default: ePub } = await import('epubjs');
 
-    const book = ePub(url);
+    // openAs is not optional here. epub.js sniffs the input type from the
+    // URL's extension, and our asset routes deliberately have none — the
+    // client is never given a file path. Without this it decides the URL is an
+    // unzipped EPUB *directory* and goes looking for
+    // `<assetUrl>/META-INF/container.xml`, which 404s and leaves the reader
+    // stuck on "Opening the book…".
+    const book = ePub(url, { openAs: 'epub' });
 
     const rendition = book.renderTo(element, {
         width: '100%',

@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -22,8 +23,26 @@ return new class extends Migration
 
     public function down(): void
     {
+        // InnoDB satisfies the user_id foreign key with this composite index,
+        // because user_id is its leftmost column, and refuses to drop it while
+        // the constraint stands. The constraint has to step aside first.
+        // SQLite does not enforce any of this, which is why the test suite
+        // never caught it — only a rollback on MySQL does.
+        $onMysql = DB::getDriverName() === 'mysql';
+
+        if ($onMysql) {
+            Schema::table('orders', fn (Blueprint $table) => $table->dropForeign(['user_id']));
+        }
+
+        Schema::table('orders', fn (Blueprint $table) => $table->dropIndex(['user_id', 'status']));
+
+        if ($onMysql) {
+            Schema::table('orders', function (Blueprint $table) {
+                $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
+            });
+        }
+
         Schema::table('orders', function (Blueprint $table) {
-            $table->dropIndex(['user_id', 'status']);
             $table->dropUnique(['idempotency_key']);
             $table->dropColumn('idempotency_key');
         });
