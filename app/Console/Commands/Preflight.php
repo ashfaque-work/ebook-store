@@ -170,6 +170,17 @@ class Preflight extends Command
     {
         $this->line('<options=bold>Payments</>');
 
+        // A deliberate hold during KYC, not a misconfiguration: checkout is
+        // closed, so an absent gateway is expected rather than alarming.
+        if (! config('store.payments_enabled')) {
+            $this->caution(
+                'Selling is switched off (STORE_PAYMENTS_ENABLED=false)',
+                'Correct while Razorpay reviews the account. Set it to true once live keys are in.',
+            );
+
+            return;
+        }
+
         try {
             $gateway = app(PaymentGateway::class);
         } catch (Throwable $e) {

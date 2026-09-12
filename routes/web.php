@@ -17,6 +17,7 @@ use App\Http\Controllers\Reader\ReaderController;
 use App\Http\Controllers\SimulatedGatewayController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\Webhooks\RazorpayWebhookController;
+use App\Http\Middleware\EnsurePaymentsAreEnabled;
 use Illuminate\Support\Facades\Route;
 
 // Public Routes
@@ -59,7 +60,10 @@ Route::middleware('auth')->group(function () {
 // Checkout. Deliberately NOT behind `verified` — making someone complete an
 // email round-trip before they can pay costs sales, and the account is already
 // authenticated. Verification gates the admin panel, where it matters.
-Route::middleware('auth')->group(function () {
+// EnsurePaymentsAreEnabled holds this group closed while Razorpay reviews the
+// account, so the store can be live and readable — which that review requires —
+// without a customer meeting a 500 at the one moment that matters.
+Route::middleware(['auth', EnsurePaymentsAreEnabled::class])->group(function () {
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
     Route::get('/checkout/{order}/pay', [CheckoutController::class, 'pay'])->name('checkout.pay');
     Route::post('/checkout/{order}/verify', [CheckoutController::class, 'verify'])->name('checkout.verify');

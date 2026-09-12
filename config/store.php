@@ -104,6 +104,26 @@ return [
 
     'gst_enabled' => filter_var(env('STORE_GST_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Selling
+    |--------------------------------------------------------------------------
+    |
+    | Razorpay KYC takes two to seven working days, and the store is worth
+    | putting in front of people before it clears - not least because Razorpay
+    | wants to read the legal pages on a live URL as part of that review.
+    |
+    | Set this to false for that window. Free books still download, the
+    | catalogue and the reader work as normal, and paid titles say plainly that
+    | purchasing opens shortly instead of failing at checkout.
+    |
+    | This is deliberately separate from simply having no gateway keys. Missing
+    | keys in production are a mistake and still throw; this is a decision.
+    |
+    */
+
+    'payments_enabled' => filter_var(env('STORE_PAYMENTS_ENABLED', true), FILTER_VALIDATE_BOOLEAN),
+
     // Our own state code, for place-of-supply. Same state as the buyer means
     // CGST + SGST; a different state means IGST.
     'state_code' => env('STORE_STATE_CODE', ''),

@@ -4,7 +4,7 @@ import BookCover from '@/Components/BookCover.vue';
 import ConfirmDialog from '@/Components/Ui/ConfirmDialog.vue';
 import EmptyState from '@/Components/Ui/EmptyState.vue';
 import UiButton from '@/Components/Ui/UiButton.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { formatPaise, formatPrice } from '@/lib/money';
 
@@ -14,6 +14,10 @@ const props = defineProps({
 });
 
 const isEmpty = computed(() => props.cartItems.length === 0);
+
+// False while the gateway account is in review. The checkout route turns
+// people around in that window, so the button should not invite them into it.
+const paymentsEnabled = computed(() => usePage().props.store.paymentsEnabled);
 
 const clearing = ref(false);
 const checkingOut = ref(false);
@@ -95,9 +99,17 @@ const clearCart = () => router.delete('/cart');
                         No delivery, no waiting. Your books are in your library the moment payment clears.
                     </p>
 
-                    <UiButton class="mt-6" size="lg" block :disabled="checkingOut" @click="checkout">
-                        {{ checkingOut ? 'Taking you to payment…' : 'Check out' }}
-                    </UiButton>
+                    <template v-if="paymentsEnabled">
+                        <UiButton class="mt-6" size="lg" block :disabled="checkingOut" @click="checkout">
+                            {{ checkingOut ? 'Taking you to payment…' : 'Check out' }}
+                        </UiButton>
+                    </template>
+                    <template v-else>
+                        <UiButton class="mt-6" size="lg" block disabled>Purchasing opens shortly</UiButton>
+                        <p class="text-muted mt-3 text-sm">
+                            Our payment provider is completing its review. Your cart is saved — nothing here expires.
+                        </p>
+                    </template>
                 </div>
             </template>
         </div>

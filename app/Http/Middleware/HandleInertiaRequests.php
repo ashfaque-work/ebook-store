@@ -58,6 +58,9 @@ class HandleInertiaRequests extends Middleware
                 'refundMaxReadPercent' => config('store.refund_max_read_percent'),
                 'refundProcessingDays' => config('store.refund_processing_days'),
                 'supportResponseHours' => config('store.support_response_hours'),
+                // So a buy button can say what will actually happen, rather
+                // than sending someone to a checkout that turns them around.
+                'paymentsEnabled' => (bool) config('store.payments_enabled'),
             ],
             'canRegister' => Route::has('register'),
             'toast' => fn () => $request->session()->get('toast'),

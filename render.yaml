@@ -110,3 +110,10 @@ services:
       # Leave GST off until a GSTIN actually exists.
       - key: STORE_GST_ENABLED
         value: false
+
+      # Razorpay wants to read the legal pages on a live URL before it approves
+      # the account, so the store goes up first and the till opens after. Paid
+      # titles say purchasing opens shortly; free books and the reader work.
+      # Set this to true the day the live keys go in.
+      - key: STORE_PAYMENTS_ENABLED
+        value: false

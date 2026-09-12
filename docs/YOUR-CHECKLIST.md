@@ -52,7 +52,7 @@ or issue tax invoices.
 **The long pole: 2–7 working days.** Nothing else below is blocked by it, so
 start it before the hosting work, not after.
 
-- [ ] Deploy far enough that the five legal pages are reachable on a public URL (§4 gets you there), or point Razorpay at a temporary host
+- [ ] Deploy first, with `STORE_PAYMENTS_ENABLED=false` (§4 gets you there). Razorpay reads your five legal pages on a live URL as part of the review, so the store has to be up before the account is approved. In that mode browsing, samples, the reader and free books all work, and paid titles say purchasing opens shortly instead of failing at checkout
 - [ ] Sign up at razorpay.com — a sole proprietorship with PAN and a bank account qualifies
 - [ ] Give them the same business name and address you put in `.env` — a mismatch is the usual reason for rejection
 - [ ] Submit the five policy URLs
@@ -118,6 +118,7 @@ Postgres, MySQL and SQLite on every push.
 ## 5. Go live with payments
 
 - [ ] Once KYC clears, set `RAZORPAY_KEY`, `RAZORPAY_SECRET` (live keys start `rzp_live_`)
+- [ ] Set `STORE_PAYMENTS_ENABLED=true` — this is what actually opens the till
 - [ ] Register `https://<your-domain>/webhooks/razorpay` in the Razorpay dashboard for `payment.captured`, `payment.failed` and `refund.processed`
 - [ ] Set `RAZORPAY_WEBHOOK_SECRET` to the secret you chose there
 - [ ] **Buy something for ₹1 with a real card or UPI.** Confirm: the book appears in the library, a receipt arrives, the order shows an invoice number
