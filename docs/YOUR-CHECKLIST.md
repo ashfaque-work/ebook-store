@@ -8,30 +8,23 @@ Tick these off in the file as you go.
 
 ---
 
-## 0. Done for you — both gaps are now closed ✅
+## 0. Done for you ✅
 
-These were the two things I could not verify when the code was written. Both have since
-been driven in a real browser and against a real MySQL server, and the four bugs that
-surfaced are fixed.
+Everything below was verified rather than assumed — driven in a real browser, built as a
+real image, and run as a real container against a real PostgreSQL server.
 
-- [x] **A real EPUB renders, paginates, and resumes.** Table of contents, all three themes, keyboard shortcuts and the sample-end buy panel all work. A PDF renders too.
-- [x] **A book was bought end to end** through the mock gateway — cart, pay page, signed callback, invoice number, library, reader.
-- [x] **Migrations apply, seed and roll back cleanly on MySQL**, repeatedly.
+- [x] **A real EPUB renders, paginates, and resumes.** Table of contents, all three themes, keyboard shortcuts and the sample-end buy panel. A PDF renders too.
+- [x] **A book was bought end to end** through the simulated gateway — cart, pay page, signed callback, invoice number, library, reader.
+- [x] **Migrations apply, seed and roll back cleanly** on PostgreSQL, MySQL and SQLite, on every push.
 - [x] **The mobile layouts hold at 360px**, including the admin drawer.
+- [x] **The production image builds, boots and serves.** The container was started against an empty PostgreSQL database: it migrated itself, and `/`, `/login`, `/register`, `/sitemap.xml`, `/robots.txt`, `/up` and all five legal pages returned 200.
+- [x] **CI is green on all seven jobs** — tests on three databases, Pint, Prettier, the asset build, a dependency audit, and a build of the image itself.
 
-**One thing on your machine still needs a hand.** Your `ebook_store` MySQL database is in a
-broken state — its tables report *"doesn't exist in engine"* and `DROP DATABASE` fails with
-*"Directory not empty"*, meaning orphaned InnoDB `.ibd` files are left in MySQL's data
-directory. Nothing was lost (the tables were already unreadable), and it is not caused by
-this application. To clear it:
-
-1. Stop MySQL.
-2. Delete the leftover `ebook_store` folder in your MySQL data directory (XAMPP: `xampp/mysql/data/ebook_store`).
-3. Start MySQL, then `CREATE DATABASE ebook_store CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`
-4. `php artisan migrate --seed`
-
-Or simply point `DB_DATABASE` at a new name and skip the cleanup entirely — that is what I
-did to verify the migrations.
+Four things that would each have failed the first deploy on their own were found this way
+and fixed: the asset build could not resolve Ziggy, the container aborted at boot on a
+missing `storage/framework/views`, `/sitemap.xml` 500'd under the image's PHP settings, and
+migrations were configured to run from a pre-deploy command that Render does not offer on
+the free plan.
 
 ---
 
@@ -115,7 +108,9 @@ Postgres, MySQL and SQLite on every push.
 
 - [ ] Create a service from the committed `render.yaml`
 - [ ] Paste in every secret marked `sync: false`
+- [ ] Leave `RUN_MIGRATIONS=true`. Render only offers pre-deploy commands on paid plans, so on free the schema is created at boot instead — set this to `false` and switch to `preDeployCommand` if you ever run more than one instance
 - [ ] Confirm the health check at `/up` passes
+- [ ] Run `php artisan store:preflight` from the Render shell once the environment is set
 - [ ] Point UptimeRobot at `/up` every 10 minutes — the free plan sleeps after 15 minutes idle and a cold visitor otherwise waits ~50 seconds
 
 ---

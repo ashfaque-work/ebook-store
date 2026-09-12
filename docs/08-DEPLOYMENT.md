@@ -140,11 +140,21 @@ Config, route and view caches are built in [`docker/entrypoint.sh`](../docker/en
 at boot rather than at image build time, because they bake in environment values and the
 environment is not known until the container starts on the platform.
 
-[`render.yaml`](../render.yaml) declares the service, the health check, the pre-deploy
-migration and every environment variable. Anything marked `sync: false` is a secret you paste
-into the dashboard.
+[`render.yaml`](../render.yaml) declares the service, the health check and every environment
+variable. Anything marked `sync: false` is a secret you paste into the dashboard.
 
-**Pre-deploy command:** `php artisan migrate --force`. Never `migrate:fresh` in production.
+**Migrations:** `php artisan migrate --force`, run from the entrypoint when `RUN_MIGRATIONS`
+is `true`. Never `migrate:fresh` in production.
+
+A pre-deploy command is the natural home for this, and it is where this used to live — but
+Render offers pre-deploy commands [only on paid instance types](https://render.com/docs/deploys),
+and on the free plan it is ignored rather than refused. The first deploy then comes up
+against an empty schema and every page 500s.
+
+Running it at boot is safe here only because the free plan runs a single instance: `migrate`
+is idempotent, so a restart after an idle sleep is a no-op. **On moving to a paid plan, set
+`RUN_MIGRATIONS=false` and restore `preDeployCommand`** — two instances migrating
+concurrently is a broken schema.
 
 **Health check path:** `/up`.
 
