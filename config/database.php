@@ -95,7 +95,9 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => 'public',
-            'sslmode' => 'prefer',
+            // Env-driven: hosted Postgres (Neon, Supabase) requires TLS, and a
+            // hardcoded 'prefer' silently ignores DB_SSLMODE in production.
+            'sslmode' => env('DB_SSLMODE', 'prefer'),
         ],
 
         'sqlsrv' => [

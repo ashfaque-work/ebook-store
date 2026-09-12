@@ -22,8 +22,8 @@ RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-in
 # ---------------------------------------------------------------- runtime
 FROM php:8.2-fpm-alpine
 
-RUN apk add --no-cache nginx supervisor icu-dev oniguruma-dev libzip-dev \
-    && docker-php-ext-install pdo_mysql bcmath intl zip opcache \
+RUN apk add --no-cache nginx supervisor icu-dev oniguruma-dev libzip-dev postgresql-dev \
+    && docker-php-ext-install pdo_mysql pdo_pgsql bcmath intl zip opcache \
     && rm -rf /var/cache/apk/*
 
 # bcmath is not optional: the money layer uses it so rupees convert to paise

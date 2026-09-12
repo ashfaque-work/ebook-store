@@ -193,6 +193,12 @@ ordinary page assertion. The genre shelves threw a 500 for days behind a passing
 the `inertiaPartial()` helper in `tests/Pest.php`, and give **every** deferred prop a test
 that actually asks for it.
 
+**PostgreSQL aborts a transaction that MySQL would shrug off.** Two idempotency guards
+inserted a row and caught the unique violation. On Postgres that poisons the whole
+transaction, so every later statement throws `current transaction is aborted` — the guard
+"worked" while breaking everything after it. `insertOrIgnore` never provokes the error.
+Found only by running the suite against a real Postgres.
+
 **SQLite forgives what MySQL does not.** Two `down()` methods dropped a composite index that
 InnoDB was using to satisfy a foreign key; MySQL refuses, SQLite does not care. The matrix
 job catches this only because it now asserts how many tables survive a reset — checking the

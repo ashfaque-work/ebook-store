@@ -27,17 +27,39 @@ deploy, or you will lose customer purchases to a routine redeploy.
 | Piece | Service | Free tier | Catch |
 |---|---|---|---|
 | App | **Render** web service | 512 MB, sleeps after 15 min idle | ~50 s cold start |
-| Database | **TiDB Serverless** | 25 GiB | MySQL-compatible — no code changes |
+| Database | **Neon** Postgres | 0.5 GB, 100 CU-hrs/mo | Autosuspends after ~5 min idle, resumes on connect |
 | Files | **Cloudflare R2** | 10 GB, zero egress | S3-compatible |
 | Email | **Brevo** | 300/day | or Resend, 3k/month |
 | Errors | **Sentry** | 5k events/month | |
 | Uptime | **UptimeRobot** | 50 monitors | also keeps Render awake |
 
-**Why TiDB and not Neon/Supabase Postgres.** Postgres `LIKE` is case-sensitive. The catalogue
-search in [`HomeController`](../app/Http/Controllers/HomeController.php) would silently return
-nothing for `harry` against a title of `Harry`, and you would have to rewrite every `LIKE` to
-`ILIKE`. TiDB speaks the MySQL wire protocol; nothing in the app changes. Alternatives if TiDB
-does not suit: Aiven or Clever Cloud free MySQL (smaller quotas).
+**Why Neon.** The decision is about failure modes, not headline numbers.
+
+| Provider | Inactivity behaviour | Data survives? |
+|---|---|---|
+| **Neon** | Autosuspends after ~5 min, resumes on the next connection | Yes |
+| Supabase | **Paused after 1 week idle**, needs a manual restore or a keep-alive ping | Yes, frozen |
+| Aiven | Powered off after inactivity; 20 connections, no pooling | Yes |
+| Render Postgres | **Expires 30 days after creation**, +14-day grace, then deleted | **No** |
+
+Supabase pausing is disqualifying for a portfolio: a visitor arriving on a quiet week gets a
+broken site until *you* notice and click restore. Neon resumes by itself. Render's free
+database deletes itself, which is why the app is hosted there and the database is not.
+
+Neon also ships pgvector, which the catalogue will want if semantic search over book content
+is ever added.
+
+**The app runs on PostgreSQL, MySQL or SQLite.** CI exercises all three on every push. What
+changed to make Postgres safe was small and is worth knowing about, because both items were
+silent rather than loud:
+
+- `LIKE` is case-sensitive on Postgres. Searches now use Laravel's `whereLike()`, which is
+  case-insensitive by default and picks the right grammar per driver. A raw `like` would have
+  returned nothing for `harry` against `Harry` — wrong results, no error.
+- Postgres aborts an entire transaction when any statement inside it fails. Two idempotency
+  guards implemented "insert and catch the unique violation", which left every later query in
+  that transaction throwing `current transaction is aborted`. They use `insertOrIgnore` now,
+  which never provokes the error on any engine.
 
 **Cold starts.** Render's free tier sleeps. A first visitor waits ~50 s, which is fatal for a
 storefront. Point UptimeRobot at `/up` (the health route already exists in

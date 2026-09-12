@@ -88,9 +88,16 @@ return new class extends Migration
         });
     }
 
-    /** SQLite spells the integer cast differently from MySQL. */
+    /**
+     * Every engine spells the integer cast differently, and only MySQL knows
+     * what UNSIGNED means in a CAST.
+     */
     private function intType(): string
     {
-        return DB::getDriverName() === 'sqlite' ? 'INTEGER' : 'UNSIGNED';
+        return match (DB::getDriverName()) {
+            'sqlite' => 'INTEGER',
+            'pgsql' => 'BIGINT',
+            default => 'UNSIGNED',
+        };
     }
 };

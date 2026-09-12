@@ -38,8 +38,11 @@ class HomeController extends Controller
             ->with(['author', 'genre'])
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('title', 'like', "%{$search}%")
-                        ->orWhereHas('author', fn ($a) => $a->where('name', 'like', "%{$search}%"));
+                    // whereLike is case-insensitive by default and Laravel
+                    // picks the right grammar per driver — Postgres LIKE is
+                    // case-sensitive and would silently match nothing.
+                    $q->whereLike('title', "%{$search}%")
+                        ->orWhereHas('author', fn ($a) => $a->whereLike('name', "%{$search}%"));
                 });
             })
             ->when($filters['genre'] ?? null, function ($query, $slug) {

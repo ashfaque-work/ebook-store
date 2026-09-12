@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\QueryException;
 
 /**
  * A gateway webhook we have seen.
@@ -41,17 +40,28 @@ class WebhookEvent extends Model
      */
     public static function claim(string $gateway, string $eventId, string $type, array $payload): ?self
     {
-        try {
-            return static::create([
-                'gateway' => $gateway,
-                'event_id' => $eventId,
-                'event_type' => $type,
-                'payload' => $payload,
-            ]);
-        } catch (QueryException) {
-            // Unique violation: another delivery of the same event got here first.
+        $now = now();
+
+        // insertOrIgnore rather than catching the unique violation: PostgreSQL
+        // aborts the entire transaction when a statement fails, so swallowing
+        // the exception leaves every later query in that transaction throwing
+        // "current transaction is aborted". MySQL and SQLite are forgiving
+        // about it, which is exactly what made this easy to miss.
+        $inserted = static::query()->insertOrIgnore([
+            'gateway' => $gateway,
+            'event_id' => $eventId,
+            'event_type' => $type,
+            'payload' => json_encode($payload),
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+
+        if ($inserted === 0) {
+            // Another delivery of the same event got here first.
             return null;
         }
+
+        return static::firstWhere('event_id', $eventId);
     }
 
     public function markProcessed(): void

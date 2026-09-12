@@ -46,16 +46,17 @@ chapter.
 | Frontend | Inertia 2, Vue 3, Tailwind CSS 4, reka-ui, lucide |
 | Reader | epub.js, pdf.js |
 | Build | Vite 7, Prettier |
-| Database | MySQL 8 (SQLite in tests) |
+| Database | PostgreSQL (MySQL and SQLite also supported; CI runs all three) |
 | Payments | Razorpay |
 | Storage | Local disk, or any S3-compatible bucket (Cloudflare R2) |
-| Tests | Pest — 233 tests, 853 assertions |
+| Tests | Pest — 256 tests, 1,004 assertions, green on Postgres, MySQL and SQLite |
 
 ---
 
 ## Local setup
 
-Requires PHP 8.2+ with `bcmath`, Composer, Node 22+, and MySQL 8.
+Requires PHP 8.2+ with `bcmath` and `pdo_pgsql`, Composer, Node 22+, and PostgreSQL 14+.
+(MySQL and SQLite work too — `DB_CONNECTION` is all that changes.)
 
 ```bash
 composer install

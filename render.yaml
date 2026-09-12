@@ -26,20 +26,20 @@ services:
         value: stderr
 
       - key: DB_CONNECTION
-        value: mysql
+        value: pgsql
       - key: DB_HOST
         sync: false
       - key: DB_PORT
-        value: 4000
+        value: 5432
       - key: DB_DATABASE
         sync: false
       - key: DB_USERNAME
         sync: false
       - key: DB_PASSWORD
         sync: false
-      # TiDB requires TLS.
-      - key: MYSQL_ATTR_SSL_CA
-        value: /etc/ssl/certs/ca-certificates.crt
+      # Neon requires TLS.
+      - key: DB_SSLMODE
+        value: require
 
       - key: SESSION_DRIVER
         value: database

@@ -26,11 +26,11 @@ class OrderController extends Controller
             ->when($filters['status'] ?? null, fn ($q, $status) => $q->where('status', $status))
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('order_number', 'like', "%{$search}%")
-                        ->orWhere('invoice_number', 'like', "%{$search}%")
+                    $q->whereLike('order_number', "%{$search}%")
+                        ->orWhereLike('invoice_number', "%{$search}%")
                         ->orWhereHas('user', fn ($u) => $u
-                            ->where('email', 'like', "%{$search}%")
-                            ->orWhere('name', 'like', "%{$search}%"));
+                            ->whereLike('email', "%{$search}%")
+                            ->orWhereLike('name', "%{$search}%"));
                 });
             })
             ->latest()

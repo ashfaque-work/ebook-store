@@ -94,13 +94,17 @@ Full detail and reasoning in [08-DEPLOYMENT.md](08-DEPLOYMENT.md). All free.
 > Free hosting rebuilds the container on every deploy and takes `storage/app`
 > with it. Skip this step and a routine redeploy deletes books people paid for.
 
-### TiDB Serverless (25 GiB free)
+### Neon Postgres (free)
 
-- [ ] Create a cluster; fill `DB_HOST`, `DB_PORT=4000`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`
-- [ ] Keep `MYSQL_ATTR_SSL_CA=/etc/ssl/certs/ca-certificates.crt` — TiDB requires TLS
+- [ ] Create a project; fill `DB_HOST`, `DB_PORT=5432`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`
+- [ ] Keep `DB_SSLMODE=require` — Neon requires TLS
 
-MySQL-compatible on purpose: Postgres would silently break catalogue search,
-because its `LIKE` is case-sensitive.
+Neon rather than Supabase because Supabase pauses a free project after a week
+idle and needs a manual restore; Neon resumes on the next connection. Not
+Render's own free Postgres, which is **deleted** 30 days after creation.
+
+The app already runs on Postgres — the migration is done and CI covers
+Postgres, MySQL and SQLite on every push.
 
 ### Brevo or Resend (email)
 

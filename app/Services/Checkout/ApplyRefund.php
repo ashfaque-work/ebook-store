@@ -5,7 +5,6 @@ namespace App\Services\Checkout;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Refund;
-use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -32,17 +31,26 @@ class ApplyRefund
         ?int $refundedBy = null,
     ): bool {
         return DB::transaction(function () use ($payment, $gatewayRefundId, $amountPaise, $reason, $refundedBy) {
-            try {
-                Refund::create([
-                    'order_id' => $payment->order_id,
-                    'payment_id' => $payment->id,
-                    'gateway_refund_id' => $gatewayRefundId,
-                    'amount_paise' => $amountPaise,
-                    'reason' => $reason,
-                    'refunded_by' => $refundedBy,
-                ]);
-            } catch (QueryException) {
-                // Unique violation: we have already recorded this refund.
+            $now = now();
+
+            // insertOrIgnore rather than catching the unique violation. This
+            // runs inside a transaction, and PostgreSQL aborts the whole
+            // transaction when a statement fails — so catching the exception
+            // would leave recalculate() throwing "current transaction is
+            // aborted" instead of quietly doing nothing.
+            $inserted = Refund::query()->insertOrIgnore([
+                'order_id' => $payment->order_id,
+                'payment_id' => $payment->id,
+                'gateway_refund_id' => $gatewayRefundId,
+                'amount_paise' => $amountPaise,
+                'reason' => $reason,
+                'refunded_by' => $refundedBy,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+
+            if ($inserted === 0) {
+                // We have already recorded this refund.
                 return false;
             }
 
