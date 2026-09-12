@@ -79,12 +79,13 @@ services:
       - key: R2_PUBLIC_URL
         sync: false
 
-      # log until an SMTP provider exists. With `smtp` and an empty MAIL_HOST
-      # the first person to register gets a 500 after their account is created,
-      # because verification mail is sent during that request. Switch this to
-      # smtp in the dashboard at the same time as filling MAIL_HOST.
+      # Left to the dashboard rather than pinned here, so switching it on does
+      # not get reverted by the next blueprint sync. Use `log` until MAIL_HOST
+      # and credentials are filled in: with `smtp` and no host, the first
+      # person to register is created and then handed a 500, because
+      # verification mail is sent during that same request.
       - key: MAIL_MAILER
-        value: log
+        sync: false
       - key: MAIL_HOST
         sync: false
       - key: MAIL_PORT
