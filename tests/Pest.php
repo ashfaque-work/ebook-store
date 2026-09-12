@@ -14,8 +14,14 @@ use Tests\TestCase;
 |--------------------------------------------------------------------------
 */
 
+// withoutVite: the root Blade template calls @vite, which reads
+// public/build/manifest.json — a build artifact that is gitignored and absent
+// on a clean checkout. Without this, every page test passes on a developer's
+// machine and fails in CI. What the manifest guarantees is covered where it
+// belongs: the assets job builds it, and the image job asserts it ships.
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
+    ->beforeEach(fn () => test()->withoutVite())
     ->in('Feature');
 
 /*

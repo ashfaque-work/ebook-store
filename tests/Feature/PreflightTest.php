@@ -2,13 +2,62 @@
 
 use App\Models\Book;
 
+/**
+ * Stand in for a built front end, and say whether we made it.
+ *
+ * Every check but the asset one is pure configuration. That one reads a build
+ * artifact, which is gitignored — so on a developer's machine it is there and
+ * in CI it is not, and the outcome of these tests would otherwise depend on
+ * which of the two is running them.
+ */
+function withBuiltAssets(): bool
+{
+    if (file_exists(public_path('build/manifest.json'))) {
+        return false;
+    }
+
+    @mkdir(public_path('build'), 0755, true);
+    file_put_contents(public_path('build/manifest.json'), '{}');
+
+    return true;
+}
+
 test('preflight passes once the business details are filled in', function () {
     // Everything else is already healthy locally; the placeholders are the
     // only thing standing between a fresh clone and a clean run.
     config()->set('store.legal_name', 'Real Business Pvt Ltd');
     config()->set('store.support_email', 'hello@realbusiness.in');
 
-    $this->artisan('store:preflight')->assertSuccessful();
+    $stubbed = withBuiltAssets();
+
+    try {
+        $this->artisan('store:preflight')->assertSuccessful();
+    } finally {
+        if ($stubbed) {
+            unlink(public_path('build/manifest.json'));
+        }
+    }
+});
+
+test('preflight catches a front end that was never built', function () {
+    config()->set('store.legal_name', 'Real Business Pvt Ltd');
+    config()->set('store.support_email', 'hello@realbusiness.in');
+
+    $manifest = public_path('build/manifest.json');
+    $saved = file_exists($manifest) ? file_get_contents($manifest) : null;
+
+    if ($saved !== null) {
+        unlink($manifest);
+    }
+
+    // Without it every page is a 500, and the deploy still reports success.
+    try {
+        $this->artisan('store:preflight')->assertFailed();
+    } finally {
+        if ($saved !== null) {
+            file_put_contents($manifest, $saved);
+        }
+    }
 });
 
 test('preflight fails a fresh clone, because the placeholders are still there', function () {

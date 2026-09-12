@@ -11,9 +11,14 @@ services:
     plan: free
     region: singapore
     healthCheckPath: /up
-    # Runs before traffic is switched over; never migrate:fresh here.
-    preDeployCommand: php artisan migrate --force
     envVars:
+      # Migrations run from the entrypoint rather than a preDeployCommand,
+      # which Render offers only on paid instance types — set there, it is
+      # silently ignored on this plan and the schema is never created.
+      # On moving to a paid plan, set this to false and use preDeployCommand.
+      - key: RUN_MIGRATIONS
+        value: true
+
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
@@ -61,6 +66,11 @@ services:
       - key: R2_SECRET_ACCESS_KEY
         sync: false
       - key: R2_BUCKET
+        sync: false
+      # Covers are served straight to browsers, books never are. Leave this
+      # unset and both share one bucket — which means either the books are
+      # public or the covers 404.
+      - key: R2_PUBLIC_BUCKET
         sync: false
       - key: R2_ENDPOINT
         sync: false

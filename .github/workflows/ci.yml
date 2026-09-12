@@ -114,6 +114,14 @@ jobs:
           node-version: '22'
           cache: npm
 
+      # app.js imports Ziggy from vendor/, so the asset build needs Composer's
+      # packages as much as npm's. No PHP runs here; only the files matter.
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+      - run: composer install --prefer-dist --no-interaction --no-progress --no-scripts
+
       # `npm ci` is the point of this job as much as the build is: a peer
       # dependency conflict fails here and nowhere else until a deploy.
       - run: npm ci
