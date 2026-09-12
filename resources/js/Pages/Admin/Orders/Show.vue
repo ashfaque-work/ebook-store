@@ -46,7 +46,7 @@ const formatDateTime = (value) =>
                 &larr; All orders
             </Link>
 
-            <div class="rounded-[--radius-ui] bg-white p-6 shadow-xs">
+            <div class="bg-raised rounded-[--radius-ui] p-6 shadow-xs">
                 <dl class="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
                     <div>
                         <dt class="text-muted">Status</dt>
@@ -85,10 +85,7 @@ const formatDateTime = (value) =>
                     </li>
                 </ul>
 
-                <div
-                    v-if="order.tax_paise > 0"
-                    class="mt-4 space-y-1 border-t border-gray-200 pt-4 text-sm text-gray-600"
-                >
+                <div v-if="order.tax_paise > 0" class="border-line text-muted mt-4 space-y-1 border-t pt-4 text-sm">
                     <div class="flex justify-between">
                         <span>Subtotal</span>
                         <span class="tabular-nums">{{ formatPaise(order.subtotal_paise) }}</span>
@@ -99,7 +96,7 @@ const formatDateTime = (value) =>
                     </div>
                 </div>
 
-                <div class="mt-4 flex justify-between border-t border-gray-200 pt-4 text-lg font-medium text-gray-900">
+                <div class="border-line text-content mt-4 flex justify-between border-t pt-4 text-lg font-medium">
                     <span>Total</span>
                     <span class="tabular-nums">{{ formatPaise(order.total_paise) }}</span>
                 </div>
@@ -110,9 +107,9 @@ const formatDateTime = (value) =>
                 </div>
             </div>
 
-            <div v-if="order.refunds?.length" class="rounded-[--radius-ui] bg-white p-6 shadow-xs">
+            <div v-if="order.refunds?.length" class="bg-raised rounded-[--radius-ui] p-6 shadow-xs">
                 <h3 class="text-content text-sm font-semibold">Refunds</h3>
-                <ul role="list" class="mt-3 divide-y divide-gray-200 text-sm">
+                <ul role="list" class="divide-line mt-3 divide-y text-sm">
                     <li
                         v-for="refund in order.refunds"
                         :key="refund.id"
@@ -120,14 +117,14 @@ const formatDateTime = (value) =>
                     >
                         <span>
                             {{ formatDateTime(refund.created_at) }}
-                            <span v-if="refund.reason" class="block text-xs text-gray-500">{{ refund.reason }}</span>
+                            <span v-if="refund.reason" class="text-muted block text-xs">{{ refund.reason }}</span>
                         </span>
                         <span class="tabular-nums">{{ formatPaise(refund.amount_paise) }}</span>
                     </li>
                 </ul>
             </div>
 
-            <div class="rounded-[--radius-ui] bg-white p-6 shadow-xs">
+            <div class="bg-raised rounded-[--radius-ui] p-6 shadow-xs">
                 <h3 class="text-content text-sm font-semibold">Refund</h3>
                 <p v-if="!canRefund" class="text-muted mt-2 text-sm">There is nothing left to refund on this order.</p>
                 <template v-else>
@@ -179,7 +176,7 @@ const formatDateTime = (value) =>
                     <button
                         type="button"
                         @click="confirming = false"
-                        class="rounded-[--radius-ui] px-4 py-2 text-sm text-gray-600 hover:underline"
+                        class="text-muted rounded-[--radius-ui] px-4 py-2 text-sm hover:underline"
                     >
                         Cancel
                     </button>

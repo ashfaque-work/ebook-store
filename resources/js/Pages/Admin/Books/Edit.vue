@@ -118,7 +118,7 @@ const submit = () => {
                         v-model="form.excerpt"
                         id="excerpt"
                         rows="4"
-                        class="bg-surface text-content mt-1 block w-full rounded-[--radius-ui] border-gray-300 shadow-xs"
+                        class="bg-surface text-content border-line mt-1 block w-full rounded-[--radius-ui] shadow-xs"
                     ></textarea>
                     <p class="text-muted mt-1 text-sm">
                         The real first lines, not a blurb. The home page leads with this.
@@ -149,7 +149,7 @@ const submit = () => {
                         type="file"
                         @input="form.cover_image = $event.target.files[0]"
                         id="cover_image"
-                        class="mt-1 block w-full cursor-pointer rounded-[--radius-ui] border border-gray-300 bg-gray-50 text-gray-900 focus:outline-hidden dark:placeholder-gray-400"
+                        class="border-line bg-surface text-content mt-1 block w-full cursor-pointer rounded-[--radius-ui] border focus:outline-hidden dark:placeholder-gray-400"
                     />
                     <div v-if="form.errors.cover_image" class="mt-2 text-sm text-red-600">
                         {{ form.errors.cover_image }}
@@ -165,7 +165,7 @@ const submit = () => {
                         type="file"
                         @input="form.book_file = $event.target.files[0]"
                         id="book_file"
-                        class="mt-1 block w-full cursor-pointer rounded-[--radius-ui] border border-gray-300 bg-gray-50 text-gray-900 focus:outline-hidden dark:placeholder-gray-400"
+                        class="border-line bg-surface text-content mt-1 block w-full cursor-pointer rounded-[--radius-ui] border focus:outline-hidden dark:placeholder-gray-400"
                     />
                     <div v-if="form.errors.book_file" class="mt-2 text-sm text-red-600">
                         {{ form.errors.book_file }}
@@ -181,7 +181,7 @@ const submit = () => {
                         type="file"
                         @input="form.sample_file = $event.target.files[0]"
                         id="sample_file"
-                        class="mt-1 block w-full cursor-pointer rounded-[--radius-ui] border border-gray-300 bg-gray-50 text-gray-900 focus:outline-hidden"
+                        class="border-line bg-surface text-content mt-1 block w-full cursor-pointer rounded-[--radius-ui] border focus:outline-hidden"
                     />
                     <p class="text-muted mt-1 text-sm">
                         <span v-if="hasSample">A sample is already uploaded; choosing a file replaces it.</span>
@@ -198,7 +198,7 @@ const submit = () => {
                         type="checkbox"
                         v-model="form.is_published"
                         id="is_published"
-                        class="focus:ring-marigold mt-1 rounded-sm border-gray-300 text-blue-600 shadow-xs"
+                        class="focus:ring-marigold border-line mt-1 rounded-sm text-blue-600 shadow-xs"
                     />
                     <label for="is_published" class="text-content text-sm">
                         <span class="font-medium">Published</span>

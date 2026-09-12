@@ -69,7 +69,7 @@ const form = useForm({
                         :href="route('verification.send')"
                         method="post"
                         as="button"
-                        class="rounded-[--radius-ui] text-sm text-gray-600 underline hover:text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden dark:hover:text-gray-100 dark:focus:ring-offset-gray-800"
+                        class="text-muted hover:text-content rounded-[--radius-ui] text-sm underline focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden dark:hover:text-gray-100 dark:focus:ring-offset-gray-800"
                     >
                         Click here to re-send the verification email.
                     </Link>

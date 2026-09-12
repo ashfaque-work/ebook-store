@@ -30,16 +30,16 @@ const links = [
                     v-for="link in links"
                     :key="link.href"
                     :href="link.href"
-                    class="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-                    :class="{ 'font-semibold text-gray-900 dark:text-white': $page.url.startsWith(link.href) }"
+                    class="text-muted hover:text-content"
+                    :class="{ 'text-content font-semibold': $page.url.startsWith(link.href) }"
                 >
                     {{ link.label }}
                 </Link>
             </nav>
 
-            <article class="legal rounded-lg bg-white p-6 shadow-xs sm:p-10 dark:bg-gray-800">
-                <h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">{{ title }}</h1>
-                <p v-if="lastUpdated" class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            <article class="legal bg-raised rounded-lg p-6 shadow-xs sm:p-10">
+                <h1 class="text-content text-3xl font-bold tracking-tight">{{ title }}</h1>
+                <p v-if="lastUpdated" class="text-muted mt-2 text-sm">
                     Last updated {{ lastUpdated }} · {{ store.legalName }}
                 </p>
 

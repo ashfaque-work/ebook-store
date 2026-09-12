@@ -109,7 +109,7 @@ const pay = () => (isMock.value ? simulate('paid') : payWithRazorpay());
 
     <GuestLayout>
         <div class="mx-auto max-w-lg px-4 sm:px-6">
-            <div class="rounded-[--radius-ui] bg-white p-6 shadow-xs sm:p-8">
+            <div class="bg-raised rounded-[--radius-ui] p-6 shadow-xs sm:p-8">
                 <h1 class="text-content text-2xl font-bold tracking-tight">Complete your payment</h1>
                 <p class="text-muted mt-1 text-sm">Order {{ order.order_number }}</p>
 
@@ -124,10 +124,7 @@ const pay = () => (isMock.value ? simulate('paid') : payWithRazorpay());
                     </li>
                 </ul>
 
-                <div
-                    v-if="order.tax_paise > 0"
-                    class="mt-4 space-y-1 border-t border-gray-200 pt-4 text-sm text-gray-600"
-                >
+                <div v-if="order.tax_paise > 0" class="border-line text-muted mt-4 space-y-1 border-t pt-4 text-sm">
                     <div class="flex justify-between">
                         <span>Subtotal</span>
                         <span>{{ formatPaise(order.subtotal_paise) }}</span>
@@ -138,7 +135,7 @@ const pay = () => (isMock.value ? simulate('paid') : payWithRazorpay());
                     </div>
                 </div>
 
-                <div class="mt-4 flex justify-between border-t border-gray-200 pt-4 text-lg font-medium text-gray-900">
+                <div class="border-line text-content mt-4 flex justify-between border-t pt-4 text-lg font-medium">
                     <span>Total</span>
                     <span>{{ formatPaise(order.total_paise) }}</span>
                 </div>

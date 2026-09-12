@@ -42,8 +42,8 @@ const statusClasses = (value) =>
         paid: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
         pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
         failed: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-        refunded: 'bg-gray-200 text-gray-800',
-    })[value] ?? 'bg-gray-100 text-gray-800';
+        refunded: 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+    })[value] ?? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
 
 const tiles = computed(() => [
     { label: 'Paid orders', value: props.stats.paidCount },
@@ -64,21 +64,21 @@ const tiles = computed(() => [
         </template>
 
         <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-            <div v-for="tile in tiles" :key="tile.label" class="rounded-[--radius-ui] bg-white p-4 shadow-xs">
+            <div v-for="tile in tiles" :key="tile.label" class="bg-raised rounded-[--radius-ui] p-4 shadow-xs">
                 <p class="text-muted text-xs">{{ tile.label }}</p>
                 <p class="text-content mt-1 text-xl font-semibold tabular-nums">{{ tile.value }}</p>
             </div>
         </div>
 
-        <div class="mt-6 rounded-[--radius-ui] bg-white shadow-xs">
+        <div class="bg-raised mt-6 rounded-[--radius-ui] shadow-xs">
             <div class="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <input
                     v-model="search"
                     type="search"
                     placeholder="Order, invoice, customer…"
-                    class="rounded-[--radius-ui] border-gray-300 text-sm"
+                    class="border-line rounded-[--radius-ui] text-sm"
                 />
-                <select v-model="status" class="rounded-[--radius-ui] border-gray-300 text-sm">
+                <select v-model="status" class="border-line rounded-[--radius-ui] text-sm">
                     <option value="">All statuses</option>
                     <option value="paid">Paid</option>
                     <option value="pending">Awaiting payment</option>
@@ -92,7 +92,7 @@ const tiles = computed(() => [
             </p>
 
             <div v-else class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                <table class="divide-line min-w-full divide-y text-sm">
                     <thead>
                         <tr class="text-muted text-left text-xs">
                             <th scope="col" class="px-4 py-3 font-medium">Order</th>
@@ -112,7 +112,7 @@ const tiles = computed(() => [
                                 >
                                     {{ order.order_number }}
                                 </Link>
-                                <span v-if="order.invoice_number" class="block text-xs text-gray-500">
+                                <span v-if="order.invoice_number" class="text-muted block text-xs">
                                     {{ order.invoice_number }}
                                 </span>
                             </td>

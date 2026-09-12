@@ -93,7 +93,7 @@ const deleteBook = (book) => {
                                     {{ book.title }}
                                     <span
                                         v-if="!book.is_published"
-                                        class="ml-2 rounded-full bg-gray-200 px-2 py-0.5 text-xs font-medium text-gray-700"
+                                        class="bg-line text-content ml-2 rounded-full px-2 py-0.5 text-xs font-medium"
                                     >
                                         Draft
                                     </span>
@@ -117,7 +117,7 @@ const deleteBook = (book) => {
                                 </td>
                             </tr>
                             <tr v-if="books.data.length === 0">
-                                <td colspan="6" class="px-6 py-4 text-center whitespace-nowrap text-gray-500">
+                                <td colspan="6" class="text-muted px-6 py-4 text-center whitespace-nowrap">
                                     No books found.
                                 </td>
                             </tr>

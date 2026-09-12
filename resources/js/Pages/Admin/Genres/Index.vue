@@ -74,7 +74,7 @@ const deleteGenre = (id) => {
                                 </td>
                             </tr>
                             <tr v-if="genres.data.length === 0">
-                                <td colspan="3" class="px-6 py-4 text-center whitespace-nowrap text-gray-500">
+                                <td colspan="3" class="text-muted px-6 py-4 text-center whitespace-nowrap">
                                     No genres found.
                                 </td>
                             </tr>

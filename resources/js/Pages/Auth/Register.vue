@@ -92,7 +92,7 @@ const submit = () => {
                 <div class="mt-4 flex items-center justify-end">
                     <Link
                         href="/login"
-                        class="text-muted rounded-[--radius-ui] text-sm underline hover:text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden dark:hover:text-gray-100 dark:focus:ring-offset-gray-800"
+                        class="text-muted hover:text-content rounded-[--radius-ui] text-sm underline focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden dark:hover:text-gray-100 dark:focus:ring-offset-gray-800"
                     >
                         Already registered?
                     </Link>
