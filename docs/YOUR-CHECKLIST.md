@@ -131,6 +131,22 @@ Postgres, MySQL and SQLite on every push.
 
 ---
 
+## 5a. Run the pre-flight check
+
+```bash
+php artisan store:preflight
+```
+
+One command, and it refuses to pass on the things that fail *silently* in
+production: debug mode leaking your gateway keys in a stack trace, the
+simulated gateway serving real customers, books still on a disk the host
+wipes on redeploy, receipts going to a log file, placeholder business details
+on the legal pages Razorpay reads, GST switched on without a GSTIN.
+
+Run it on the live host after setting the environment, not just locally.
+
+---
+
 ## 6. Before you tell anyone about it
 
 - [ ] `APP_DEBUG=false` and a real `APP_URL` in production

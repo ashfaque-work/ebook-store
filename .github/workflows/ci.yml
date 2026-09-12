@@ -146,3 +146,59 @@ jobs:
       # The two known findings both trace to epubjs and need a major bump of
       # the renderer; see docs/SECURITY-NOTES.md.
       - run: npm audit --audit-level=critical
+
+  image:
+    name: Build production image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      # The Dockerfile is what Render actually runs, and it fails in ways the
+      # rest of CI cannot see — a missing PHP extension, or an asset build that
+      # needs vendor/ present because app.js imports Ziggy from it. Left
+      # unbuilt, the first sign of trouble is a failed deploy.
+      - name: Build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: ebook-store:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: The image has the extensions the app needs
+        run: |
+          docker run --rm --entrypoint php ebook-store:ci -m > modules.txt
+          for ext in pdo_pgsql pdo_mysql bcmath intl zip; do
+            grep -qx "$ext" modules.txt || { echo "missing PHP extension: $ext"; exit 1; }
+          done
+          # OPcache is a Zend extension, so it is listed under its display name
+          # rather than alongside the rest — and it stays off in the CLI, which
+          # is why this checks the listing and not opcache_get_status().
+          grep -qx "Zend OPcache" modules.txt || { echo "missing PHP extension: opcache"; exit 1; }
+          echo "all required extensions present"
+
+      - name: The built assets made it into the image
+        run: docker run --rm --entrypoint sh ebook-store:ci -c 'test -f public/build/manifest.json'
+
+      # The entrypoint builds the config, route and view caches at boot. It
+      # runs before anything the rest of this job can see, and it is where a
+      # missing writable directory surfaces — as a container that exits on
+      # start, which on Render reads as a deploy that simply never comes up.
+      - name: The container boots
+        run: |
+          docker run --rm \
+            -e APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= \
+            ebook-store:ci php artisan about --only=environment
+
+      # The suite renders this under the developer's php.ini. The image has its
+      # own, and the sitemap opens with an XML declaration that short_open_tag
+      # turns into a PHP open tag — a 500 that only ever appears in the image.
+      - name: The sitemap compiles under the image's php.ini
+        run: |
+          docker run --rm \
+            -e APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= \
+            --entrypoint php ebook-store:ci artisan tinker \
+            --execute="echo view('sitemap', ['urls' => []])->render();" | grep -q '<?xml'

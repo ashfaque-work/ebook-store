@@ -109,6 +109,7 @@ vendor/bin/pint                   # PHP formatting
 npm run format                    # JS/Vue formatting
 npm run build                     # production assets
 php artisan books:migrate-storage # move files onto object storage
+php artisan store:preflight       # check the config before going live
 ```
 
 ---
