@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AuthorController as AdminAuthorController;
 use App\Http\Controllers\Admin\BookController as AdminBookController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\GenreController as AdminGenreController;
+use App\Http\Controllers\Admin\MailController as AdminMailController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\BookController;
@@ -151,6 +152,13 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::resource('authors', AdminAuthorController::class);
     Route::resource('genres', AdminGenreController::class);
     Route::resource('books', AdminBookController::class)->except('show');
+
+    // Mail is the one part of the store whose failure is invisible, and the
+    // free plan has no shell to check it from.
+    Route::get('mail', [AdminMailController::class, 'index'])->name('mail.index');
+    Route::post('mail/test', [AdminMailController::class, 'test'])
+        ->middleware('throttle:6,1')
+        ->name('mail.test');
 
     Route::get('reviews', [AdminReviewController::class, 'index'])->name('reviews.index');
     Route::post('reviews/{review}/hide', [AdminReviewController::class, 'hide'])->name('reviews.hide');

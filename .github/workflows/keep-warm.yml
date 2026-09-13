@@ -1,0 +1,59 @@
+name: Keep warm
+
+# The free hosting plan stops the container after fifteen minutes with no
+# traffic, and the next visitor waits about fifty seconds for it to start
+# again — which, for someone who followed a link to a book, is long enough to
+# leave. A request every ten minutes keeps it running.
+#
+# This is a workaround for a free plan, not a design. The moment the store
+# earns anything, a paid instance removes the need for it.
+#
+# GitHub is best-effort about scheduled runs and will delay them under load, so
+# treat this as reducing cold starts rather than eliminating them. A dedicated
+# uptime monitor keeps better time and tells you when the site is down, which
+# this deliberately does not try to do.
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  # So it can be proven to work without waiting for the schedule.
+  workflow_dispatch:
+
+# No repository contents are read, and nothing is written.
+permissions: {}
+
+concurrency:
+  group: keep-warm
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    name: Ping the health check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Wake the site
+        env:
+          # Set this as a repository variable (Settings → Secrets and variables
+          # → Actions → Variables). Without it the job says so and stops,
+          # rather than failing every ten minutes for weeks.
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: |
+          if [ -z "$SITE_URL" ]; then
+            echo "No SITE_URL variable set — nothing to ping."
+            echo "Add it under Settings → Secrets and variables → Actions → Variables."
+            exit 0
+          fi
+
+          # A cold start is the case this exists for, so the timeout has to be
+          # longer than one: --max-time 90 rather than curl's default.
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 90 --retry 2 --retry-delay 10 "$SITE_URL/up")
+
+          echo "GET $SITE_URL/up -> $code"
+
+          # 5xx means the app is up enough to answer, which is all this job is
+          # for. Only a complete failure to connect is worth a red run.
+          if [ "$code" = "000" ]; then
+            echo "No response at all."
+            exit 1
+          fi

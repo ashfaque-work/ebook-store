@@ -5,6 +5,7 @@ import {
     BookOpen,
     ChevronDown,
     Library,
+    Mail,
     Menu,
     LayoutDashboard,
     Moon,
@@ -54,6 +55,7 @@ const sections = computed(() => [
                       { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
                       { href: '/admin/orders', label: 'Orders', icon: Receipt },
                       { href: '/admin/reviews', label: 'Reviews', icon: Star },
+                      { href: '/admin/mail', label: 'Email', icon: Mail },
                   ],
               },
               {
