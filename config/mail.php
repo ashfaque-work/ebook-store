@@ -69,6 +69,23 @@ return [
             // ],
         ],
 
+        /*
+         | Brevo, over its HTTP API rather than SMTP.
+         |
+         | Free hosting commonly blocks outbound SMTP to keep spammers off it,
+         | and this store's does: connecting to smtp.gmail.com:587 times out at
+         | the socket, before any password is even offered. An API call over
+         | HTTPS goes out on a port nobody blocks.
+         |
+         | Brevo rather than the others because it will verify a single sender
+         | address. The rest want a domain you own, which is a thing to buy
+         | before a store can email anybody at all.
+         */
+        'brevo' => [
+            'transport' => 'brevo',
+            'key' => env('BREVO_API_KEY'),
+        ],
+
         'resend' => [
             'transport' => 'resend',
         ],
@@ -120,7 +137,9 @@ return [
 
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', 'Example'),
+        // The store's own name, not Laravel's placeholder: it is what a
+        // customer sees in their inbox.
+        'name' => env('MAIL_FROM_NAME', env('STORE_TRADING_NAME', 'eBook Store')),
     ],
 
 ];

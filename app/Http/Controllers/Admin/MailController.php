@@ -43,6 +43,8 @@ class MailController extends Controller
                 'fromName' => config('mail.from.name'),
             ],
             'problems' => $this->problems($mailer),
+            'usesSmtp' => $mailer === 'smtp',
+            'hasApiKey' => (bool) config('mail.mailers.'.$mailer.'.key'),
         ]);
     }
 
@@ -106,6 +108,17 @@ class MailController extends Controller
             $problems[] = 'MAIL_HOST is empty, so sending will fail.';
         }
 
+        if ($mailer === 'smtp') {
+            // Said plainly because the symptom is a socket timeout, which
+            // looks like the site is broken rather than like a policy.
+            $problems[] = 'This host blocks outbound SMTP, so smtp will time out whatever the credentials are. '
+                .'Use an API-based mailer instead — set MAIL_MAILER=brevo and BREVO_API_KEY.';
+        }
+
+        if ($mailer === 'brevo' && ! config('mail.mailers.brevo.key')) {
+            $problems[] = 'MAIL_MAILER is brevo but BREVO_API_KEY is not set.';
+        }
+
         if (str_contains((string) config('mail.from.address'), 'example.com')) {
             $problems[] = 'MAIL_FROM_ADDRESS is still an example.com address; mail from it lands in spam.';
         }
@@ -118,6 +131,10 @@ class MailController extends Controller
         // The spaces are not part of it, and a password with them in fails
         // with the same "username and password not accepted" as a wrong one —
         // so it is worth naming rather than leaving someone to guess.
+        if ($mailer !== 'smtp') {
+            return $problems;
+        }
+
         if ($password !== '' && str_contains($password, ' ')) {
             $problems[] = 'MAIL_PASSWORD contains spaces. Gmail displays app passwords in groups of four, '
                 .'but they should be entered as sixteen characters with no spaces.';

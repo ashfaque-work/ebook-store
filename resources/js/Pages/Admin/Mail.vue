@@ -8,6 +8,8 @@ import { AlertTriangle, Check } from 'lucide-vue-next';
 const props = defineProps({
     config: { type: Object, required: true },
     problems: { type: Array, default: () => [] },
+    usesSmtp: { type: Boolean, default: false },
+    hasApiKey: { type: Boolean, default: false },
 });
 
 const page = usePage();
@@ -16,14 +18,19 @@ const form = useForm({ email: page.props.auth?.user?.email ?? '' });
 
 const send = () => form.post('/admin/mail/test', { preserveScroll: true });
 
-const rows = computed(() => [
-    { label: 'Mailer', value: props.config.mailer },
-    { label: 'Host', value: props.config.host || '—' },
-    { label: 'Port', value: props.config.port || '—' },
-    { label: 'Username', value: props.config.username || '—' },
-    { label: 'Password', value: props.config.hasPassword ? 'set' : 'not set' },
-    { label: 'From', value: `${props.config.fromName} <${props.config.fromAddress}>` },
-]);
+// An API mailer has no host, port or password, and showing empty rows for
+// them invites someone to go and fill them in.
+const rows = computed(() =>
+    [
+        { label: 'Mailer', value: props.config.mailer },
+        props.usesSmtp ? { label: 'Host', value: props.config.host || '—' } : null,
+        props.usesSmtp ? { label: 'Port', value: props.config.port || '—' } : null,
+        props.usesSmtp ? { label: 'Username', value: props.config.username || '—' } : null,
+        props.usesSmtp ? { label: 'Password', value: props.config.hasPassword ? 'set' : 'not set' } : null,
+        props.usesSmtp ? null : { label: 'API key', value: props.hasApiKey ? 'set' : 'not set' },
+        { label: 'From', value: `${props.config.fromName} <${props.config.fromAddress}>` },
+    ].filter(Boolean),
+);
 </script>
 
 <template>

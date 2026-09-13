@@ -5,9 +5,12 @@ namespace App\Providers;
 use App\Services\Payments\FakePaymentGateway;
 use App\Services\Payments\PaymentGateway;
 use App\Services\Payments\RazorpayPaymentGateway;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 use RuntimeException;
+use Symfony\Component\Mailer\Bridge\Brevo\Transport\BrevoTransportFactory;
+use Symfony\Component\Mailer\Transport\Dsn;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -53,5 +56,33 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Vite::prefetch(concurrency: 3);
+
+        $this->registerBrevoMailer();
+    }
+
+    /**
+     * Teach the mailer what 'brevo' means.
+     *
+     * Laravel ships transports for the providers it knows about; Brevo is not
+     * one of them, but Symfony has a bridge and the manager takes extensions.
+     *
+     * It earns its place because the host blocks outbound SMTP — a connection
+     * to port 587 times out at the socket, before any password is offered — so
+     * email has to leave over HTTPS or not at all. Brevo is the one that will
+     * verify a single sender address rather than requiring a domain.
+     */
+    private function registerBrevoMailer(): void
+    {
+        Mail::extend('brevo', function (array $config) {
+            $key = $config['key'] ?? null;
+
+            if (! $key) {
+                throw new RuntimeException(
+                    'MAIL_MAILER is brevo but BREVO_API_KEY is not set, so nothing could be sent.'
+                );
+            }
+
+            return (new BrevoTransportFactory)->create(new Dsn('brevo+api', 'default', $key));
+        });
     }
 }

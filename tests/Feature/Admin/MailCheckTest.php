@@ -142,7 +142,7 @@ test('a password that is not sixteen characters is flagged for gmail', function 
             ->contains(fn ($line) => str_contains($line, 'sixteen characters'))));
 });
 
-test('a correct sixteen-character app password raises nothing', function () {
+test('a correct app password raises no password problem', function () {
     config()->set('mail.default', 'smtp');
     config()->set('mail.mailers.smtp.host', 'smtp.gmail.com');
     config()->set('mail.mailers.smtp.username', 'me@gmail.com');
@@ -151,5 +151,60 @@ test('a correct sixteen-character app password raises nothing', function () {
 
     actingAsAdmin();
 
+    $this->get('/admin/mail')
+        ->assertInertia(fn ($page) => $page->where('problems', fn ($problems) => collect($problems)
+            ->doesntContain(fn ($line) => str_contains($line, 'sixteen characters')
+                || str_contains($line, 'spaces')
+                || str_contains($line, 'quotation'))));
+});
+
+test('smtp is flagged whatever the credentials are, because the host blocks it', function () {
+    config()->set('mail.default', 'smtp');
+    config()->set('mail.mailers.smtp.host', 'smtp.gmail.com');
+    config()->set('mail.mailers.smtp.username', 'me@gmail.com');
+    config()->set('mail.mailers.smtp.password', 'abcdefghijklmnop');
+    config()->set('mail.from.address', 'me@gmail.com');
+
+    actingAsAdmin();
+
+    // The symptom is a socket timeout, which reads as the site being broken
+    // rather than as a policy of the host.
+    $this->get('/admin/mail')
+        ->assertInertia(fn ($page) => $page->where('problems', fn ($problems) => collect($problems)
+            ->contains(fn ($line) => str_contains($line, 'blocks outbound SMTP'))));
+});
+
+test('a configured api mailer raises nothing', function () {
+    config()->set('mail.default', 'brevo');
+    config()->set('mail.mailers.brevo.key', 'xkeysib-test');
+    config()->set('mail.from.address', 'me@gmail.com');
+
+    actingAsAdmin();
+
+    $this->get('/admin/mail')->assertInertia(fn ($page) => $page->where('problems', []));
+});
+
+test('an api mailer with no key says so', function () {
+    config()->set('mail.default', 'brevo');
+    config()->set('mail.mailers.brevo.key', null);
+    config()->set('mail.from.address', 'me@gmail.com');
+
+    actingAsAdmin();
+
+    $this->get('/admin/mail')
+        ->assertInertia(fn ($page) => $page->where('problems', fn ($problems) => collect($problems)
+            ->contains(fn ($line) => str_contains($line, 'BREVO_API_KEY'))));
+});
+
+test('smtp password advice does not fire for an api mailer', function () {
+    config()->set('mail.default', 'brevo');
+    config()->set('mail.mailers.brevo.key', 'xkeysib-test');
+    config()->set('mail.mailers.smtp.password', 'left over from before');
+    config()->set('mail.from.address', 'me@gmail.com');
+
+    actingAsAdmin();
+
+    // Stale SMTP settings are normal after switching, and complaining about
+    // them would send someone to fix a thing that is no longer used.
     $this->get('/admin/mail')->assertInertia(fn ($page) => $page->where('problems', []));
 });
