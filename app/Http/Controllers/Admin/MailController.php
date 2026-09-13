@@ -112,6 +112,28 @@ class MailController extends Controller
 
         $username = (string) config('mail.mailers.smtp.username');
         $from = (string) config('mail.from.address');
+        $password = (string) config('mail.mailers.smtp.password');
+
+        // Gmail shows an app password in four groups of four for readability.
+        // The spaces are not part of it, and a password with them in fails
+        // with the same "username and password not accepted" as a wrong one —
+        // so it is worth naming rather than leaving someone to guess.
+        if ($password !== '' && str_contains($password, ' ')) {
+            $problems[] = 'MAIL_PASSWORD contains spaces. Gmail displays app passwords in groups of four, '
+                .'but they should be entered as sixteen characters with no spaces.';
+        }
+
+        if ($password !== '' && (str_starts_with($password, '"') || str_ends_with($password, '"'))) {
+            $problems[] = 'MAIL_PASSWORD starts or ends with a quotation mark. The host stores the value '
+                .'literally, so the quotes have become part of the password.';
+        }
+
+        if ($mailer === 'smtp' && str_contains($username, '@gmail.') && $password !== ''
+            && mb_strlen(str_replace(' ', '', $password)) !== 16) {
+            $problems[] = 'A Gmail app password is exactly sixteen characters. This one is '
+                .mb_strlen(str_replace(' ', '', $password)).', which suggests an account password — '
+                .'Gmail always refuses those for SMTP.';
+        }
 
         if ($mailer === 'smtp' && str_contains($username, '@gmail.') && $username !== $from) {
             // Gmail will not send as an address the account does not own; it

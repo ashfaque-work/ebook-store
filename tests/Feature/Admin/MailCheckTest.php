@@ -102,3 +102,54 @@ test('sending a test is admin-only', function () {
 
     Mail::assertNothingSent();
 });
+
+test('a password with spaces in it is named as the problem', function () {
+    config()->set('mail.default', 'smtp');
+    config()->set('mail.mailers.smtp.username', 'me@gmail.com');
+    config()->set('mail.mailers.smtp.password', 'abcd efgh ijkl mnop');
+
+    actingAsAdmin();
+
+    // Gmail shows app passwords in groups of four. Pasted with the spaces, it
+    // fails with exactly the same error as a wrong password.
+    $this->get('/admin/mail')
+        ->assertInertia(fn ($page) => $page->where('problems', fn ($problems) => collect($problems)
+            ->contains(fn ($line) => str_contains($line, 'spaces'))));
+});
+
+test('a quoted password is named as the problem', function () {
+    config()->set('mail.default', 'smtp');
+    config()->set('mail.mailers.smtp.password', '"abcdefghijklmnop"');
+
+    actingAsAdmin();
+
+    $this->get('/admin/mail')
+        ->assertInertia(fn ($page) => $page->where('problems', fn ($problems) => collect($problems)
+            ->contains(fn ($line) => str_contains($line, 'quotation mark'))));
+});
+
+test('a password that is not sixteen characters is flagged for gmail', function () {
+    config()->set('mail.default', 'smtp');
+    config()->set('mail.mailers.smtp.username', 'me@gmail.com');
+    config()->set('mail.mailers.smtp.password', 'my-real-account-password');
+
+    actingAsAdmin();
+
+    // Gmail always refuses an account password for SMTP, and says only that
+    // the username and password were not accepted.
+    $this->get('/admin/mail')
+        ->assertInertia(fn ($page) => $page->where('problems', fn ($problems) => collect($problems)
+            ->contains(fn ($line) => str_contains($line, 'sixteen characters'))));
+});
+
+test('a correct sixteen-character app password raises nothing', function () {
+    config()->set('mail.default', 'smtp');
+    config()->set('mail.mailers.smtp.host', 'smtp.gmail.com');
+    config()->set('mail.mailers.smtp.username', 'me@gmail.com');
+    config()->set('mail.mailers.smtp.password', 'abcdefghijklmnop');
+    config()->set('mail.from.address', 'me@gmail.com');
+
+    actingAsAdmin();
+
+    $this->get('/admin/mail')->assertInertia(fn ($page) => $page->where('problems', []));
+});
