@@ -31,6 +31,12 @@ const problems = computed(() =>
                   href: '/admin/orders?status=pending',
               }
             : null,
+        props.takings.criticalReviews
+            ? {
+                  text: `${props.takings.criticalReviews} review${props.takings.criticalReviews === 1 ? '' : 's'} at two stars or below`,
+                  href: '/admin/reviews?status=critical',
+              }
+            : null,
         props.catalogue.drafts
             ? {
                   text: `${props.catalogue.drafts} unpublished book${props.catalogue.drafts === 1 ? '' : 's'}`,

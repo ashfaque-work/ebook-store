@@ -8,6 +8,7 @@ use App\Models\Book;
 use App\Models\Order;
 use App\Models\ReadingProgress;
 use App\Models\Refund;
+use App\Models\Review;
 use App\Models\User;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -64,6 +65,10 @@ class DashboardController extends Controller
             'awaitingPayment' => Order::where('status', Order::STATUS_PENDING)->count(),
             'refundedPaise' => (int) Refund::sum('amount_paise'),
             'customers' => User::where('role', User::ROLE_CUSTOMER)->count(),
+            // A one-star review is not necessarily a problem, but it is always
+            // worth reading — and it is the thing an owner most wants to know
+            // about on the day it appears.
+            'criticalReviews' => Review::where('rating', '<=', 2)->whereNull('hidden_at')->count(),
         ];
     }
 

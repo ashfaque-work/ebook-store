@@ -2,6 +2,7 @@
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import BookCard from '@/Components/Ui/BookCard.vue';
 import BookCover from '@/Components/BookCover.vue';
+import Reviews from '@/Components/Reviews.vue';
 import Shelf from '@/Components/Ui/Shelf.vue';
 import UiButton from '@/Components/Ui/UiButton.vue';
 import { Deferred, Head, Link, router } from '@inertiajs/vue3';
@@ -14,6 +15,9 @@ const props = defineProps({
     isPurchased: Boolean,
     hasSample: Boolean,
     related: { type: Array, default: null },
+    reviews: { type: Object, default: null },
+    canReview: { type: Boolean, default: false },
+    myReview: { type: Object, default: null },
 });
 
 const adding = ref(false);
@@ -164,6 +168,21 @@ const facts = computed(() =>
                         <Shelf v-if="related?.length" heading="You might also like">
                             <BookCard v-for="item in related" :key="item.id" :book="item" />
                         </Shelf>
+                    </Deferred>
+
+                    <Deferred data="reviews">
+                        <template #fallback>
+                            <div class="bg-line/60 mt-14 h-40 rounded" aria-hidden="true" />
+                        </template>
+
+                        <Reviews
+                            :book-id="book.id"
+                            :book-title="book.title"
+                            :reviews="reviews"
+                            :can-review="canReview"
+                            :my-review="myReview"
+                            :signed-in="Boolean($page.props.auth?.user)"
+                        />
                     </Deferred>
                 </div>
             </div>

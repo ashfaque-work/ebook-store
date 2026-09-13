@@ -10,6 +10,7 @@ import {
     Moon,
     Receipt,
     ShoppingBag,
+    Star,
     Sun,
     Tags,
     UserRound,
@@ -52,6 +53,7 @@ const sections = computed(() => [
                   items: [
                       { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
                       { href: '/admin/orders', label: 'Orders', icon: Receipt },
+                      { href: '/admin/reviews', label: 'Reviews', icon: Star },
                   ],
               },
               {

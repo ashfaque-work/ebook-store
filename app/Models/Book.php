@@ -147,6 +147,11 @@ class Book extends Model
         return $this->hasMany(BookChunk::class);
     }
 
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
     /**
      * Only books that are live in the catalogue. Every public-facing query
      * must go through this scope.

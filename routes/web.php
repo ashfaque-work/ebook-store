@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\BookController as AdminBookController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\GenreController as AdminGenreController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Reader\AnnotationController;
 use App\Http\Controllers\Reader\ReaderController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SearchInsideController;
 use App\Http\Controllers\SimulatedGatewayController;
 use App\Http\Controllers\SitemapController;
@@ -61,6 +63,13 @@ Route::get('/dashboard', function () {
 })->middleware('auth')->name('dashboard');
 
 Route::middleware('auth')->group(function () {
+    // Reviews. Writing one needs the book, which the controller checks: the
+    // point of them is that the reviewer actually read it.
+    Route::post('/books/{book}/reviews', [ReviewController::class, 'store'])
+        ->middleware('throttle:20,1')
+        ->name('reviews.store');
+    Route::delete('/books/{book}/reviews', [ReviewController::class, 'destroy'])->name('reviews.destroy');
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -142,6 +151,10 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::resource('authors', AdminAuthorController::class);
     Route::resource('genres', AdminGenreController::class);
     Route::resource('books', AdminBookController::class)->except('show');
+
+    Route::get('reviews', [AdminReviewController::class, 'index'])->name('reviews.index');
+    Route::post('reviews/{review}/hide', [AdminReviewController::class, 'hide'])->name('reviews.hide');
+    Route::post('reviews/{review}/restore', [AdminReviewController::class, 'restore'])->name('reviews.restore');
 
     Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
     Route::get('orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
