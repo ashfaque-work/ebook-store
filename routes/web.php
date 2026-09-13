@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AuthorController as AdminAuthorController;
 use App\Http\Controllers\Admin\BookController as AdminBookController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\GenreController as AdminGenreController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\BookController;
@@ -48,7 +49,7 @@ Route::delete('/cart', [CartController::class, 'clear'])->name('cart.clear');
 Route::get('/dashboard', function () {
     // Send admins to the admin panel; customers to their library.
     return auth()->user()->isAdmin()
-        ? redirect()->route('admin.authors.index')
+        ? redirect()->route('admin.dashboard')
         : redirect()->route('library.index');
 })->middleware('auth')->name('dashboard');
 
@@ -128,6 +129,9 @@ Route::middleware('auth')->group(function () {
 
 // Admin Routes
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    // Where an admin lands. Takings, what sold, and what is broken.
+    Route::get('/', AdminDashboardController::class)->name('dashboard');
+
     Route::resource('authors', AdminAuthorController::class);
     Route::resource('genres', AdminGenreController::class);
     Route::resource('books', AdminBookController::class)->except('show');

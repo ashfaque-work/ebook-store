@@ -6,6 +6,7 @@ import {
     ChevronDown,
     Library,
     Menu,
+    LayoutDashboard,
     Moon,
     Receipt,
     ShoppingBag,
@@ -48,7 +49,10 @@ const sections = computed(() => [
         ? [
               {
                   heading: 'Store',
-                  items: [{ href: '/admin/orders', label: 'Orders', icon: Receipt }],
+                  items: [
+                      { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
+                      { href: '/admin/orders', label: 'Orders', icon: Receipt },
+                  ],
               },
               {
                   heading: 'Catalogue',
@@ -62,7 +66,17 @@ const sections = computed(() => [
         : []),
 ]);
 
-const isCurrent = (href) => (href === '/' ? page.url === '/' : page.url.startsWith(href));
+/*
+ * A prefix match would light up every ancestor: /admin/books would mark both
+ * Books and the Dashboard at /admin as current. Items whose path is a prefix
+ * of another's say so, and are matched exactly.
+ */
+const isCurrent = (item) => {
+    const href = typeof item === 'string' ? item : item.href;
+    const exact = typeof item === 'string' ? href === '/' : Boolean(item.exact) || href === '/';
+
+    return exact ? page.url === href : page.url.startsWith(href);
+};
 </script>
 
 <template>
@@ -94,11 +108,11 @@ const isCurrent = (href) => (href === '/' ? page.url === '/' : page.url.startsWi
                                 :href="item.href"
                                 class="flex items-center gap-3 rounded-[--radius-ui] px-2 py-2 text-sm transition-colors"
                                 :class="
-                                    isCurrent(item.href)
+                                    isCurrent(item)
                                         ? 'bg-marigold/15 text-content font-semibold'
                                         : 'text-muted hover:bg-line/50 hover:text-content'
                                 "
-                                :aria-current="isCurrent(item.href) ? 'page' : undefined"
+                                :aria-current="isCurrent(item) ? 'page' : undefined"
                             >
                                 <component :is="item.icon" class="size-4 shrink-0" aria-hidden="true" />
                                 {{ item.label }}
@@ -182,9 +196,7 @@ const isCurrent = (href) => (href === '/' ? page.url === '/' : page.url.startsWi
                             :key="item.href"
                             :href="item.href"
                             class="flex items-center gap-3 rounded-[--radius-ui] px-2 py-2.5 text-sm"
-                            :class="
-                                isCurrent(item.href) ? 'bg-marigold/15 font-semibold' : 'text-muted hover:bg-line/50'
-                            "
+                            :class="isCurrent(item) ? 'bg-marigold/15 font-semibold' : 'text-muted hover:bg-line/50'"
                         >
                             <component :is="item.icon" class="size-4 shrink-0" aria-hidden="true" />
                             {{ item.label }}

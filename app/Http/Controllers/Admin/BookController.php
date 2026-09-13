@@ -17,16 +17,39 @@ class BookController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        // Eager load relationships to prevent N+1 query issues
+        $filters = $request->only(['search', 'status', 'genre']);
+
         $books = Book::with(['author', 'genre'])
             ->withCount('orderItems')
+            // Fifty-odd books is already more than fits on a screen, and a
+            // catalogue only grows. Scrolling pages to find one title is the
+            // thing an admin does most.
+            ->when($filters['search'] ?? null, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->whereLike('title', "%{$search}%")
+                        ->orWhereHas('author', fn ($a) => $a->whereLike('name', "%{$search}%"));
+                });
+            })
+            ->when($filters['status'] ?? null, fn ($q, $status) => match ($status) {
+                'published' => $q->where('is_published', true),
+                'draft' => $q->where('is_published', false),
+                'free' => $q->where('price_paise', 0),
+                'paid' => $q->where('price_paise', '>', 0),
+                // An unknown value narrows nothing rather than erroring: this
+                // arrives from a query string and is not to be trusted.
+                default => $q,
+            })
+            ->when($filters['genre'] ?? null, fn ($q, $genre) => $q->whereHas('genre', fn ($g) => $g->where('slug', $genre)))
             ->latest()
-            ->paginate(15);
+            ->paginate(15)
+            ->withQueryString();
 
         return Inertia::render('Admin/Books/Index', [
             'books' => $books,
+            'filters' => $filters,
+            'genres' => Genre::orderBy('name')->get(['id', 'name', 'slug']),
         ]);
     }
 
