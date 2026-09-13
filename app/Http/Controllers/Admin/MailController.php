@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Throwable;
 
 /**
@@ -61,6 +62,17 @@ class MailController extends Controller
                 (string) config('store.trading_name', config('app.name')),
                 (string) config('mail.default'),
             ));
+        } catch (TransportExceptionInterface $e) {
+            // Reaching the provider failed, rather than the provider refusing.
+            // On a host that blocks outbound SMTP this is the only symptom,
+            // and it otherwise looks like the whole site broke.
+            return back()->with('toast', [
+                'type' => 'error',
+                'message' => 'Could not reach '.config('mail.mailers.smtp.host').' on port '
+                    .config('mail.mailers.smtp.port').'. Either the credentials are wrong or this host blocks '
+                    .'outbound SMTP — in which case use a provider with an HTTP API, such as Resend or Brevo. '
+                    .'('.Str::limit($e->getMessage(), 160).')',
+            ]);
         } catch (Throwable $e) {
             // The provider's own words. "Could not send" tells an owner
             // nothing; "535 Username and Password not accepted" tells them

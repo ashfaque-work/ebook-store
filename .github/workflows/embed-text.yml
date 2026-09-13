@@ -35,7 +35,7 @@ jobs:
   embed:
     name: Embed a day's worth
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 100
 
     steps:
       - uses: actions/checkout@v4
@@ -62,6 +62,11 @@ jobs:
           CACHE_STORE: array
           SESSION_DRIVER: array
           EMBEDDINGS_DRIVER: cloudflare
+          # Measured: at 32 per request a night's work would outrun the job's
+          # own timeout. Workers AI takes up to a hundred texts at a time, and
+          # the cost is per token either way — fewer round trips is simply
+          # faster for the same neurons.
+          EMBEDDINGS_BATCH: '100'
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_AI_TOKEN: ${{ secrets.CLOUDFLARE_AI_TOKEN }}
         run: |

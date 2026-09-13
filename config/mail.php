@@ -45,7 +45,15 @@ return [
             'port' => env('MAIL_PORT', 2525),
             'username' => env('MAIL_USERNAME'),
             'password' => env('MAIL_PASSWORD'),
-            'timeout' => null,
+            /*
+             | Null means PHP's default of sixty seconds, which is longer than
+             | the web server will wait — so a host that quietly drops outbound
+             | SMTP produces a 504 from nginx rather than an error anyone can
+             | act on. Fifteen seconds is far longer than a working handshake
+             | needs and short enough to fail as a message instead of a
+             | gateway timeout.
+             */
+            'timeout' => (int) env('MAIL_TIMEOUT', 15),
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 
