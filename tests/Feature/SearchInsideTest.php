@@ -3,6 +3,7 @@
 use App\Models\Book;
 use App\Models\BookChunk;
 use App\Services\Search\SearchInsideBooks;
+use App\Support\Epub\TextExtractor;
 use Illuminate\Support\Facades\Storage;
 
 function passage(Book $book, int $position, string $content, ?string $heading = null): BookChunk
@@ -146,4 +147,60 @@ test('the licence Gutenberg wraps every book in is not indexed', function () {
     // It is identical across the catalogue, so indexing it would make a search
     // for a common legal word return every book at once.
     expect($book->chunks()->where('content', 'like', '%PROJECT GUTENBERG%')->count())->toBe(0);
+})->skip(fn () => ! class_exists(ZipArchive::class), 'ZipArchive is not available');
+
+/**
+ * An EPUB whose prose is wrapped in inline markup the way real books are:
+ * a drop-cap span on the first letter, emphasis mid-sentence.
+ */
+function inlineMarkupEpub(): string
+{
+    $body = '<h2>Chapter I.</h2>'
+        .'<p><span class="dropcap">I</span>T is a truth <em>universally</em> acknowledged, '
+        .'that a single man in possession of a good fortune must be in want of a wife.</p>'
+        .'<p>However <i>little</i> known the feelings of such a man may be.</p>';
+
+    $path = tempnam(sys_get_temp_dir(), 'epub').'.epub';
+    $zip = new ZipArchive;
+    $zip->open($path, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+    $zip->addFromString('mimetype', 'application/epub+zip');
+    $zip->addFromString('META-INF/container.xml',
+        '<?xml version="1.0"?><container xmlns="urn:oasis:names:tc:opendocument:xmlns:container" version="1.0">'
+        .'<rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>');
+    $zip->addFromString('OEBPS/text.xhtml',
+        '<?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml"><head><title>B</title>'
+        .'</head><body>'.$body.'</body></html>');
+    $zip->addFromString('OEBPS/content.opf',
+        '<?xml version="1.0"?><package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="id">'
+        .'<metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>B</dc:title><dc:identifier id="id">x</dc:identifier></metadata>'
+        .'<manifest><item id="text" href="text.xhtml" media-type="application/xhtml+xml"/></manifest>'
+        .'<spine><itemref idref="text"/></spine></package>');
+    $zip->close();
+
+    $bytes = file_get_contents($path);
+    @unlink($path);
+
+    return $bytes;
+}
+
+test('a paragraph is indexed whole, drop cap and all', function () {
+    $passages = TextExtractor::passages(inlineMarkupEpub());
+    $text = implode(' ', array_column($passages, 'content'));
+
+    // Recursing into any element with element children descends into the
+    // drop-cap span and takes only the letter, dropping the rest of the
+    // sentence. It cost thirty thousand words of Pride and Prejudice, and the
+    // index looked perfectly healthy while it happened.
+    expect($text)->toContain('IT is a truth universally acknowledged')
+        ->and($text)->toContain('must be in want of a wife')
+        ->and($text)->toContain('However little known the feelings');
+})->skip(fn () => ! class_exists(ZipArchive::class), 'ZipArchive is not available');
+
+test('inline markup does not split one paragraph into several passages', function () {
+    $passages = TextExtractor::passages(inlineMarkupEpub());
+
+    // Two paragraphs, well under the word budget, so they belong in one
+    // passage under one heading — not one passage per span.
+    expect($passages)->toHaveCount(1)
+        ->and($passages[0]['heading'])->toBe('Chapter I.');
 })->skip(fn () => ! class_exists(ZipArchive::class), 'ZipArchive is not available');
