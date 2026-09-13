@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Author;
 use App\Models\Book;
 use App\Models\Genre;
+use App\Support\EpubSampler;
 use App\Support\EpubStats;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
@@ -248,6 +249,15 @@ class ImportPublicDomainBooks extends Command
         $filePath = 'books/'.Str::random(40).'.epub';
         Storage::disk(Book::fileDisk())->put($filePath, $epub);
 
+        // The storefront offers the first chapter everywhere; a book arriving
+        // without one is a promise the shop cannot keep.
+        $samplePath = null;
+
+        if ($sample = EpubSampler::make($epub)) {
+            $samplePath = 'samples/'.Str::random(40).'.epub';
+            Storage::disk(Book::fileDisk())->put($samplePath, $sample);
+        }
+
         $coverPath = null;
 
         if ($coverUrl && $cover = $this->download($coverUrl)) {
@@ -278,6 +288,7 @@ class ImportPublicDomainBooks extends Command
             'cover_image_path' => $coverPath,
             'file_path' => $filePath,
             'file_format' => 'epub',
+            'sample_path' => $samplePath,
             'file_size' => strlen($epub),
         ]);
 
