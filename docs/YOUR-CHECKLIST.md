@@ -99,10 +99,32 @@ Render's own free Postgres, which is **deleted** 30 days after creation.
 The app already runs on Postgres — the migration is done and CI covers
 Postgres, MySQL and SQLite on every push.
 
-### Brevo or Resend (email)
+### Brevo (email) — done
 
-- [ ] Fill `MAIL_HOST`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM_ADDRESS`
-- [ ] Add SPF and DKIM records, or receipts land in spam
+Set up and working. Worth knowing why it is Brevo and not SMTP.
+
+- [x] Free plan, 300 emails a day, sender address verified
+- [x] `MAIL_MAILER=brevo` and `BREVO_API_KEY` on the host
+- [x] Proved from `/admin/mail` — the page checks the configuration and sends a real test
+
+**Render blocks outbound SMTP.** A connection to `smtp.gmail.com:587` times out at
+the socket, before any password is offered, so no Gmail app password could ever
+have worked. Brevo sends over its HTTPS API instead, on a port nobody blocks.
+
+Brevo rather than Resend or Postmark because it verifies a single sender address.
+The others require a domain you own, and this store has none yet.
+
+**Mail currently lands in Gmail's Promotions tab, and a domain is the only fix.**
+The sender is a `@gmail.com` address sent through Brevo's servers, so SPF and DKIM
+cannot align — Gmail cannot confirm Brevo may send as gmail.com, and files it
+accordingly. Once you own a domain:
+
+- [ ] Add it under Senders, domains, IPs in Brevo
+- [ ] Add the SPF and DKIM records Brevo gives you at your registrar
+- [ ] Change `MAIL_FROM_ADDRESS` to something at that domain
+
+Receipts then arrive in Primary. Until then they are delivered and readable,
+just filed under Promotions.
 
 ### Render
 

@@ -184,8 +184,14 @@ SESSION_DRIVER=database
 CACHE_STORE=database
 QUEUE_CONNECTION=sync                # no worker on the free tier — see below
 
-MAIL_MAILER=smtp
-MAIL_HOST=smtp-relay.brevo.com
+# Over Brevo's HTTP API, not SMTP: this host blocks outbound SMTP, and the
+# symptom is a socket timeout rather than a refusal.
+MAIL_MAILER=brevo
+BREVO_API_KEY=xkeysib-...
+# Must match a sender address verified in Brevo.
+MAIL_FROM_ADDRESS=you@example.com
+# Unused with an API mailer, kept only if you switch back:
+# MAIL_HOST=smtp-relay.brevo.com
 MAIL_PORT=587
 MAIL_FROM_ADDRESS=orders@yourdomain.com
 
