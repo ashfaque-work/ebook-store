@@ -4,9 +4,13 @@ namespace App\Services\Search;
 
 use App\Models\Book;
 use App\Models\BookChunk;
+use App\Services\Search\Embeddings\EmbedderFactory;
+use App\Services\Search\Embeddings\EmbeddingFailed;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Throwable;
 
 /**
  * Find the passage, not the book.
@@ -27,6 +31,14 @@ class SearchInsideBooks
     public const PER_PAGE = 20;
 
     /**
+     * How much of the catalogue must carry a vector before semantic search is
+     * allowed to influence the ranking. Not a round number for its own sake:
+     * a run that fails on a handful of passages should not disable the feature
+     * for everyone, but a run that has barely started should.
+     */
+    private const COVERAGE_REQUIRED = 0.9;
+
+    /**
      * @return array{results: array<int, array<string, mixed>>, total: int, engine: string}
      */
     public function __invoke(string $query, ?Book $book = null, int $limit = self::PER_PAGE): array
@@ -43,6 +55,12 @@ class SearchInsideBooks
             // Only what a customer could reach anyway.
             ->when(! $book, fn (Builder $q) => $q->whereHas('book', fn ($b) => $b->where('is_published', true)));
 
+        $semantic = $this->semanticIds($query, $book, $limit);
+
+        if ($semantic !== []) {
+            return $this->fused($query, $book, $semantic, $limit);
+        }
+
         $chunks = $this->onPostgres()
             ? $this->rankWithPostgres($chunks, $query)
             : $this->rankWithSubstring($chunks, $query);
@@ -58,6 +76,135 @@ class SearchInsideBooks
             'total' => $total,
             'engine' => $this->engine(),
         ];
+    }
+
+    /**
+     * Passages closest in meaning to the question, by vector distance.
+     *
+     * Returns nothing — rather than failing — whenever semantic search is not
+     * available: no provider configured, no pgvector, nothing embedded yet, or
+     * the provider being down. The literal search is a perfectly good answer,
+     * and an outage of something optional must not take the search box with it.
+     *
+     * @return array<int, int> chunk ids, nearest first
+     */
+    private function semanticIds(string $query, ?Book $book, int $limit): array
+    {
+        if (! $this->onPostgres() || ! $this->vectorsReady()) {
+            return [];
+        }
+
+        $embedder = EmbedderFactory::make();
+
+        if ($embedder === null) {
+            return [];
+        }
+
+        try {
+            $vector = $embedder->embed([$query])[0] ?? null;
+        } catch (EmbeddingFailed) {
+            return [];
+        }
+
+        if ($vector === null) {
+            return [];
+        }
+
+        $rows = DB::select(
+            'SELECT c.id FROM book_chunks c
+             JOIN books b ON b.id = c.book_id
+             WHERE c.embedding IS NOT NULL AND '.($book ? 'c.book_id = ?' : 'b.is_published = ?').'
+             ORDER BY c.embedding <=> ?::vector
+             LIMIT ?',
+            [$book ? $book->id : true, '['.implode(',', $vector).']', $limit * 2],
+        );
+
+        return array_map(fn ($row) => (int) $row->id, $rows);
+    }
+
+    /**
+     * Combine the two rankings with reciprocal rank fusion.
+     *
+     * A tsvector score and a distance in vector space are not on the same
+     * scale and cannot be added. RRF uses only the position in each list,
+     * which sidesteps that: a passage both methods like beats one only a
+     * single method found, and a passage only one of them found still places.
+     * The constant damps the top few ranks, so one confident wrong hit cannot
+     * run away with the results.
+     *
+     * @param  array<int, int>  $semantic
+     * @return array{results: array<int, array<string, mixed>>, total: int, engine: string}
+     */
+    private function fused(string $query, ?Book $book, array $semantic, int $limit): array
+    {
+        $k = 60;
+        $scores = [];
+
+        foreach ($semantic as $rank => $id) {
+            $scores[$id] = ($scores[$id] ?? 0) + 1 / ($k + $rank + 1);
+        }
+
+        $literalQuery = BookChunk::query()
+            ->when($book, fn (Builder $q) => $q->where('book_id', $book->id))
+            ->when(! $book, fn (Builder $q) => $q->whereHas('book', fn ($b) => $b->where('is_published', true)));
+
+        $literal = $this->rankWithPostgres($literalQuery, $query)->limit($limit * 2)->pluck('id')->all();
+
+        foreach ($literal as $rank => $id) {
+            $scores[$id] = ($scores[$id] ?? 0) + 1 / ($k + $rank + 1);
+        }
+
+        arsort($scores);
+        $ids = array_slice(array_keys($scores), 0, $limit);
+
+        $chunks = BookChunk::with(['book:id,slug,title,author_id,cover_image_path,price_paise', 'book.author:id,name'])
+            ->whereIn('id', $ids)
+            ->get()
+            ->keyBy('id');
+
+        $results = [];
+
+        foreach ($ids as $id) {
+            if ($chunk = $chunks->get($id)) {
+                $results[] = $this->present($chunk, $query);
+            }
+        }
+
+        return [
+            'results' => $results,
+            'total' => count($scores),
+            'engine' => 'hybrid',
+        ];
+    }
+
+    /**
+     * Is there enough to compare against?
+     *
+     * Not "is there one vector". A half-embedded catalogue is actively worse
+     * than none: the vector half of the ranking can only ever return passages
+     * that happen to have been reached, so it promotes them over better
+     * matches that have not been. Measured, this turned "universally
+     * acknowledged" from Pride and Prejudice into King Arthur.
+     *
+     * So semantic search waits until nearly everything is embedded, and until
+     * then the literal search answers alone — which it does well.
+     */
+    private function vectorsReady(): bool
+    {
+        return Cache::remember('search:vector-coverage', now()->addMinutes(10), function () {
+            try {
+                $row = DB::selectOne(
+                    'SELECT COUNT(*) AS total, COUNT(embedding) AS embedded FROM book_chunks'
+                );
+            } catch (Throwable) {
+                // No such column: this database cannot do it at all.
+                return false;
+            }
+
+            $total = (int) ($row->total ?? 0);
+
+            return $total > 0 && ((int) ($row->embedded ?? 0)) / $total >= self::COVERAGE_REQUIRED;
+        });
     }
 
     private function rankWithPostgres(Builder $chunks, string $query): Builder
