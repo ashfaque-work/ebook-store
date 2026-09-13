@@ -125,12 +125,23 @@ class ReaderController extends Controller
     }
 
     /**
-     * Hand over the bytes.
+     * Hand over the bytes, from this origin, whatever disk they live on.
      *
-     * On object storage we presign and let the CDN do the work: streaming a
-     * 20 MB EPUB through a 512 MB container is how the free tier falls over.
-     * Locally we serve the file so byte ranges work, which is what lets pdf.js
-     * seek instead of downloading everything up front.
+     * Presigning object storage and redirecting the browser is cheaper, and it
+     * does not work: the reader fetches this with XHR, so the redirect target
+     * has to be allowed by the page's connect-src *and* answer with CORS
+     * headers. R2 sends none, and the signed host is not in the policy — so
+     * the request dies silently and the reader sits on "Opening the book…"
+     * forever. Nothing is logged, because from the server's side it all
+     * succeeded.
+     *
+     * It was invisible in development for the worst possible reason: the local
+     * disk took a different branch and served the file directly. One path now,
+     * so what is exercised locally is what runs in production.
+     *
+     * The cost is real — the bytes travel through the container — but a book
+     * is a few megabytes and this is bounded by an ownership check, not open
+     * to the internet.
      */
     private function serve(?string $path, string $format): HttpResponse
     {
@@ -143,14 +154,28 @@ class ReaderController extends Controller
             'Content-Disposition' => 'inline',
             'Cache-Control' => 'private, max-age=600',
             'X-Content-Type-Options' => 'nosniff',
+            // Said plainly rather than left to be discovered: this streams from
+            // object storage, so it cannot answer a range request. pdf.js reads
+            // this and fetches the whole file instead of seeking.
+            'Accept-Ranges' => 'none',
         ];
 
-        if (config('filesystems.disks.'.Book::fileDisk().'.driver') === 's3') {
-            return redirect()->away($disk->temporaryUrl($path, now()->addMinutes(10)));
+        if ($size = $disk->size($path)) {
+            $headers['Content-Length'] = (string) $size;
         }
 
-        // BinaryFileResponse handles Range requests for us.
-        return response()->file($disk->path($path), $headers);
+        return response()->stream(function () use ($disk, $path) {
+            $stream = $disk->readStream($path);
+
+            if ($stream === false || $stream === null) {
+                return;
+            }
+
+            // Copied in chunks rather than read into a string: a 20 MB book
+            // read whole is 20 MB of memory in a 512 MB container, per reader.
+            fpassthru($stream);
+            fclose($stream);
+        }, 200, $headers);
     }
 
     /**

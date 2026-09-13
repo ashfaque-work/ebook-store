@@ -107,9 +107,9 @@ test('a sample is readable without an account', function () {
 test('the sample never serves the full book', function () {
     $response = $this->get(route('reader.sample.asset', $this->book));
 
-    $served = file_get_contents($response->baseResponse->getFile()->getPathname());
-
-    expect($served)->toBe('%PDF-1.4 first chapter');
+    // Streamed from the disk rather than handed over as a file path, so that
+    // object storage and the local disk take the same route through the app.
+    expect($response->streamedContent())->toBe('%PDF-1.4 first chapter');
 });
 
 test('a book with no sample has no sample to read', function () {
