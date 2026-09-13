@@ -139,6 +139,15 @@ class Book extends Model
     }
 
     /**
+     * The book's own text, in searchable passages. Written by the indexer,
+     * rebuilt whenever the file changes.
+     */
+    public function chunks(): HasMany
+    {
+        return $this->hasMany(BookChunk::class);
+    }
+
+    /**
      * Only books that are live in the catalogue. Every public-facing query
      * must go through this scope.
      */

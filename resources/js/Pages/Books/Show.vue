@@ -101,6 +101,13 @@ const facts = computed(() =>
                             </template>
                         </div>
 
+                        <Link
+                            :href="`/search-inside?book=${book.slug}`"
+                            class="text-accent-text mt-4 inline-block text-sm hover:underline"
+                        >
+                            Search inside this book
+                        </Link>
+
                         <dl class="border-line mt-8 space-y-2 border-t pt-6 text-sm">
                             <div v-for="fact in facts" :key="fact.label" class="flex justify-between gap-4">
                                 <dt class="text-muted">{{ fact.label }}</dt>

@@ -17,6 +17,7 @@ const store = computed(() => page.props.store ?? {});
 
 const primary = computed(() => [
     { href: '/', label: 'Browse' },
+    { href: '/search-inside', label: 'Search inside' },
     ...(user.value ? [{ href: '/library', label: 'My library' }] : []),
 ]);
 

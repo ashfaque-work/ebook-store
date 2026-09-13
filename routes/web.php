@@ -16,6 +16,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Reader\AnnotationController;
 use App\Http\Controllers\Reader\ReaderController;
+use App\Http\Controllers\SearchInsideController;
 use App\Http\Controllers\SimulatedGatewayController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\Webhooks\RazorpayWebhookController;
@@ -25,6 +26,12 @@ use Illuminate\Support\Facades\Route;
 // Public Routes
 Route::get('/', HomeController::class)->name('home');
 Route::get('/books/{book:slug}', [BookController::class, 'show'])->name('books.show');
+
+// Searching the text of the books rather than their titles. Open to everyone:
+// finding the passage you half remember is the best argument this shop makes.
+Route::get('/search-inside', SearchInsideController::class)
+    ->middleware('throttle:60,1')
+    ->name('search.inside');
 
 // Crawlability. Generated rather than stored: a stale sitemap is worse than
 // none, and robots.txt has to know the real APP_URL.
