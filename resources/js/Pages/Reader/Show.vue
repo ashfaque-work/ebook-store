@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ArrowLeft, Bookmark, List, Type, X } from 'lucide-vue-next';
+import { ArrowLeft, Bookmark, ChevronLeft, ChevronRight, List, Type, X } from 'lucide-vue-next';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { formatPrice } from '@/lib/money';
 import { useReaderSettings } from '@/Reader/useReaderSettings';
@@ -81,11 +81,13 @@ const onRelocate = (info) => {
 };
 
 const next = () => {
+    if (showHint.value) dismissHint();
     engine.value?.next();
     revealChrome();
 };
 
 const prev = () => {
+    if (showHint.value) dismissHint();
     engine.value?.prev();
     revealChrome();
 };
@@ -247,6 +249,40 @@ const saveHighlight = (at, text) => {
 
 /* ---------------------------------------------------------------- seeking */
 
+/*
+ * The page turns by tapping the edges, swiping, or the arrow keys — and none
+ * of those announce themselves. Shown once, then remembered, because a hint
+ * that returns every session is an irritation rather than help.
+ *
+ * It stays until the first page is turned rather than fading on a timer: the
+ * people who need it are the ones still working out what to do, and they are
+ * precisely the ones a six-second timer runs out on.
+ */
+const HINT_SEEN = 'reader:turn-hint-seen';
+const showHint = ref(false);
+
+const dismissHint = () => {
+    showHint.value = false;
+    try {
+        window.localStorage.setItem(HINT_SEEN, '1');
+    } catch {
+        // Private windows and blocked storage: the hint simply shows again.
+    }
+};
+
+onMounted(() => {
+    let seen = false;
+    try {
+        seen = window.localStorage.getItem(HINT_SEEN) === '1';
+    } catch {
+        seen = false;
+    }
+
+    if (seen) return;
+
+    showHint.value = true;
+});
+
 const seeking = ref(false);
 const seekDraft = ref(0);
 
@@ -339,6 +375,25 @@ const timeLeft = computed(() => {
             @touchstart.passive="onTouchStart"
             @touchend.passive="onTouchEnd"
         />
+
+        <!--
+          The tap zones made visible. Pointer devices get something to aim at
+          and, more to the point, something to notice; touch keeps the whole
+          edge of the page and the swipe, which is why these are hidden there.
+        -->
+        <button type="button" class="page-turn left" aria-label="Previous page" @click.stop="prev">
+            <ChevronLeft class="turn-glyph" />
+        </button>
+
+        <button type="button" class="page-turn right" aria-label="Next page" @click.stop="next">
+            <ChevronRight class="turn-glyph" />
+        </button>
+
+        <p v-if="showHint" class="turn-hint" @click="dismissHint">
+            Tap either side of the page to turn it — or swipe, or use
+            <kbd>&larr;</kbd>
+            <kbd>&rarr;</kbd>
+        </p>
 
         <p v-if="loading" class="notice" :style="{ color: resolved.muted }">Opening the book…</p>
         <p v-else-if="error" role="alert" class="notice">{{ error }}</p>
@@ -582,6 +637,98 @@ const timeLeft = computed(() => {
 .toc-item:focus-visible {
     outline: 2px solid #f0a830;
     outline-offset: 2px;
+}
+
+/*
+  Page turns. Anchored to the edges rather than floated over the text, and —
+  unlike the rest of the chrome — they never hide. A control that disappears
+  three seconds after the page loads is a control nobody finds, which is
+  exactly how a reader ends up asking how to turn the page. Dim enough to stay
+  out of the way of the prose, bright on hover.
+*/
+.page-turn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 15;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 4.5rem;
+    border: 0;
+    border-radius: 10px;
+    background: rgba(128, 128, 128, 0.08);
+    color: inherit;
+    opacity: 0.55;
+    cursor: pointer;
+    transition:
+        opacity 220ms ease,
+        background 220ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .page-turn {
+        display: flex;
+    }
+}
+
+.page-turn:hover {
+    opacity: 1;
+    background: rgba(128, 128, 128, 0.18);
+}
+
+.page-turn.left {
+    left: 0.5rem;
+}
+
+.page-turn.right {
+    right: 0.5rem;
+}
+
+.page-turn:focus-visible {
+    outline: 2px solid #f0a830;
+    outline-offset: 2px;
+    opacity: 1;
+}
+
+.turn-glyph {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+/* Shown once, on the first book anyone opens. */
+.turn-hint {
+    position: absolute;
+    left: 50%;
+    bottom: 4.5rem;
+    transform: translateX(-50%);
+    z-index: 25;
+    max-width: min(90vw, 30rem);
+    padding: 0.625rem 1rem;
+    border-radius: 999px;
+    background: rgba(20, 20, 28, 0.88);
+    color: #fff;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    font-size: 0.8125rem;
+    text-align: center;
+    cursor: pointer;
+    animation: hint-in 420ms ease both;
+}
+
+.turn-hint kbd {
+    display: inline-block;
+    padding: 0 0.3rem;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.16);
+    font-family: inherit;
+}
+
+@keyframes hint-in {
+    from {
+        opacity: 0;
+        transform: translate(-50%, 8px);
+    }
 }
 
 .glyph {
