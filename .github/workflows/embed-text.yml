@@ -21,7 +21,11 @@ on:
         required: false
         default: '5000'
 
-permissions: {}
+# Reading the repository, and nothing else. A private repository cannot be
+# checked out without this, and the failure it gives is "repository not found",
+# which reads like a typo rather than a permission.
+permissions:
+  contents: read
 
 concurrency:
   group: embed-text
