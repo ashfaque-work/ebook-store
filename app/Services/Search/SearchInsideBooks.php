@@ -9,6 +9,7 @@ use App\Services\Search\Embeddings\EmbeddingFailed;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -192,12 +193,18 @@ class SearchInsideBooks
     private function vectorsReady(): bool
     {
         return Cache::remember('search:vector-coverage', now()->addMinutes(10), function () {
+            // Asked before counting, not discovered by failing. On Postgres a
+            // statement that errors poisons the whole transaction, so a
+            // query against a column that is not there does not merely return
+            // false — it takes every later query in the request with it, and
+            // catching the exception does not undo that.
             try {
-                $row = DB::selectOne(
-                    'SELECT COUNT(*) AS total, COUNT(embedding) AS embedded FROM book_chunks'
-                );
+                if (! Schema::hasColumn('book_chunks', 'embedding')) {
+                    return false;
+                }
+
+                $row = DB::selectOne('SELECT COUNT(*) AS total, COUNT(embedding) AS embedded FROM book_chunks');
             } catch (Throwable) {
-                // No such column: this database cannot do it at all.
                 return false;
             }
 
