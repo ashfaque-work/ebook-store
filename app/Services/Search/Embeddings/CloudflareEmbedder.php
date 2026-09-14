@@ -2,6 +2,7 @@
 
 namespace App\Services\Search\Embeddings;
 
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Throwable;
 
@@ -32,10 +33,16 @@ class CloudflareEmbedder implements Embedder
         try {
             $response = Http::withToken($this->token)
                 ->timeout(60)
-                ->retry(2, 1500)
+                // Retry what might pass a moment later, but not a 429: the
+                // daily allowance being spent will not have changed in 1.5s.
+                ->retry(2, 1500, fn ($e) => ! ($e instanceof RequestException && $e->response->status() === 429), throw: false)
                 ->post($url, ['text' => array_values($texts)]);
         } catch (Throwable $e) {
             throw new EmbeddingFailed('Could not reach Workers AI: '.$e->getMessage(), previous: $e);
+        }
+
+        if ($response->status() === 429) {
+            throw EmbeddingFailed::rateLimited('Workers AI rate limit reached: '.$response->body());
         }
 
         if (! $response->successful()) {

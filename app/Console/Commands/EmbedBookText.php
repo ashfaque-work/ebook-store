@@ -47,6 +47,7 @@ class EmbedBookText extends Command
         $limit = max(0, (int) $this->option('limit'));
         $done = 0;
         $failed = 0;
+        $embedded = 0;
 
         $total = $this->pending()->count();
 
@@ -60,25 +61,43 @@ class EmbedBookText extends Command
         $bar = $this->output->createProgressBar($target);
         $bar->start();
 
+        // A cursor over ids rather than "whatever is still pending": a batch
+        // that fails stays pending on purpose, so it is retried next run, and
+        // re-querying for pending rows would hand this run the same batch back
+        // forever.
+        $lastId = 0;
+        $stoppedByLimit = false;
+
         while ($done < $target) {
-            $batch = $this->pending()->limit(min($batchSize, $target - $done))->get();
+            $batch = $this->pending()
+                ->where('id', '>', $lastId)
+                ->limit(min($batchSize, $target - $done))
+                ->get();
 
             if ($batch->isEmpty()) {
                 break;
             }
 
+            $lastId = (int) $batch->last()->id;
+
             try {
                 $vectors = $embedder->embed($batch->pluck('content')->all());
             } catch (EmbeddingFailed $e) {
-                // Skipped, not fatal: the run keeps its progress and the
-                // passages it could not do are still pending next time.
+                if ($e->rateLimited) {
+                    // The allowance is spent, not the passages at fault. Stop
+                    // and leave everything untouched for the next run.
+                    $stoppedByLimit = true;
+                    $this->newLine();
+                    $this->warn('  Provider limit reached — stopping. The rest will be picked up next run.');
+
+                    break;
+                }
+
+                // A genuine failure: skipped for this run, retried next time.
                 $failed += $batch->count();
+                $done += $batch->count();
                 $this->newLine();
                 $this->warn('  '.$e->getMessage());
-
-                // Move past this batch so the loop cannot spin on it forever.
-                $this->markUnembeddable($batch->pluck('id')->all(), $embedder->name());
-                $done += $batch->count();
                 $bar->setProgress(min($target, $done));
 
                 continue;
@@ -100,39 +119,37 @@ class EmbedBookText extends Command
             });
 
             $done += $batch->count();
+            $embedded += $batch->count();
             $bar->setProgress(min($target, $done));
         }
 
         $bar->finish();
         $this->newLine(2);
-        $this->info(($done - $failed).' passage(s) embedded.');
+        $this->info("{$embedded} passage(s) embedded.");
 
         if ($failed > 0) {
-            $this->warn("  {$failed} could not be embedded; run again to retry them.");
+            $this->warn("  {$failed} could not be embedded this run; they will be retried next time.");
+        }
+
+        if ($stoppedByLimit) {
+            $this->line('  Stopped at the provider limit, not because anything is wrong.');
         }
 
         return self::SUCCESS;
     }
 
+    /**
+     * Passages without a vector.
+     *
+     * Asked of the vector itself rather than of a marker column, so that a
+     * passage whose attempt failed is still owed one — the earlier version
+     * marked those as done-but-failed and never came back to them.
+     */
     private function pending()
     {
         return BookChunk::query()
-            ->when(
-                ! $this->option('force'),
-                fn ($q) => $q->whereNull('embedded_with'),
-            )
+            ->when(! $this->option('force'), fn ($q) => $q->whereNull('embedding'))
             ->orderBy('id');
-    }
-
-    /**
-     * Note the attempt without a vector, so a passage the provider keeps
-     * refusing does not block every later one behind it.
-     *
-     * @param  array<int, int>  $ids
-     */
-    private function markUnembeddable(array $ids, string $model): void
-    {
-        BookChunk::whereIn('id', $ids)->update(['embedded_with' => $model.' (failed)']);
     }
 
     private function supportsVectors(): bool

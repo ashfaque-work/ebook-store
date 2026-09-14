@@ -125,3 +125,54 @@ test('the embed command refuses on a database that cannot hold vectors', functio
 
     $this->artisan('store:embed-text')->assertFailed();
 })->skip(fn () => DB::getDriverName() === 'pgsql', 'This database does hold vectors');
+
+test('a spent allowance is reported as a rate limit, not a failure', function () {
+    Http::fake(['https://api.cloudflare.com/*' => Http::response(
+        ['errors' => [['message' => 'you have used up your daily free allocation of 10,000 neurons']]],
+        429,
+    )]);
+
+    try {
+        (new CloudflareEmbedder('acct', 'token', 'model', 2))->embed(['first']);
+        $this->fail('Expected a rate limit.');
+    } catch (EmbeddingFailed $e) {
+        // Treated as an ordinary failure, the next batch in line was marked as
+        // broken and never retried — twelve hundred good passages in one night.
+        expect($e->rateLimited)->toBeTrue();
+    }
+});
+
+test('a rate limit is not retried within the same call', function () {
+    Http::fake(['https://api.cloudflare.com/*' => Http::response('limit', 429)]);
+
+    try {
+        (new CloudflareEmbedder('acct', 'token', 'model', 2))->embed(['first']);
+    } catch (EmbeddingFailed) {
+        // expected
+    }
+
+    // The allowance will not have come back a second and a half later.
+    Http::assertSentCount(1);
+});
+
+test('an ordinary provider error is not mistaken for a rate limit', function () {
+    Http::fake(['https://api.cloudflare.com/*' => Http::response('bad request', 400)]);
+
+    try {
+        (new CloudflareEmbedder('acct', 'token', 'model', 2))->embed(['first']);
+        $this->fail('Expected a failure.');
+    } catch (EmbeddingFailed $e) {
+        expect($e->rateLimited)->toBeFalse();
+    }
+});
+
+test('openai rate limits are recognised too', function () {
+    Http::fake(['https://api.openai.com/*' => Http::response('slow down', 429)]);
+
+    try {
+        (new OpenAiEmbedder('sk-test', 'text-embedding-3-small', 2))->embed(['first']);
+        $this->fail('Expected a rate limit.');
+    } catch (EmbeddingFailed $e) {
+        expect($e->rateLimited)->toBeTrue();
+    }
+});

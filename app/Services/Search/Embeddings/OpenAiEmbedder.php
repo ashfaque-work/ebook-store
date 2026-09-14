@@ -2,6 +2,7 @@
 
 namespace App\Services\Search\Embeddings;
 
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Throwable;
 
@@ -29,7 +30,9 @@ class OpenAiEmbedder implements Embedder
         try {
             $response = Http::withToken($this->key)
                 ->timeout(60)
-                ->retry(2, 1500)
+                // Retry what might pass a moment later, but not a 429: the
+                // daily allowance being spent will not have changed in 1.5s.
+                ->retry(2, 1500, fn ($e) => ! ($e instanceof RequestException && $e->response->status() === 429), throw: false)
                 ->post('https://api.openai.com/v1/embeddings', [
                     'model' => $this->model,
                     'input' => array_values($texts),
@@ -37,6 +40,10 @@ class OpenAiEmbedder implements Embedder
                 ]);
         } catch (Throwable $e) {
             throw new EmbeddingFailed('Could not reach OpenAI: '.$e->getMessage(), previous: $e);
+        }
+
+        if ($response->status() === 429) {
+            throw EmbeddingFailed::rateLimited('OpenAI rate limit reached: '.$response->body());
         }
 
         if (! $response->successful()) {
