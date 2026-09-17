@@ -46,6 +46,12 @@
 
         <meta name="theme-color" content="#12172B">
 
+        {{-- Browsers ask for /favicon.ico on their own, but the SVG stays crisp
+             on high-density screens and the touch icon is what iOS saves. --}}
+        <link rel="icon" href="/favicon.ico" sizes="any">
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=archivo:400,500,600,700|literata:400,400i,600,700&display=swap"

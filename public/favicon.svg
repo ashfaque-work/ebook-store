@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="eBook Store">
+  <rect x="2" y="2" width="96" height="96" rx="22" fill="#12172B"/>
+  <!-- pages taper away from the spine, like an open book -->
+  <path d="M16 33 L45 26 L45 74 L16 71 Z" fill="#FBF6EC"/>
+  <path d="M84 33 L55 26 L55 74 L84 71 Z" fill="#FBF6EC"/>
+  <rect x="46" y="26" width="8" height="48" rx="3.5" fill="#F2A63B"/>
+</svg>
