@@ -7,6 +7,13 @@ read the whole book in the browser — on any device, picking up where they left
 Built for the Indian market: rupee-denominated, GST-aware, mobile-first, and deployable on
 free hosting.
 
+## Live demo
+
+**[ebook.ashfaqueahmad.com](https://ebook.ashfaqueahmad.com)**
+
+Hosted on Render's free tier, so the first request after a quiet spell takes a few seconds
+to wake the container.
+
 ---
 
 ## What it does
