@@ -5,6 +5,7 @@ import { Menu, Moon, ShoppingBag, Sun, X } from 'lucide-vue-next';
 import { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui';
 import { useTheme } from '@/Composables/useTheme';
 import ToastListener from '@/Components/ToastListener.vue';
+import AuthorMark from '@/Components/AuthorMark.vue';
 
 const { theme, toggleTheme } = useTheme();
 const page = usePage();
@@ -139,10 +140,22 @@ const isCurrent = (href) => (href === '/' ? page.url === '/' : page.url.startsWi
                         {{ link.label }}
                     </Link>
                 </nav>
-                <p class="text-muted mt-6 text-xs">
-                    &copy; {{ new Date().getFullYear() }} {{ store.legalName ?? $page.props.appName ?? 'eBook Store' }}.
-                    Digital books, delivered instantly.
-                </p>
+                <div class="mt-6 flex flex-col gap-2 text-xs sm:flex-row sm:items-center sm:justify-between">
+                    <p class="text-muted">
+                        &copy; {{ new Date().getFullYear() }} {{ store.legalName ?? $page.props.appName ?? 'eBook Store' }}.
+                        Digital books, delivered instantly.
+                    </p>
+                    <!-- The maker's credit: monogram, name and a link out. -->
+                    <a
+                        href="https://ashfaqueahmad.com"
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        class="text-muted hover:text-content inline-flex items-center gap-2 transition-colors"
+                    >
+                        <AuthorMark class="size-5" />
+                        <span>built by <span class="font-medium">Ashfaque Ahmad</span></span>
+                    </a>
+                </div>
             </div>
         </footer>
 
