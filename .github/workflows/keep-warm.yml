@@ -2,20 +2,22 @@ name: Keep warm
 
 # The free hosting plan stops the container after fifteen minutes with no
 # traffic, and the next visitor waits about fifty seconds for it to start
-# again — which, for someone who followed a link to a book, is long enough to
-# leave. A request every ten minutes keeps it running.
+# again. Pinging every ten minutes used to prevent that.
 #
-# This is a workaround for a free plan, not a design. The moment the store
-# earns anything, a paid instance removes the need for it.
+# The schedule is gone, deliberately, and it must not come back without doing
+# this arithmetic first:
 #
-# GitHub is best-effort about scheduled runs and will delay them under load, so
-# treat this as reducing cold starts rather than eliminating them. A dedicated
-# uptime monitor keeps better time and tells you when the site is down, which
-# this deliberately does not try to do.
+#   Render grants 750 free instance-hours per MONTH, per WORKSPACE — not per
+#   service. Hours are only consumed while a service is awake. A service that
+#   is pinged every ten minutes never sleeps, so it alone burns about 720 hours
+#   a month: effectively the entire workspace allowance. When the allowance
+#   runs out Render suspends EVERY free service in the workspace, so keeping
+#   this one warm takes the others down with it at the end of the month.
+#
+# Cold starts are the cheaper problem. Warm the site by hand before showing it
+# to anyone — the Actions tab, "Run workflow" — which is what workflow_dispatch
+# is kept for.
 on:
-  schedule:
-    - cron: '*/10 * * * *'
-  # So it can be proven to work without waiting for the schedule.
   workflow_dispatch:
 
 # No repository contents are read, and nothing is written.
