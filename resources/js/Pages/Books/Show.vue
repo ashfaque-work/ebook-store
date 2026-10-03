@@ -5,7 +5,7 @@ import BookCover from '@/Components/BookCover.vue';
 import Reviews from '@/Components/Reviews.vue';
 import Shelf from '@/Components/Ui/Shelf.vue';
 import UiButton from '@/Components/Ui/UiButton.vue';
-import { Deferred, Head, Link, router } from '@inertiajs/vue3';
+import { Deferred, Head, Link, router, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { formatPrice } from '@/lib/money';
 
@@ -24,6 +24,7 @@ const adding = ref(false);
 const claiming = ref(false);
 
 const isFree = computed(() => props.book.price_paise === 0);
+const isGuest = computed(() => !usePage().props.auth?.user);
 
 // One click, not a cart and a checkout with nothing to charge. Guests go via
 // the sign-in page and land back here, because the book still has to be
@@ -91,7 +92,10 @@ const facts = computed(() =>
                             </template>
                             <template v-else-if="isFree">
                                 <UiButton size="lg" block :disabled="claiming" @click="claimFree">
-                                    {{ claiming ? 'Opening…' : 'Read free' }}
+                                    {{ claiming ? 'Opening…' : isGuest ? 'Sign in to read free' : 'Read free' }}
+                                </UiButton>
+                                <UiButton v-if="hasSample" :href="`/read/${book.slug}/sample`" variant="ghost" block>
+                                    Read the first chapter
                                 </UiButton>
                             </template>
                             <template v-else>
@@ -200,8 +204,11 @@ const facts = computed(() =>
                 <UiButton :href="`/read/${book.slug}`" block>Read</UiButton>
             </template>
             <template v-else-if="isFree">
+                <UiButton v-if="hasSample" :href="`/read/${book.slug}/sample`" variant="secondary" class="shrink-0">
+                    Sample
+                </UiButton>
                 <UiButton block :disabled="claiming" @click="claimFree">
-                    {{ claiming ? 'Opening…' : 'Read free' }}
+                    {{ claiming ? 'Opening…' : isGuest ? 'Sign in to read' : 'Read free' }}
                 </UiButton>
             </template>
             <template v-else>
