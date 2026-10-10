@@ -1,7 +1,7 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ArrowLeft, Bookmark, ChevronLeft, ChevronRight, List, Type, X } from 'lucide-vue-next';
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { formatPrice } from '@/lib/money';
 import { useReaderSettings } from '@/Reader/useReaderSettings';
 import { useProgressSync } from '@/Reader/useProgressSync';
@@ -15,6 +15,7 @@ const props = defineProps({
     highlights: { type: Array, default: () => [] },
 });
 
+const stage = ref(null);
 const viewport = ref(null);
 const engine = ref(null);
 const loading = ref(true);
@@ -47,15 +48,69 @@ const {
 
 const sync = useProgressSync(props.isSample ? null : route('reader.progress', props.book.id));
 
+/* ------------------------------------------------------- the shape of a page
+ *
+ * A column the full width of a desktop window is 140-odd characters across,
+ * which is roughly twice what anyone can read without losing their place on
+ * the way back to the left margin. So the frame is capped at the reader's
+ * chosen measure and centred, and when there is room for two of them side by
+ * side the book opens as a spread — which is, after all, what a book does.
+ *
+ * It has to be done out here rather than in the theme inside the iframe:
+ * epub.js stamps `max-width: inherit !important` on the body in paginated
+ * mode, so the only width that survives is the width of the frame it is
+ * rendering into.
+ */
+
+/** Width of "0" in a serif face, near enough, as a fraction of the size. */
+const CH_IN_EM = 0.5;
+
+/** Between the two pages of a spread: a gutter, not a gap. */
+const SPREAD_GUTTER = 64;
+
+/** Breathing room outside the text, so the page-turn chips are never on it. */
+const SIDE_ROOM = 112;
+
+/** Narrower than this is not a page, whatever the window is doing. */
+const MIN_PAGE = 240;
+
+/** The stage's content box: inside its padding, so it is subtracted once only. */
+const available = ref(0);
+
+const pageWidth = computed(() => Math.round(resolved.value.maxWidth * resolved.value.fontSize * CH_IN_EM));
+
+const spread = computed(() => available.value >= pageWidth.value * 2 + SPREAD_GUTTER + SIDE_ROOM);
+
+const frameWidth = computed(() =>
+    spread.value ? pageWidth.value * 2 + SPREAD_GUTTER : Math.min(pageWidth.value, Math.max(available.value, MIN_PAGE)),
+);
+
+let frameObserver = null;
+
+const relayout = () => {
+    if (!engine.value) return;
+    engine.value.setSpread?.(spread.value);
+    engine.value.resize?.();
+};
+
 /* ------------------------------------------------------------------ chrome */
 
 let chromeTimer = null;
 
+/*
+ * The controls step out of the way once you settle into reading — but not
+ * before you have started. Hiding them three seconds after the book opens
+ * leaves a first-time reader looking at a page of text with no way back, no
+ * contents and no settings, which reads as broken rather than immersive.
+ */
+const hasTurnedAPage = ref(false);
+
 const revealChrome = () => {
     chromeVisible.value = true;
     clearTimeout(chromeTimer);
-    // The page is the interface; the controls step out of the way once you
-    // settle into reading, and come back the moment you look for them.
+
+    if (!hasTurnedAPage.value) return;
+
     chromeTimer = setTimeout(() => {
         if (!showToc.value && !showSettings.value) {
             chromeVisible.value = false;
@@ -82,12 +137,14 @@ const onRelocate = (info) => {
 
 const next = () => {
     if (showHint.value) dismissHint();
+    hasTurnedAPage.value = true;
     engine.value?.next();
     revealChrome();
 };
 
 const prev = () => {
     if (showHint.value) dismissHint();
+    hasTurnedAPage.value = true;
     engine.value?.prev();
     revealChrome();
 };
@@ -112,9 +169,21 @@ onMounted(async () => {
             element: viewport.value,
             onRelocate,
             onReady: ({ toc: contents }) => (toc.value = contents ?? []),
+            onMeasured: ({ words }) => (measuredWords.value = words),
         });
 
         engine.value.applyTheme(resolved.value);
+        engine.value.setSpread?.(spread.value);
+
+        // Before the first chapter is displayed, not after: this registers a
+        // content hook, and a hook added later only reaches chapters loaded
+        // after it. Registered afterwards, the opening chapter — the one
+        // everybody meets — was the one chapter you could not tap to turn.
+        engine.value.onGesture?.({
+            tap: tapAt,
+            swipe: (direction) => (direction === 'next' ? next() : prev()),
+        });
+
         await engine.value.display(location.value);
 
         engine.value.onSelected(({ location: at, text }) => {
@@ -137,11 +206,52 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
     clearTimeout(chromeTimer);
+    clearTimeout(relayoutTimer);
     window.removeEventListener('keydown', onKey);
+    frameObserver?.disconnect();
     engine.value?.destroy();
 });
 
+// The stage, not the window: a phone rotating and a desktop window dragged
+// narrower both matter, and so does the drawer opening beside the page.
+let relayoutTimer = null;
+
+onMounted(() => {
+    if (!stage.value) return;
+
+    // Measured before the book opens, so the first chapter is laid out at the
+    // width it will keep. The observer reports a content box, so this has to
+    // be one too — reading clientWidth here counted the padding twice and cost
+    // a phone 32 pixels of page.
+    const style = window.getComputedStyle(stage.value);
+    available.value = Math.round(
+        stage.value.getBoundingClientRect().width - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight),
+    );
+
+    frameObserver = new ResizeObserver(([entry]) => {
+        const width = Math.round(entry.contentRect.width);
+
+        if (width === available.value) return;
+
+        available.value = width;
+
+        // Re-laying out an EPUB means re-rendering the chapter, so it waits
+        // for the drag to stop rather than running on every frame of it.
+        clearTimeout(relayoutTimer);
+        relayoutTimer = setTimeout(relayout, 180);
+    });
+
+    frameObserver.observe(stage.value);
+});
+
 watch(resolved, (value) => engine.value?.applyTheme(value), { deep: true });
+
+// Text size and measure both change how wide a page should be, and the frame
+// has to settle before epub.js is asked to re-flow into it.
+watch([pageWidth, spread], async () => {
+    await nextTick();
+    relayout();
+});
 
 /* --------------------------------------------------------------- shortcuts */
 
@@ -177,15 +287,25 @@ function onKey(event) {
 
 /* ------------------------------------------------------------------ tap and swipe */
 
-const onViewportClick = (event) => {
-    const third = viewport.value.clientWidth / 3;
-    const x = event.clientX - viewport.value.getBoundingClientRect().left;
+/**
+ * Outer thirds turn the page; the middle shows or hides the controls.
+ *
+ * Measured on the stage, so the margins either side of a narrow page count as
+ * the edges of the screen — which is where a hand actually falls.
+ */
+const tapAt = (clientX) => {
+    if (!stage.value) return;
+
+    const third = stage.value.clientWidth / 3;
+    const x = clientX - stage.value.getBoundingClientRect().left;
 
     if (x < third) return prev();
     if (x > third * 2) return next();
 
     chromeVisible.value ? (chromeVisible.value = false) : revealChrome();
 };
+
+const onViewportClick = (event) => tapAt(event.clientX);
 
 let touchStartX = null;
 
@@ -307,12 +427,31 @@ const onSeekCommit = (event) => {
 
 /* ---------------------------------------------------------------- reading time */
 
-const timeLeft = computed(() => {
-    if (!props.book.page_count || percent.value >= 99) return null;
+/*
+ * Measured from the file that is open, not from the catalogue.
+ *
+ * The catalogue knows Pride and Prejudice is 439 pages, and a sample of it is
+ * six thousand words — so reading the page count told anyone opening a sample
+ * they had "about 8h 47m left" of a chapter they would finish over a coffee.
+ * The engines count what they actually loaded and report it here; the page
+ * count is only a fallback for a book whose index has not finished building.
+ */
+const WORDS_A_MINUTE = 250;
+const WORDS_A_PAGE = 300;
 
-    // ~300 words a page at ~250 words a minute. A rough number that is still
-    // more useful than a percentage.
-    const minutes = Math.round(((100 - percent.value) / 100) * props.book.page_count * 1.2);
+const measuredWords = ref(null);
+
+const totalWords = computed(() => {
+    if (measuredWords.value) return measuredWords.value;
+
+    // No fallback for a sample: a wrong estimate is worse than none.
+    return props.isSample ? null : (props.book.page_count ?? 0) * WORDS_A_PAGE || null;
+});
+
+const timeLeft = computed(() => {
+    if (!totalWords.value || percent.value >= 99) return null;
+
+    const minutes = Math.round((((100 - percent.value) / 100) * totalWords.value) / WORDS_A_MINUTE);
 
     if (minutes < 1) return 'less than a minute left';
     if (minutes < 60) return `about ${minutes} min left`;
@@ -367,14 +506,21 @@ const timeLeft = computed(() => {
             </div>
         </header>
 
-        <!-- The page -->
+        <!--
+          The page, and the room around it. The stage takes the taps, because
+          the margins either side of the text are the most natural place to
+          tap to turn; the frame inside it is capped at the measure and holds
+          the rendered book.
+        -->
         <div
-            ref="viewport"
-            class="viewport"
+            ref="stage"
+            class="stage"
             @click="onViewportClick"
             @touchstart.passive="onTouchStart"
             @touchend.passive="onTouchEnd"
-        />
+        >
+            <div ref="viewport" class="page-frame" :style="{ width: `${frameWidth}px` }" />
+        </div>
 
         <!--
           The tap zones made visible. Pointer devices get something to aim at
@@ -544,11 +690,20 @@ const timeLeft = computed(() => {
     font-family: Literata, Georgia, serif;
 }
 
-.viewport {
+.stage {
     flex: 1;
     min-height: 0;
-    overflow: auto;
-    padding: 3.5rem 1rem 3.5rem;
+    display: flex;
+    justify-content: center;
+    overflow: hidden;
+    padding: 3.5rem 1rem;
+}
+
+.page-frame {
+    flex: none; /* the width is computed, not negotiated */
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .bar {

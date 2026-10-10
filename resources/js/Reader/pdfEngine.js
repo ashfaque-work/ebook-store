@@ -8,7 +8,7 @@
  * EPUB-only for now; a PDF text layer is worth adding, but a broken one is
  * worse than an honest absence.
  */
-export async function createPdfEngine({ url, element, onRelocate, onReady }) {
+export async function createPdfEngine({ url, element, onRelocate, onReady, onMeasured }) {
     const pdfjs = await import('pdfjs-dist');
     const worker = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
 
@@ -32,6 +32,10 @@ export async function createPdfEngine({ url, element, onRelocate, onReady }) {
     const toc = await buildToc(doc, outline);
 
     onReady?.({ toc });
+
+    // The length of the file that was opened, so a sample is not credited with
+    // the whole book's reading time. ~300 words to a page.
+    onMeasured?.({ words: doc.numPages * 300 });
 
     async function renderPage(pageNumber) {
         current = Math.min(Math.max(1, pageNumber), doc.numPages);
@@ -87,6 +91,14 @@ export async function createPdfEngine({ url, element, onRelocate, onReady }) {
                 renderPage(current);
             }
         },
+
+        /** A PDF page is a fixed image; there is no second column to make. */
+        setSpread() {},
+
+        /** The canvas is in the page's own document, so its events arrive already. */
+        onGesture() {},
+
+        resize: () => renderPage(current),
 
         onSelected() {
             // Canvas rendering has no selectable text. See the note above.
