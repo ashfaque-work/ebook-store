@@ -118,18 +118,21 @@ services:
       - key: STORE_GST_ENABLED
         value: false
 
-      # Razorpay wants to read the legal pages on a live URL before it approves
-      # the account, so the store goes up first and the till opens after. Paid
-      # titles say purchasing opens shortly; free books and the reader work.
-      # Set this to true the day the live keys go in.
+      # The till is open, onto the simulated gateway below. With this false
+      # the cart, the checkout, the invoice series and the refund flow are all
+      # unreachable, which is half of what this application does.
       - key: STORE_PAYMENTS_ENABLED
-        value: false
+        value: true
 
       # The simulated gateway, in production, deliberately: it lets a visitor
       # walk the cart, checkout, invoice and refund flow while the real
       # account is in review, instead of leaving half the shop unreachable.
-      # Nothing is charged and every page with a price says so. Set this back
-      # to false the day live keys go in — store:preflight fails if a live
-      # gateway is ever running behind the demonstration notice.
+      # Nothing is charged and every page with a price says so.
+      #
+      # Both of these go back the other way the day live Razorpay keys land —
+      # true for payments, false for the demonstration — and the priced
+      # titles go back to free with store:demo-pricing --clear. store:preflight
+      # fails outright if a live gateway is ever left running behind the
+      # demonstration notice, which is the dangerous half of this switch.
       - key: STORE_DEMO_PAYMENTS
-        value: false
+        value: true

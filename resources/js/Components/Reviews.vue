@@ -80,9 +80,21 @@ const stars = [1, 2, 3, 4, 5];
             </ul>
         </div>
 
-        <p v-else-if="reviews" class="text-muted mt-3 text-sm">
-            No reviews yet.
-            <template v-if="canReview">Yours would be the first.</template>
+        <!--
+          An empty section is a chance to say what the thing is for. Only
+          people who have actually read the book can review it here, which is
+          worth saying out loud — it explains both why there are none yet and
+          why the ones that appear are worth reading.
+        -->
+        <p v-else-if="reviews" class="text-muted font-reading mt-3 text-sm">
+            <template v-if="canReview">No reviews yet — yours would be the first.</template>
+            <template v-else-if="signedIn"
+                >No reviews yet. Reviews here come from people who have read the book.</template
+            >
+            <template v-else>
+                No reviews yet. Only readers who have opened the book can leave one, so there are never many — and never
+                any that are made up.
+            </template>
         </p>
 
         <!-- Writing one -->
