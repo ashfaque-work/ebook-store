@@ -215,6 +215,18 @@ class Preflight extends Command
                 'STORE_DEMO_PAYMENTS is on with live gateway keys',
                 'The shop is taking real payments while telling customers nothing is charged. Set STORE_DEMO_PAYMENTS=false.',
             );
+
+            return;
+        }
+
+        // Titles priced for the demonstration are public-domain files, and
+        // selling those for real money is a licence question rather than a
+        // configuration one. Nothing here can tell the two apart, so it asks.
+        if (($priced = Book::where('price_paise', '>', 0)->count()) > 0) {
+            $this->caution(
+                "{$priced} title(s) are priced and the gateway is live",
+                'If any were priced for the demonstration, run store:demo-pricing --clear before selling them.',
+            );
         }
 
         empty(config('services.razorpay.webhook_secret'))
