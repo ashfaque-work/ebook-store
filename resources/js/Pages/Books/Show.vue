@@ -164,9 +164,15 @@ const facts = computed(() =>
                         </div>
                     </dl>
 
+                    <!--
+                      The placeholders pulse. Still and the colour of the hairline
+                      rule, they read as a gap in the page rather than as something
+                      on its way — which is how a book with no reviews looked like a
+                      broken layout for the second and a half the request took.
+                    -->
                     <Deferred data="related">
                         <template #fallback>
-                            <div class="bg-line/60 mt-12 h-48 rounded" aria-hidden="true" />
+                            <div class="bg-line/60 mt-12 h-48 animate-pulse rounded" aria-hidden="true" />
                         </template>
 
                         <Shelf v-if="related?.length" heading="You might also like">
@@ -176,7 +182,7 @@ const facts = computed(() =>
 
                     <Deferred data="reviews">
                         <template #fallback>
-                            <div class="bg-line/60 mt-14 h-40 rounded" aria-hidden="true" />
+                            <div class="bg-line/60 mt-14 h-24 animate-pulse rounded" aria-hidden="true" />
                         </template>
 
                         <Reviews

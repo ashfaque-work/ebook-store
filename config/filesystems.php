@@ -79,6 +79,16 @@ return [
             'use_path_style_endpoint' => true,
             'visibility' => 'public',
             'throw' => true,
+
+            // Object storage sends no cache headers unless asked, so every
+            // cover on every shelf was fetched again on every page view —
+            // thirty-six round trips to another continent to redraw a page
+            // the visitor had already seen. Covers are stored under a random
+            // name and a replacement gets a new one, so they can be cached
+            // for as long as the browser likes.
+            'options' => [
+                'CacheControl' => 'public, max-age=31536000, immutable',
+            ],
         ],
 
         's3' => [

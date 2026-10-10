@@ -10,6 +10,7 @@ const props = defineProps({
 });
 
 const failed = ref(false);
+const loaded = ref(false);
 
 const showImage = computed(() => Boolean(props.src) && !failed.value);
 
@@ -31,24 +32,18 @@ const initials = computed(() =>
 </script>
 
 <template>
-    <img
-        v-if="showImage"
-        :src="src"
-        :alt="alt"
-        loading="lazy"
-        decoding="async"
-        @error="failed = true"
-        :class="[$props.class, 'bg-gray-200 object-cover dark:bg-gray-700']"
-    />
-
     <!--
-      No artwork. Rather than a grey box, this is a plausible jacket: a cloth
-      ground, a spine down the binding edge, and the title set as a publisher
-      would set it. On a dark shelf an unlit rectangle reads as a hole in the
-      page; this reads as a book whose cover simply is not very exciting.
+      The plate is always there, and the artwork arrives on top of it.
+
+      Covers come from object storage a continent away and take the better
+      part of two seconds each; a shelf of twelve was a shelf of grey
+      rectangles while they came in, which is both ugly and unreadable — you
+      could not tell a book that was loading from a book with no cover. Now
+      the shelf is legible from the first frame and the jackets fade in over
+      it. It also means a cover that never arrives degrades into something
+      that still says what the book is, rather than staying grey for ever.
     -->
     <div
-        v-else
         role="img"
         :aria-label="alt"
         :class="[$props.class, 'book-plate relative flex flex-col justify-between overflow-hidden p-3 text-center']"
@@ -62,5 +57,17 @@ const initials = computed(() =>
         </span>
 
         <span class="line-clamp-1 text-[0.62rem] tracking-wide text-white/45 uppercase">{{ author ?? '&nbsp;' }}</span>
+
+        <img
+            v-if="showImage"
+            :src="src"
+            alt=""
+            loading="lazy"
+            decoding="async"
+            @load="loaded = true"
+            @error="failed = true"
+            class="absolute inset-0 h-full w-full object-cover transition-opacity duration-500"
+            :class="loaded ? 'opacity-100' : 'opacity-0'"
+        />
     </div>
 </template>
