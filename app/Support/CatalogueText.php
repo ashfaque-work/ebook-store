@@ -73,6 +73,33 @@ class CatalogueText
     }
 
     /**
+     * Does this title still read as a catalogue record after tidying?
+     *
+     * For the ones the restyling declines: a couple of lowercase words among
+     * several proper nouns. Minor words are not evidence of anything — "A
+     * Room with a View" is set exactly as its publisher set it, and listing
+     * it as suspect trains people to ignore the list.
+     */
+    public static function titleNeedsAttention(string $title): bool
+    {
+        $words = array_slice(preg_split('/\s+/u', $title, -1, PREG_SPLIT_NO_EMPTY) ?: [], 1);
+
+        foreach ($words as $word) {
+            $bare = preg_replace('/[^\p{L}]/u', '', $word);
+
+            if ($bare === '' || in_array(mb_strtolower($bare), self::MINOR_WORDS, true)) {
+                continue;
+            }
+
+            if (mb_strlen($bare) > 3 && mb_strtolower($bare) === $bare) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Is this title in sentence case, as a catalogue record would store it?
      *
      * Looked at word by word: a title with capitals of its own ("The Strange

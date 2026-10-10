@@ -128,7 +128,7 @@ class TidyCatalogue extends Command
         // Titles the restyling declined: a couple of lowercase words among
         // several proper nouns, which is where a rule stops being safe.
         $halfStyled = $books
-            ->filter(fn (Book $b) => CatalogueText::title($b->title) === $b->title && self::hasLowercaseWords($b->title))
+            ->filter(fn (Book $b) => CatalogueText::titleNeedsAttention(CatalogueText::title($b->title)))
             ->pluck('title');
 
         if ($authors->isEmpty() && $volumes->isEmpty() && $halfStyled->isEmpty()) {
@@ -149,24 +149,6 @@ class TidyCatalogue extends Command
         foreach ($volumes as $title) {
             $this->line('  part of a set, sold on its own:               '.self::shorten($title));
         }
-    }
-
-    /**
-     * A title carrying words a publisher would have capitalised.
-     */
-    private static function hasLowercaseWords(string $title): bool
-    {
-        $words = array_slice(preg_split('/\s+/u', $title, -1, PREG_SPLIT_NO_EMPTY) ?: [], 1);
-
-        foreach ($words as $word) {
-            $bare = preg_replace('/[^\p{L}]/u', '', $word);
-
-            if (mb_strlen($bare) > 3 && mb_strtolower($bare) === $bare) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private static function shorten(string $value): string

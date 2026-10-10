@@ -69,3 +69,22 @@ test('an author with nothing wrong with them is untouched', function () {
     expect(CatalogueText::authorName('Jane Austen'))->toBe('Jane Austen')
         ->and(CatalogueText::authorName('Charlotte Brontë'))->toBe('Charlotte Brontë');
 });
+
+test('a title set the way its publisher set it is not flagged for attention', function (string $title) {
+    expect(CatalogueText::titleNeedsAttention($title))->toBeFalse();
+})->with([
+    // "with" and "a" are minor words; flagging these teaches people to
+    // ignore the list, which is worse than not having one.
+    'A Room with a View',
+    'The Boy with Wings',
+    'Pride and Prejudice',
+    'Moby Dick; Or, The Whale',
+]);
+
+test('a title still carrying sentence case is flagged', function (string $title) {
+    expect(CatalogueText::titleNeedsAttention($title))->toBeTrue();
+})->with([
+    'The strange case of Dr. Jekyll and Mr. Hyde',
+    'The Blue Castle: a novel',
+    'Modern English biography, volume 2 (of 4), I-Q',
+]);
