@@ -7,6 +7,7 @@ use App\Models\Book;
 use App\Models\Genre;
 use App\Support\EpubSampler;
 use App\Support\EpubStats;
+use App\Support\Shelves;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -370,34 +371,21 @@ class ImportPublicDomainBooks extends Command
     }
 
     /**
-     * Gutenberg's bookshelves read like shelf labels already ("Category:
-     * British Literature"); its subjects read like library catalogue entries
-     * ("Courtship -- Fiction"). Prefer a shelf, fall back to the first useful
-     * word of a subject.
+     * The shop shelf this book belongs on.
+     *
+     * Gutenberg's own shelves and subjects go in — "Category: Banned Books
+     * from Anne Haight's list", "Courtship -- Fiction" — and one of the
+     * shop's eight comes out. Importing the labels verbatim is what produced
+     * twelve shelves, three of them holding a single book, with names nobody
+     * browses by. See App\Support\Shelves.
      */
     private function genre(array $entry): Genre
     {
-        $name = null;
-
-        foreach ($entry['bookshelves'] ?? [] as $shelf) {
-            $clean = Str::of($shelf)->after('Category:')->squish()->toString();
-
-            if ($clean !== '' && ! Str::contains($clean, 'Browsing:')) {
-                $name = $clean;
-                break;
-            }
-        }
-
-        if (! $name) {
-            $subject = (string) ($entry['subjects'][0] ?? '');
-            $name = Str::of($subject)->before('--')->squish()->toString();
-        }
-
-        $name = $name !== '' ? Str::limit($name, 40, '') : 'Classics';
-
-        return Genre::firstOrCreate(
-            ['slug' => Str::slug($name)],
-            ['name' => $name],
+        $shelves = array_map(
+            fn (string $shelf) => Str::of($shelf)->after('Category:')->squish()->toString(),
+            $entry['bookshelves'] ?? [],
         );
+
+        return Shelves::for([...$shelves, ...($entry['subjects'] ?? [])]);
     }
 }

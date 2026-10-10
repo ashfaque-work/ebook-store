@@ -133,12 +133,28 @@ test('the author is turned round into reading order', function () {
     expect(Book::sole()->author->name)->toBe('Jane Austen');
 });
 
-test('shelf labels become genres, without the Category prefix', function () {
+test('a library subject becomes a shelf somebody browses', function () {
+    // The fixture is filed the way Gutenberg files things: shelved under
+    // "British Literature", subject "Courtship -- Fiction". The first is a
+    // fact about the library, the second is what the book is actually like.
     fakeCatalogue([gutendexEntry(1)]);
 
     $this->artisan('store:import-books', ['--count' => 1]);
 
-    expect(Genre::sole()->name)->toBe('British Literature');
+    expect(Genre::sole()->name)->toBe('Romance');
+});
+
+test('a shelf label nobody browses by does not become a shelf', function () {
+    // Importing these verbatim is what produced twelve shelves, three of
+    // which held a single book.
+    fakeCatalogue([gutendexEntry(1, [
+        'bookshelves' => ["Category: Banned Books from Anne Haight's list"],
+        'subjects' => ['Literature'],
+    ])]);
+
+    $this->artisan('store:import-books', ['--count' => 1]);
+
+    expect(Genre::sole()->name)->toBe('Classics');
 });
 
 test('a book with no epub is skipped rather than half-created', function () {
