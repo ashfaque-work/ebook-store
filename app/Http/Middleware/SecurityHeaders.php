@@ -59,8 +59,15 @@ class SecurityHeaders
             "script-src 'self' 'unsafe-inline' https://checkout.razorpay.com",
             // The gateway renders its own checkout in an iframe.
             'frame-src https://api.razorpay.com https://checkout.razorpay.com',
-            "style-src 'self' 'unsafe-inline' https://fonts.bunny.net",
-            'font-src \'self\' https://fonts.bunny.net data:',
+            // blob: is the EPUB's own stylesheets. epub.js rewrites each
+            // chapter's <link> to a blob URL built from the zip, so without it
+            // every book renders with its typography stripped — centred title
+            // pages left-aligned, drop caps gone — and the console fills with
+            // one refusal per chapter. The sheets run inside a sandboxed
+            // iframe with scripting off, and this policy still governs what
+            // they may load.
+            "style-src 'self' 'unsafe-inline' blob: https://fonts.bunny.net",
+            'font-src \'self\' https://fonts.bunny.net data: blob:',
             // blob: is required by pdf.js; data: by the cover fallbacks.
             "img-src {$assets} data: blob:",
             "media-src {$assets} blob:",

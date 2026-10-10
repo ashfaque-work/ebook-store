@@ -40,6 +40,13 @@ test('the policy lets the reader work', function () {
         ->toContain('blob:')
         ->toContain("worker-src 'self' blob:")
         ->toContain("child-src 'self' blob:");
+
+    // And the book's own stylesheets and embedded fonts, which epub.js hands
+    // to the iframe as blob URLs. Leave these out and every book still opens —
+    // stripped of its typography, with one console refusal per chapter and
+    // nothing visibly broken enough to notice.
+    expect($csp)->toContain("style-src 'self' 'unsafe-inline' blob:")
+        ->toContain('font-src \'self\' https://fonts.bunny.net data: blob:');
 });
 
 test('the policy allows the font host we actually use', function () {
