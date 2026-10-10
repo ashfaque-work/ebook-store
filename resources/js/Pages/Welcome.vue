@@ -24,18 +24,13 @@ const props = defineProps({
     books: { type: Object, default: null },
 });
 
-// Three covers, middle one first so the fan reads outward from the newest.
-const fanned = computed(() => {
-    const pool = (props.newest ?? []).filter((b) => b.cover_image_path).slice(0, 3);
-    return pool.length === 3 ? [pool[1], pool[0], pool[2]] : pool;
-});
-
-// Straight into a book rather than onto a product page: the first free title
-// on the shelf, or the shelves themselves if somehow nothing is free.
-const startReadingHref = computed(() => {
-    const free = (props.newest ?? []).find((b) => b.price_paise === 0);
-    return free ? `/books/${free.slug}` : '#shelves';
-});
+/*
+ * The drop cap is for prose that opens on a word. An excerpt that opens on a
+ * quotation mark would set the quote three lines tall — ::first-letter takes
+ * leading punctuation with it — and that reads as a mistake rather than a
+ * flourish.
+ */
+const opensOnALetter = computed(() => /^\p{L}/u.test(props.featured?.excerpt ?? ''));
 
 const search = ref(props.filters?.search ?? '');
 const genre = ref(props.filters?.genre ?? '');
@@ -71,110 +66,79 @@ const clearFilters = () => {
         <!-- ------------------------------------------------ browsing -->
         <template v-if="mode === 'shelves'">
             <!--
-              The hero opens a book rather than selling one. A bookshop's most
- characteristic moment is reading the first lines, so that is what
- leads — set at true reading size, in the reading face.
+              The window of a bookshop, which is a book — open, lit, and set
+              at the size it will be read at. Not a strapline above two
+              buttons: the strongest argument for a book has always been its
+              first paragraph, and this shop has fifty-four of them going
+              spare.
             -->
-            <!--
-              The shelf in low light. Covers are the only bright thing on the
-              page, which is the whole argument for an indigo storefront: book
-              jackets are designed against white and glow against this.
-            -->
-            <section class="relative isolate overflow-hidden">
+            <section class="hero relative isolate overflow-hidden">
                 <div class="hero-glow" aria-hidden="true" />
 
+                <!--
+                  The page needs a heading that says what the page is, and
+                  this design deliberately has no strapline to carry one. So
+                  it is here for a screen reader and a crawler, and the window
+                  is left to make the argument visually.
+                -->
+                <h1 class="sr-only">
+                    Books worth your evening — {{ stats.free }} classics, free to read in your browser
+                </h1>
+
                 <div
-                    class="relative mx-auto grid max-w-[1200px] items-center gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1.05fr_1fr] md:gap-14 md:py-24"
+                    class="relative mx-auto grid max-w-[1060px] items-center gap-10 px-4 py-14 sm:px-6 md:min-h-[min(76vh,42rem)] md:grid-cols-[minmax(0,21rem)_1fr] md:gap-16 md:py-20"
                 >
-                    <div>
-                        <p class="text-accent-text text-xs font-semibold tracking-[0.18em] uppercase">
-                            An independent ebook shop
-                        </p>
-
-                        <h1 class="mt-4 text-[clamp(2.2rem,1.4rem+3.2vw,3.6rem)] leading-[1.05]">
-                            Read something<br />
-                            remarkable tonight.
-                        </h1>
-
-                        <p class="text-muted measure mt-5 text-base/relaxed">
-                            {{ stats.free }} classics, free to read this minute — in your browser, on any device.
-                            Nothing to install, nothing to sync.
-                        </p>
-
-                        <div class="mt-8 flex flex-wrap items-center gap-3">
-                            <UiButton :href="startReadingHref" size="lg">Start reading</UiButton>
-                            <UiButton href="#shelves" variant="secondary" size="lg">Browse the shelves</UiButton>
-                        </div>
-
-                        <dl class="text-muted mt-10 flex flex-wrap gap-x-8 gap-y-3 text-sm">
-                            <div class="flex items-baseline gap-2">
-                                <dt class="tabular text-content font-semibold">{{ stats.books }}</dt>
-                                <dd>books on the shelves</dd>
-                            </div>
-                            <div class="flex items-baseline gap-2">
-                                <dt class="tabular text-content font-semibold">{{ stats.free }}</dt>
-                                <dd>free, no card needed</dd>
-                            </div>
-                        </dl>
-                    </div>
-
-                    <!-- Covers fanned as they would lie on a table. -->
-                    <div v-if="fanned.length" class="cover-fan reveal-stagger mx-auto w-full max-w-md md:max-w-none">
-                        <Link
-                            v-for="book in fanned"
-                            :key="book.id"
-                            :href="`/books/${book.slug}`"
-                            :aria-label="book.title"
-                            class="block"
-                        >
-                            <BookCover
-                                :src="book.cover_image_path"
-                                :title="book.title"
-                                :author="book.author?.name"
-                                class="cover-shadow aspect-2/3 w-full rounded-[--radius-cover]"
-                            />
-                        </Link>
-                    </div>
-                </div>
-            </section>
-
-            <!--
-              The first lines of an actual book, at true reading size. A shop
-              window that shows you the prose rather than describing it.
-            -->
-            <section v-if="featured" class="border-line bg-raised/40 border-y">
-                <div
-                    ref="firstLines"
-                    class="mx-auto grid max-w-[1200px] gap-8 px-4 py-12 sm:px-6 md:grid-cols-[minmax(0,11rem)_1fr] md:gap-12"
-                >
-                    <Link :href="`/books/${featured.slug}`" class="group mx-auto w-32 md:mx-0 md:w-full">
+                    <Link
+                        v-if="featured"
+                        :href="`/books/${featured.slug}`"
+                        class="group mx-auto block w-44 sm:w-56 md:w-full"
+                        :aria-label="`${featured.title} by ${featured.author}`"
+                    >
                         <BookCover
                             :src="featured.cover_image_path"
                             :title="featured.title"
                             :author="featured.author"
-                            class="cover-shadow cover-lift aspect-2/3 w-full rounded-[--radius-cover]"
+                            class="jacket-lit cover-lift aspect-2/3 w-full rounded-[--radius-cover]"
                         />
                     </Link>
 
-                    <div class="flex flex-col justify-center">
-                        <p class="text-muted text-xs font-semibold tracking-[0.18em] uppercase">
-                            {{ featured.isExcerpt ? 'The first lines' : 'What it is about' }}
-                        </p>
-
-                        <blockquote class="font-reading text-content measure mt-4 text-lg/relaxed md:text-xl/relaxed">
-                            <p>{{ featured.excerpt }}</p>
+                    <div v-if="featured" class="min-w-0">
+                        <blockquote>
+                            <p class="opening-lines text-content" :class="{ 'has-drop-cap': opensOnALetter }">
+                                {{ featured.excerpt }}
+                            </p>
                         </blockquote>
 
-                        <p class="mt-6 text-xl font-semibold tracking-tight">{{ featured.title }}</p>
-                        <p class="text-muted mt-1 text-sm">{{ featured.author }}</p>
+                        <h2 class="mt-8 text-2xl font-semibold tracking-tight md:text-3xl">
+                            {{ featured.title }}
+                        </h2>
+                        <p class="text-muted font-reading mt-1 text-base">{{ featured.author }}</p>
 
-                        <div class="mt-6 flex flex-wrap items-center gap-4">
-                            <UiButton v-if="featured.hasSample" :href="`/read/${featured.slug}/sample`">
-                                Read the first chapter
+                        <div class="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3">
+                            <UiButton
+                                :href="featured.hasSample ? `/read/${featured.slug}/sample` : `/books/${featured.slug}`"
+                                size="lg"
+                            >
+                                {{ featured.hasSample ? 'Keep reading' : 'Look inside' }}
                             </UiButton>
-                            <UiButton v-else :href="`/books/${featured.slug}`">Look inside</UiButton>
-                            <span class="text-muted text-sm">{{ formatPrice(featured.price_paise) }}</span>
+
+                            <!--
+                              The catalogue's size said once, in a sentence,
+                              rather than as a row of big numbers with small
+                              labels under them.
+                            -->
+                            <p class="text-muted font-reading text-sm">
+                                <Link href="#shelves" class="hover:text-content underline underline-offset-4">
+                                    {{ stats.free }} more
+                                </Link>
+                                on the shelves, free to open, nothing to install.
+                            </p>
                         </div>
+                    </div>
+
+                    <!-- Nothing published yet: the shelves speak for themselves. -->
+                    <div v-else class="md:col-span-2">
+                        <p class="text-muted measure font-reading text-base/relaxed">Nothing on the shelves yet.</p>
                     </div>
                 </div>
             </section>

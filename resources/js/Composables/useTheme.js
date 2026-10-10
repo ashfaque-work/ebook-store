@@ -1,29 +1,45 @@
 import { ref, watchEffect } from 'vue';
 
-export function useTheme() {
-    // Initialize theme from localStorage or user's OS preference
-    const theme = ref(
-        localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
-    );
+/**
+ * The shop's ground, and the switch for it.
+ *
+ * Ink is the default — not the operating system's preference. The store is a
+ * dark room where the covers are the only lit things, which is the whole
+ * identity and also how you know you are shopping rather than reading; the
+ * reader drains the ink out and hands you paper. Following
+ * prefers-color-scheme would mean most people never see either decision, only
+ * whichever one their phone happened to pick.
+ *
+ * The class itself is set by a script in the document head, before the first
+ * paint. This keeps that in step and remembers a choice once it is made.
+ */
+const STORAGE_KEY = 'theme';
 
-    // Function to toggle the theme
+function stored() {
+    try {
+        return localStorage.getItem(STORAGE_KEY);
+    } catch {
+        // Private browsing, or storage blocked outright.
+        return null;
+    }
+}
+
+export function useTheme() {
+    const theme = ref(stored() === 'light' ? 'light' : 'dark');
+
     const toggleTheme = () => {
         theme.value = theme.value === 'light' ? 'dark' : 'light';
     };
 
-    // Watch for changes in the theme and update the DOM and localStorage
     watchEffect(() => {
-        if (theme.value === 'dark') {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
+        document.documentElement.classList.toggle('dark', theme.value === 'dark');
+
+        try {
+            localStorage.setItem(STORAGE_KEY, theme.value);
+        } catch {
+            // The choice lasts for this visit, which is better than failing.
         }
-        localStorage.setItem('theme', theme.value);
     });
 
-    // Expose the theme and toggle function to be used in components
-    return {
-        theme,
-        toggleTheme,
-    };
+    return { theme, toggleTheme };
 }

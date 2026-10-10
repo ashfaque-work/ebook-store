@@ -57,6 +57,25 @@
         <link href="https://fonts.bunny.net/css?family=archivo:400,500,600,700|literata:400,400i,600,700&display=swap"
             rel="stylesheet" />
 
+        {{-- The shop's ground is ink, so it is applied before the first paint
+             rather than by Vue after hydration. Done in the component, every
+             visitor got a flash of the wrong colour on every cold load — and
+             on a host that sleeps, a cold load is most of them.
+
+             Deliberately not reading prefers-color-scheme: a shop has
+             lighting the way a shop has a floor, and the toggle in the header
+             is one click away and remembered. The reader is the other half of
+             that decision and sets its own surface regardless. --}}
+        <script>
+            try {
+                if (localStorage.getItem('theme') !== 'light') {
+                    document.documentElement.classList.add('dark');
+                }
+            } catch (e) {
+                document.documentElement.classList.add('dark');
+            }
+        </script>
+
         <!-- Scripts -->
         @routes
         @vite(['resources/js/app.js', "resources/js/Pages/{$page['component']}.vue"])
