@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Foundation\Exceptions\RegisterErrorViewPaths;
+
 /**
  * An apostrophe inside a single-quoted @section argument ends the string early,
  * and Blade then prints the directive itself instead of the page. Each error
@@ -7,7 +9,7 @@
  */
 test('every error page renders its title instead of raw blade', function (int $code) {
     // The exception handler registers the errors:: namespace the layout uses.
-    (new \Illuminate\Foundation\Exceptions\RegisterErrorViewPaths)();
+    (new RegisterErrorViewPaths)();
 
     $html = view("errors.{$code}")->render();
 

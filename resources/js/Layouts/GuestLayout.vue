@@ -142,8 +142,9 @@ const isCurrent = (href) => (href === '/' ? page.url === '/' : page.url.startsWi
                 </nav>
                 <div class="mt-6 flex flex-col gap-2 text-xs sm:flex-row sm:items-center sm:justify-between">
                     <p class="text-muted">
-                        &copy; {{ new Date().getFullYear() }} {{ store.legalName ?? $page.props.appName ?? 'eBook Store' }}.
-                        Digital books, delivered instantly.
+                        &copy; {{ new Date().getFullYear() }}
+                        {{ store.legalName ?? $page.props.appName ?? 'eBook Store' }}. Digital books, delivered
+                        instantly.
                     </p>
                     <!-- The maker's credit: monogram, name and a link out. -->
                     <a
