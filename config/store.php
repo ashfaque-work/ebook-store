@@ -124,6 +124,29 @@ return [
 
     'payments_enabled' => filter_var(env('STORE_PAYMENTS_ENABLED', true), FILTER_VALIDATE_BOOLEAN),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Demonstration checkout
+    |--------------------------------------------------------------------------
+    |
+    | Runs the simulated gateway in production, on purpose, so the checkout
+    | can be walked through while the real account is still in review. The
+    | alternative — the whole of cart, checkout, invoicing and refunds sitting
+    | there unreachable — is a shop that cannot show the half of itself that
+    | handles money.
+    |
+    | Nothing is charged and no card details are asked for or accepted. Every
+    | page where a price appears says so, which is not optional: a checkout
+    | that looks real and is not is a lie, and labelling it is the whole
+    | difference between a demonstration and a deception.
+    |
+    | Turn this off the moment real keys arrive. `store:preflight` refuses a
+    | configuration where both this and a live gateway are on.
+    |
+    */
+
+    'demo_payments' => filter_var(env('STORE_DEMO_PAYMENTS', false), FILTER_VALIDATE_BOOLEAN),
+
     // Our own state code, for place-of-supply. Same state as the buyer means
     // CGST + SGST; a different state means IGST.
     'state_code' => env('STORE_STATE_CODE', ''),

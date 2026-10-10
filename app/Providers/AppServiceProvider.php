@@ -28,14 +28,21 @@ class AppServiceProvider extends ServiceProvider
             $config = config('services.razorpay');
 
             if (empty($config['key']) || empty($config['secret'])) {
-                // Never in production. Without this, a deploy that forgot the
-                // keys would quietly hand out free books through a gateway
-                // that always says yes — and look completely healthy doing it.
-                // Failing loudly at checkout is the cheaper mistake.
-                if ($this->app->environment('production')) {
+                // In production this is refused unless it was asked for in so
+                // many words. Without the guard, a deploy that forgot the keys
+                // would quietly hand out free books through a gateway that
+                // always says yes, and look completely healthy doing it —
+                // failing loudly at checkout is the cheaper mistake.
+                //
+                // STORE_DEMO_PAYMENTS is the way to say "yes, I know, that is
+                // the point": the shop runs the simulated gateway and says on
+                // every page carrying a price that nothing is charged. A
+                // missing key is still a missing key.
+                if ($this->app->environment('production') && ! config('store.demo_payments')) {
                     throw new RuntimeException(
                         'No payment gateway is configured. Set RAZORPAY_KEY and RAZORPAY_SECRET; '
-                        .'the simulated gateway is refused in production because it takes no money.'
+                        .'the simulated gateway is refused in production unless STORE_DEMO_PAYMENTS=true, '
+                        .'which labels the shop as a demonstration because it takes no money.'
                     );
                 }
 

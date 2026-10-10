@@ -2,6 +2,7 @@
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import BookCard from '@/Components/Ui/BookCard.vue';
 import BookCover from '@/Components/BookCover.vue';
+import DemoPaymentNotice from '@/Components/DemoPaymentNotice.vue';
 import Reviews from '@/Components/Reviews.vue';
 import Shelf from '@/Components/Ui/Shelf.vue';
 import UiButton from '@/Components/Ui/UiButton.vue';
@@ -132,6 +133,13 @@ const facts = computed(() =>
                     <p v-if="isPurchased" class="text-verdigris mt-4 inline-flex items-center gap-2 text-sm">
                         In your library
                     </p>
+
+                    <!-- Above the blurb, where it is seen at every width —
+                         the desktop buy panel is hidden on a phone, and the
+                         phone is where the sticky price bar lives. Only on a
+                         book with a price: a free book charges nothing
+                         whether the gateway is simulated or not. -->
+                    <DemoPaymentNotice v-if="!isFree && !isPurchased" variant="inline" />
 
                     <section class="mt-8">
                         <h2 class="text-lg">About this book</h2>

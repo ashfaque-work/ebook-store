@@ -1,5 +1,6 @@
 <script setup>
 import GuestLayout from '@/Layouts/GuestLayout.vue';
+import DemoPaymentNotice from '@/Components/DemoPaymentNotice.vue';
 import UiButton from '@/Components/Ui/UiButton.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { Check } from 'lucide-vue-next';
@@ -13,6 +14,9 @@ defineProps({ order: Object });
 
     <GuestLayout>
         <div class="mx-auto max-w-lg px-4 py-14 sm:px-6">
+            <!-- "Total paid" is below. It has to be qualified. -->
+            <DemoPaymentNotice />
+
             <div class="flex items-center gap-3">
                 <span class="bg-verdigris/15 text-verdigris grid size-10 shrink-0 place-content-center rounded-full">
                     <Check class="size-5" aria-hidden="true" />

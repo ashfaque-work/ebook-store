@@ -190,14 +190,32 @@ class Preflight extends Command
         }
 
         if ($gateway instanceof FakePaymentGateway) {
-            app()->environment('production')
-                ? $this->problem('The simulated gateway is active', 'It takes no money. Set RAZORPAY_KEY and RAZORPAY_SECRET.')
-                : $this->pass('Simulated gateway (correct outside production)');
+            if (! app()->environment('production')) {
+                $this->pass('Simulated gateway (correct outside production)');
+            } elseif (config('store.demo_payments')) {
+                $this->caution(
+                    'Running the demonstration checkout (STORE_DEMO_PAYMENTS=true)',
+                    'Deliberate, and labelled on every page with a price. Turn it off the moment real keys arrive.',
+                );
+            } else {
+                $this->problem('The simulated gateway is active', 'It takes no money. Set RAZORPAY_KEY and RAZORPAY_SECRET.');
+            }
 
             return;
         }
 
         $this->pass('Razorpay configured');
+
+        // Both at once is the dangerous state: a real gateway taking real
+        // money behind pages that promise nothing is charged. The binding
+        // prefers Razorpay when keys exist, so the notice would be the only
+        // thing that was wrong — and it is the part a customer reads.
+        if (config('store.demo_payments')) {
+            $this->problem(
+                'STORE_DEMO_PAYMENTS is on with live gateway keys',
+                'The shop is taking real payments while telling customers nothing is charged. Set STORE_DEMO_PAYMENTS=false.',
+            );
+        }
 
         empty(config('services.razorpay.webhook_secret'))
             ? $this->problem(

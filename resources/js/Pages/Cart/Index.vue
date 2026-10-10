@@ -1,5 +1,6 @@
 <script setup>
 import GuestLayout from '@/Layouts/GuestLayout.vue';
+import DemoPaymentNotice from '@/Components/DemoPaymentNotice.vue';
 import BookCover from '@/Components/BookCover.vue';
 import ConfirmDialog from '@/Components/Ui/ConfirmDialog.vue';
 import EmptyState from '@/Components/Ui/EmptyState.vue';
@@ -107,6 +108,8 @@ const clearCart = () => router.delete('/cart');
                     <p class="text-muted mt-1 text-sm">
                         No delivery, no waiting. Your books are in your library the moment payment clears.
                     </p>
+
+                    <DemoPaymentNotice v-if="!isFreeCart" variant="inline" />
 
                     <template v-if="paymentsEnabled || isFreeCart">
                         <UiButton class="mt-6" size="lg" block :disabled="checkingOut" @click="checkout">

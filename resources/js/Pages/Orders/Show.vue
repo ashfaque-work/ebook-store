@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import DemoPaymentNotice from '@/Components/DemoPaymentNotice.vue';
 import UiButton from '@/Components/Ui/UiButton.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { formatPaise, formatPrice } from '@/lib/money';
@@ -20,6 +21,9 @@ const formatDate = (value) =>
 
         <div class="mx-auto max-w-2xl">
             <Link href="/orders" class="text-muted hover:text-content text-sm">&larr; All orders</Link>
+
+            <!-- An order with a total and an invoice number on it. Same rule. -->
+            <DemoPaymentNotice v-if="order.total_paise > 0" />
 
             <div class="border-line bg-raised mt-4 rounded-[--radius-ui] border p-6">
                 <dl class="grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">

@@ -1,5 +1,6 @@
 <script setup>
 import GuestLayout from '@/Layouts/GuestLayout.vue';
+import DemoPaymentNotice from '@/Components/DemoPaymentNotice.vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { formatPaise, formatPrice } from '@/lib/money';
@@ -109,6 +110,8 @@ const pay = () => (isMock.value ? simulate('paid') : payWithRazorpay());
 
     <GuestLayout>
         <div class="mx-auto max-w-lg px-4 sm:px-6">
+            <DemoPaymentNotice />
+
             <div class="bg-raised rounded-[--radius-ui] p-6 shadow-xs sm:p-8">
                 <h1 class="text-content text-2xl font-bold tracking-tight">Complete your payment</h1>
                 <p class="text-muted mt-1 text-sm">Order {{ order.order_number }}</p>
@@ -157,8 +160,17 @@ const pay = () => (isMock.value ? simulate('paid') : payWithRazorpay());
                     {{ processing ? 'Confirming…' : `Pay ${formatPaise(order.total_paise)}` }}
                 </button>
 
+                <!--
+                  Two different true things. With a real gateway this is the
+                  reassurance a buyer wants; with the simulated one it would
+                  be describing a payment provider that is not there, which is
+                  precisely the sentence a demonstration must not borrow.
+                -->
                 <p class="text-muted mt-3 text-center text-xs">
-                    Your card and UPI details are handled by the payment provider and never reach our servers.
+                    <template v-if="isMock"> No card or UPI details are asked for, and nothing is charged. </template>
+                    <template v-else>
+                        Your card and UPI details are handled by the payment provider and never reach our servers.
+                    </template>
                 </p>
 
                 <div

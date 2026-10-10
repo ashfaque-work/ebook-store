@@ -61,6 +61,10 @@ class HandleInertiaRequests extends Middleware
                 // So a buy button can say what will actually happen, rather
                 // than sending someone to a checkout that turns them around.
                 'paymentsEnabled' => (bool) config('store.payments_enabled'),
+                // Shared rather than passed page by page, because every page
+                // that can show a price has to say this — missing it on one
+                // of them is the only way this feature can do harm.
+                'demoPayments' => (bool) config('store.demo_payments'),
             ],
             'canRegister' => Route::has('register'),
             'toast' => fn () => $request->session()->get('toast'),

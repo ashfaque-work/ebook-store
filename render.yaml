@@ -124,3 +124,12 @@ services:
       # Set this to true the day the live keys go in.
       - key: STORE_PAYMENTS_ENABLED
         value: false
+
+      # The simulated gateway, in production, deliberately: it lets a visitor
+      # walk the cart, checkout, invoice and refund flow while the real
+      # account is in review, instead of leaving half the shop unreachable.
+      # Nothing is charged and every page with a price says so. Set this back
+      # to false the day live keys go in — store:preflight fails if a live
+      # gateway is ever running behind the demonstration notice.
+      - key: STORE_DEMO_PAYMENTS
+        value: false
